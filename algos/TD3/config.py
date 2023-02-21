@@ -1,8 +1,18 @@
+#!/usr/bin/env python
+# coding=utf-8
+'''
+Author: JiangJi
+Email: johnjim0816@gmail.com
+Date: 2023-02-20 17:22:28
+LastEditor: JiangJi
+LastEditTime: 2023-02-21 13:20:37
+Discription: 
+'''
 class AlgoConfig:
     def __init__(self) -> None:
-        self.explore_steps = 1000  # exploration steps before training
+        self.explore_steps = 100  # exploration steps before training
         self.policy_freq = 2  # policy update frequency
-        self.actor_lr = 1e-3 # actor learning rate 3e-4
+        self.actor_lr = 1e-4 # actor learning rate 3e-4
         self.critic_lr = 1e-3 # critic learning rate
         self.actor_hidden_dim = 256 # actor hidden layer dimension
         self.critic_hidden_dim = 256 # critic hidden layer dimension
