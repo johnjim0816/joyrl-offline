@@ -110,8 +110,8 @@ class Main(object):
             n_actions = envs[0].action_space.n  # action dimension
         except AttributeError:
             n_actions = envs[0].action_space.shape[0]
-            self.logger.info(f"action_bound: {abs(envs[0].action_space.low.item())}")
-            setattr(cfg, 'action_bound', abs(envs[0].action_space.low.item()))
+            self.logger.info(f"action_bound: {abs(envs[0].action_space.low[0])}")
+            setattr(cfg, 'action_bound', abs(envs[0].action_space.low[0]))
         setattr(cfg, 'action_space', envs[0].action_space)
         self.logger.info(f"n_states: {n_states}, n_actions: {n_actions}")  # print info
         # update to cfg paramters

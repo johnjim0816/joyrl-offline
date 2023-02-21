@@ -21,6 +21,16 @@ conda install pytorch==1.10.0 torchvision==0.11.0 torchaudio==0.10.0 cudatoolkit
 # GPU with mirrors
 pip install torch==1.10.0+cu113 torchvision==0.11.0+cu113 torchaudio==0.10.0 --extra-index-url https://download.pytorch.org/whl/cu113
 ```
+## Install Mujoco
+
+```bash
+pip install mujoco==2.3.2
+pip install mujoco-py==2.1.2.14
+```
+click [mujoco-releases](https://github.com/deepmind/mujoco/releases) and download mujoco 2.1.0, unzip and move to `C:/[username]/.mujoco/`, it should be like `C:/[username]/.mujoco/mujoco210`, then add `C:/[username]/.mujoco/mujoco210/bin` to SYSTEM PATH.
+
+Note that if you are using Windows, you'd better to download [visual-cpp-build-tools](https://visualstudio.microsoft.com/zh-hans/visual-cpp-build-tools/).
+
 ## Usage
 
 you can simply change the parameters (like env_name, algo_name) in `config.config.GeneralConfig()` and run:
