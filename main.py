@@ -12,6 +12,7 @@ from pathlib import Path
 import datetime
 import gym
 import torch.multiprocessing as mp
+from torch.utils.tensorboard import SummaryWriter 
 from config.config import GeneralConfig
 from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, check_n_workers
 from envs.register import register_env
@@ -40,11 +41,11 @@ class Main(object):
         self.logger.info(tplt.format("Name", "Value", "Type"))
         for k, v in cfg_dict.items():
             print (k, v)
-            if v.__class__.__name__ == 'list':
+            if v.__class__.__name__ == 'list': # convert list to str
                 v = str(v)
-            if v is None:
+            if v is None: # avoid NoneType
                 v = 'None'
-            if "support" in k:
+            if "support" in k: # avoid ndarray
                 v = str(v[0])
             self.logger.info(tplt.format(k, v, str(type(v))))
         self.logger.info(''.join(['='] * 80))
@@ -85,6 +86,8 @@ class Main(object):
         setattr(cfg, 'log_dir', log_dir)
         traj_dir = f"{task_dir}/traj"
         setattr(cfg, 'traj_dir', traj_dir)
+        tb_dir = f"{task_dir}/tb_logs"
+        setattr(cfg, 'tb_dir', tb_dir)
 
     def envs_config(self, cfg):
         ''' configure environment
@@ -230,6 +233,8 @@ class Main(object):
         cfg = merge_class_attrs(cfg, self.cfgs['algo_cfg'])
         self.create_dirs(cfg)  # create dirs
         self.logger = get_logger(cfg.log_dir)  # create the logger
+        tb_writter = SummaryWriter(cfg.tb_dir)  # create the tensorboard writter
+        setattr(cfg, 'tb_writter', tb_writter) # add tensorboard writter to config
         self.print_cfgs(cfg)  # print the configuration
         all_seed(seed=cfg.seed)  # set seed == 0 means no seed
         check_n_workers(cfg)  # check n_workers

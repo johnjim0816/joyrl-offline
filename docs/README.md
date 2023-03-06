@@ -1,71 +1,90 @@
-# JoyRL离线版说明文档
+[EN](./README_en.md)|中文
 
-## 目录树
+## JoyRL离线版
 
-JoyRL目录树如下：
-```python
-|-- joyrl
-    |-- algos
-        |-- [Algorithm name] # 指代算法名称比如DQN等
-            |-- config.py # 存放每个算法的默认参数设置
-                |-- class AlgoConfig # 算法参数设置的类
-            |-- agent.py # 存放算法
-                |-- class Agent # 每个算法的类命名为Agent
-            |-- trainer.py
-    |-- config 
-        |-- config.py # 存放通用参数设置
-    |-- presets # 预设的参数，对应的结果存放在benchmarks下面
-    |-- common # 通用文件夹
-        |--  memories.py # 存放经验回放相关函数或者类
-        |--  models.py # 存放网络模型相关类
-        |--  utils.py # 存放其他函数，比如画图、设置随机种子等等等等
-    |-- envs
-    |-- benchmarks # 存放训练好的结果
-    |-- docs # 说明文档目录
-    |-- tasks # 训练的时候会自动生成
-    |-- main.py # JoyRL训练主函数
-    |-- README.md # 项目README
-    |-- README_cn.md # 项目中文README
-    |-- requirements.txt # Pyhton依赖列表
+JoyRL是一套主要基于Torch的强化学习开源框架，旨在让读者仅仅只需通过调参数的傻瓜式操作就能训练强化学习相关项目，从而远离繁琐的代码操作，并配有详细的注释以兼具帮助初学者入门的作用。
+
+本项目为JoyRL离线版，支持读者更方便的学习和自定义算法代码，同时配备[JoyRL上线版](https://github.com/datawhalechina/joyrl)，集成度相对更高。
+
+## 安装说明
+
+目前支持Python 3.7和Gym 0.25.2版本。
+
+创建Conda环境（需先安装Anaconda）
+```bash
+conda create -n joyrl python=3.7
+conda activate joyrl
+pip install -r requirements.txt
 ```
-## 参数说明
+安装Torch：
 
-### 通用参数说明
-
-通用参数目前用Python类保存，设置如下：
-
-```python
-class GeneralConfig(DefaultConfig):
-    def __init__(self) -> None:
-        self.env_name = "CartPole-v1" # name of environment
-        self.algo_name = "PER_DQN" # name of algorithm
-        self.new_step_api = True # whether to use new step api of gym
-        self.wrapper = None # wrapper of environment
-        self.render = False # whether to render environment
-        self.mode = "train" # train or test
-        self.seed = 0 # random seed
-        self.device = "cpu" # device to use
-        self.train_eps = 100 # number of episodes for training
-        self.test_eps = 20 # number of episodes for testing
-        self.eval_eps = 10 # number of episodes for evaluation
-        self.eval_per_episode = 5 # evaluation per episode
-        self.max_steps = 200 # max steps for each episode
-        self.load_checkpoint = False
-        self.load_path = "tasks" # path to load model
-        self.show_fig = False # show figure or not
-        self.save_fig = True # save figure or not
+```bash
+# CPU
+conda install pytorch==1.10.0 torchvision==0.11.0 torchaudio==0.10.0 cpuonly -c pytorch
+# GPU
+conda install pytorch==1.10.0 torchvision==0.11.0 torchaudio==0.10.0 cudatoolkit=11.3 -c pytorch -c conda-forge
+# GPU镜像安装
+pip install torch==1.10.0+cu113 torchvision==0.11.0+cu113 torchaudio==0.10.0 --extra-index-url https://download.pytorch.org/whl/cu113
 ```
-正如项目README中使用说明所提到的，JoyRL目前使用方式有两种，一种是不带参数，直接```python main.py```，另外一种是以yaml文件的形式带参数，即```python main.py --yaml [path of yaml file]```。这里介绍一下JoyRL的运行逻辑，首先不带参数直接运行的时候，首先会加载通用参数设置，然后根据通用参数设置的算法名称加载对应算法的设置```AlgoConfig```，然后根据通用参数的self.mode即运行模式训练或者测试。由于目前JoyRL所有算法跑的默认环境都是```CartPole```或者```Pendulum```，因此如果读者在初学阶段，只需要改通用参数的环境名称或者算法名称就能体验JoyRL了。
+## 使用说明
 
-另外就是带yaml文件参数运行的时候，JoyRL会优先设置yaml文件中的参数，比如yaml文件中环境名称是Pendulum-v1，而config.py文件中通用参数默认环境名称是CartPole-v1，这个时候yaml文件的参数会覆盖掉config.py的参数，也就是说实际运行的环境名称就是yaml文件中设置的Pendulum-v1。如果yaml文件中没有设置，那么JoyRL会自动加载默认特征。比如show_fig这种参数，即训练好之后是否在窗口展示图片，默认的设置是不展示的（因为弹出窗口总是显得有那么一点烦人XD），如果读者也是默认不展示的话那么在yaml文件中就可以不进行设置。
-### 网络参数说明
+直接更改 `config.config.GeneralConfig()`类中的参数比如环境名称(env_name)、算法名称(algo_name)等等，然后执行:
+```bash
+python main.py
+```
+运行之后会在目录下自动生成 `tasks`文件夹用于保存模型和结果。
 
-略
-### 算法参数说明
+或者也可以新建一个`yaml`文件自定义参数，例如 `config/custom_config_Train.yaml`然后执行:
+```bash
+python main.py --yaml config/custom_config_Train.yaml
+```
+在[presets](./presets/)文件夹中已经有一些预设的`yaml`文件，并且相应地在[benchmarks](./benchmarks/)文件夹中保存了一些已经训练好的结果。
 
-请跳转各自的算法说明
+## 说明文档
 
-## 算法说明
-* [Q-learning](Q-learning.md)：参考DQN说明
-* [DQN](./DQN.md)
-* [PPO](./PPO.md)
+请跳转[Docs](./docs/README.md)
+
+## 环境说明
+
+请跳转[envs](./envs/README.md)查看说明
+
+## 算法列表
+
+|  算法类别   |    算法名称     | Policy |                           参考文献                           |                     作者                      | 备注 |
+| :-------------: | :----------------------------------------------------------: | :--: | --------------- | --------------- | --------------- |
+| Value-based | [Monte Carlo](./algos/MonteCarlo/) | On | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [johnjim0816](https://github.com/johnjim0816) |  |
+|  | [Value Iteration](./algos/VI/) |  | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [guoshicheng](https://github.com/gsc579) |  |
+|  | [Q-learning](./algos/QLearning/) | Off | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [johnjim0816](https://github.com/johnjim0816) |       |
+|  | [Sarsa](./algos/Sarsa/) | On | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [johnjim0816](https://github.com/johnjim0816) |       |
+|  | [DQN](./algos/DQN/) | Off | [DQN Paper](https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf) | [johnjim0816](https://github.com/johnjim0816), [guoshicheng](https://github.com/gsc579) [(CNN)](./algos/DQN/) |       |
+|  | [DoubleDQN](./algos/DoubleDQN/) | Off | [DoubleDQN Paper](https://arxiv.org/abs/1509.06461) | [johnjim0816](https://github.com/johnjim0816) |       |
+|  | Dueling DQN | Off |  |  | |
+|  | [PER_DQN](./algos/PER_DQN/) | Off | [PER_DQN Paper](https://arxiv.org/pdf/1511.05952) | [wangzhongren](https://github.com/wangzhongren-code) |       |
+|  | [NoisyDQN](./algos/NoisyDQN/) | Off | [NoisyDQN Paper](https://arxiv.org/pdf/1706.10295.pdf) | [wangzhongren](https://github.com/wangzhongren-code) |       |
+|  | C51 | Off | [C51 Paper](https://arxiv.org/abs/1707.06887) | also called Categorical DQN | |
+|  | Rainbow DQN | off | [Rainbow Paper](https://arxiv.org/abs/1710.02298) | [wangzhongren](https://github.com/wangzhongren-code) | |
+|  | QRDQN |  | [QRDQN Paper](https://arxiv.org/pdf/1710.10044.pdf) |  | |
+|  | CQL |  | [CQL Paper](https://arxiv.org/pdf/2006.04779.pdf) |  | |
+| Policy-based | [REINFORCE](./algos/REINFORCE/) | On | [REINFORCE Paper](http://www.cs.toronto.edu/~tingwuwang/REINFORCE.pdf) | [johnjim0816](https://github.com/johnjim0816) | 最基础的PG算法 |
+|  | [A2C](./algos/A2C/) | On | [A2C blog](https://towardsdatascience.com/understanding-actor-critic-methods-931b97b6df3f) | [johnjim0816](https://github.com/johnjim0816) |       |
+|  | [A3C](./algos/A3C/) | On | [A3C paper](https://arxiv.org/pdf/1602.01783) | [johnjim0816](https://github.com/johnjim0816), [Ariel Chen](https://github.com/cr-bh) |  |
+|  | GAE |  |  |  |  |
+|  | ACER |  |  |  |  |
+|  | TRPO |  | [TRPO Paper](https://arxiv.org/abs/1502.05477) |  |  |
+|                 |        [PPO](./algos/PPO/)         |       On      |                          [PPO Paper](https://arxiv.org/abs/1707.06347)                           |    [johnjim0816](https://github.com/johnjim0816), [Wen Qiu](https://github.com/clorisqiu1)     |  PPO-clip, PPO-kl     |
+|  | [DDPG](./algos/DDPG/) | Off | [DDPG Paper](https://arxiv.org/abs/1509.02971) | [johnjim0816](https://github.com/johnjim0816) |       |
+|  | [TD3](./algos/TD3/) | Off | [TD3 Paper](https://arxiv.org/pdf/1802.09477) | [johnjim0816](https://github.com/johnjim0816) |       |
+| Multi-Agent | IQL                                |        | [IQL Paper](https://web.media.mit.edu/~cynthiab/Readings/tan-MAS-reinfLearn.pdf) |                                                              |       |
+|  | VDN                                |        | [VDN Paper](https://arxiv.org/abs/1706.05296)                |                                                              | |
+|  | QTRAN                              |        |                                                              |                                                              | |
+|  | QMIX                               |        | [QMIX Paper](https://arxiv.org/abs/1803.11485)               |                                                              | |
+|  | MAPPO                              |        |                                                              |                                                              | |
+|  | MADDPG                             |        |                                                              |                                                              | |
+| Sparse reward | Hierarchical DQN                   |        | [H-DQN Paper](https://arxiv.org/abs/1604.06057)              |                                                              | |
+|  | ICM                                |        | [ICM Paper](https://arxiv.org/pdf/1705.05363.pdf)            |                                                              | |
+|  | HER                                |        | [HER Paper](https://arxiv.org/pdf/1707.01495.pdf)            |                                                              | |
+| MaxEntropy RL | [SoftQ](./algos/SoftQ/) | off | [SoftQ Paper](https://arxiv.org/abs/1702.08165) | [johnjim0816](https://github.com/johnjim0816) | |
+|  | SAC |  |  |  | |
+| Imitation Learning | [GAIL](./algos/GAIL/) |  | [GAIL Paper](https://arxiv.org/abs/1606.03476) | [Yi Zhang](https://github.com/ai4drug) | TODO |
+|  | TD3+BC |  | [TD3+BC Paper](https://arxiv.org/pdf/2106.06860.pdf) |  |  |
+| Model based | Dyna Q |  | [Dyna Q Paper](https://arxiv.org/abs/1801.06176) |  |  |

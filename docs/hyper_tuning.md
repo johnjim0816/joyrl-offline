@@ -1,5 +1,7 @@
+# 调参说明
 
-## 算法参数说明
+## Q-learning
+
 ```python
 class AlgoConfig:
     def __init__(self) -> None:
