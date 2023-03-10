@@ -40,9 +40,10 @@ class Main(object):
         tplt = "{:^20}\t{:^20}\t{:^20}"
         self.logger.info(tplt.format("Name", "Value", "Type"))
         for k, v in cfg_dict.items():
-            print (k, v)
             if v.__class__.__name__ == 'list': # convert list to str
                 v = str(v)
+            if k in ['model_dir','tb_writter']:
+                continue
             if v is None: # avoid NoneType
                 v = 'None'
             if "support" in k: # avoid ndarray
