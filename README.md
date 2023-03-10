@@ -8,14 +8,19 @@ JoyRL是一套主要基于Torch的强化学习开源框架，旨在让读者仅�
 
 ## 安装说明
 
-目前支持Python 3.7和Gym 0.25.2版本。
+目前支持Python 3.8和Gym 0.25.2版本。
 
 创建Conda环境（需先安装Anaconda）
 ```bash
-conda create -n joyrl python=3.7
+conda create -n joyrl python=3.8
 conda activate joyrl
-pip install -r requirements.txt
 ```
+
+安装Gym：
+```bash
+pip install gym==0.25.2
+```
+
 安装Torch：
 
 ```bash
@@ -26,6 +31,12 @@ conda install pytorch==1.10.0 torchvision==0.11.0 torchaudio==0.10.0 cudatoolkit
 # GPU镜像安装
 pip install torch==1.10.0+cu113 torchvision==0.11.0+cu113 torchaudio==0.10.0 --extra-index-url https://download.pytorch.org/whl/cu113
 ```
+
+安装其他依赖：
+```bash
+pip install -r requirements.txt
+```
+
 ## 使用说明
 
 直接更改 `config.config.GeneralConfig()`类中的参数比如环境名称(env_name)、算法名称(algo_name)等等，然后执行:

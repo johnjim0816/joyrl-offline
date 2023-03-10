@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2021-12-22 10:40:05
 LastEditor: JiangJi
-LastEditTime: 2022-12-06 23:25:31
+LastEditTime: 2023-02-23 22:03:10
 Discription: 
 '''
 import numpy as np
@@ -129,8 +129,8 @@ class Agent(object):
 		torch.save(self.critic_2.state_dict(), f"{fpath}/critic_2.pth")
 		torch.save(self.actor.state_dict(), f"{fpath}/actor.pth")
 
-
 	def load_model(self, fpath):
+		
 		critic_1_ckpt = torch.load(f"{fpath}/critic_1.pth", map_location=self.device)
 		critic_2_ckpt = torch.load(f"{fpath}/critic_2.pth", map_location=self.device)
 		actor_ckpt = torch.load(f"{fpath}/actor.pth", map_location=self.device)
