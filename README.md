@@ -39,7 +39,7 @@ pip install -r requirements.txt
 
 ## 使用说明
 
-直接更改 `config.config.GeneralConfig()`类中的参数比如环境名称(env_name)、算法名称(algo_name)等等，然后执行:
+直接更改 `config.config.GeneralConfig()`类以及对应算法比如`algos\DQN\config.py`中的参数，然后执行:
 ```bash
 python main.py
 ```

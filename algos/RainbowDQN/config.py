@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2022-12-24 20:41:56
 LastEditor: JiangJi
-LastEditTime: 2022-12-24 20:53:52
+LastEditTime: 2023-03-12 18:32:17
 Discription: 
 '''
 from config.config import DefaultConfig
@@ -18,9 +18,9 @@ class AlgoConfig(DefaultConfig):
         self.hidden_dim = 256 # hidden_dim for MLP
         self.Vmin = 0. # support of C51  
         self.Vmax = 200. # support of C51 
-        self.num_atoms = 51 # support of C51
-        self.support = torch.linspace(self.Vmin, self.Vmax, self.num_atoms) # support of C51
-        self.delta_z = (self.Vmax - self.Vmin) / (self.num_atoms - 1) # support of C51
+        self.n_atoms = 51 # support of C51
+        self.support = torch.linspace(self.Vmin, self.Vmax, self.n_atoms) # support of C51
+        self.delta_z = (self.Vmax - self.Vmin) / (self.n_atoms - 1) # support of C51
 
         self.n_step = 1 #the n_step for N-step DQN
         self.batch_size = 32 # batch size
