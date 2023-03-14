@@ -1,28 +1,32 @@
 general_cfg:
-  algo_name: PER_DQN
-  device: cpu
+  algo_name: NoisyDQN
+  device: cuda
   env_name: CartPole-v1
   eval_eps: 10
   eval_per_episode: 5
-  load_checkpoint: false
-  load_path: tasks
+  load_checkpoint: true
+  load_path: Train_CartPole-v1_NoisyDQN_20230314-185241
   max_steps: 200
-  mode: train
+  mode: test
+  new_step_api: true
+  render: false
   save_fig: true
-  seed: 0
+  seed: 1
   show_fig: false
-  test_eps: 20
+  test_eps: 10
   train_eps: 100
+  wrapper: null
 algo_cfg:
   batch_size: 64
   buffer_size: 100000
   epsilon_decay: 500
   epsilon_end: 0.01
   epsilon_start: 0.95
-  gamma: 0.95
+  gamma: 0.99
   hidden_dim: 256
   lr: 0.0001
   target_update: 4
+  tau: 1.0
   value_layers:
   - activation: relu
     layer_dim:

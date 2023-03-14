@@ -2,6 +2,7 @@ general_cfg:
   algo_name: C51
   device: cuda
   env_name: CartPole-v1
+  new_step_api: True
   mode: train
   load_checkpoint: false
   load_path: Train_CartPole-v1_C51_20221026-054757
