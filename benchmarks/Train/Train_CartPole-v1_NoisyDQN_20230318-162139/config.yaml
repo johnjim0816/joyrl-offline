@@ -5,14 +5,17 @@ general_cfg:
   eval_eps: 10
   eval_per_episode: 5
   load_checkpoint: false
-  load_path: tasks
+  load_path: Train_CartPole-v1_NoisyDQN
   max_steps: 200
   mode: train
+  new_step_api: true
+  render: false
   save_fig: true
-  seed: 0
+  seed: 1
   show_fig: false
-  test_eps: 20
+  test_eps: 10
   train_eps: 100
+  wrapper: null
 algo_cfg:
   batch_size: 64
   buffer_size: 100000
@@ -23,19 +26,4 @@ algo_cfg:
   hidden_dim: 256
   lr: 0.0001
   target_update: 4
-  value_layers:
-  - activation: relu
-    layer_dim:
-    - n_states
-    - 256
-    layer_type: linear
-  - activation: relu
-    layer_dim:
-    - 256
-    - 256
-    layer_type: linear
-  - activation: none
-    layer_dim:
-    - 256
-    - n_actions
-    layer_type: linear
+  tau: 1.0

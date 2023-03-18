@@ -5,70 +5,67 @@ import torch.nn.functional as F
 import numpy as np
 import math
 import random
-from common.layers import ValueNetwork
 from common.memories import ReplayBuffer
 
-'''
-This NoisyLinear is modified from the original code from 
-https://github.com/higgsfield/RL-Adventure/blob/master/5.noisy%20dqn.ipynb
-''' 
+import torch
+import torch.nn as nn
+import torch.optim as optim
 
 class NoisyLinear(nn.Module):
-    def __init__(self, input_dim, output_dim, std_init=0.4):
+    '''在Noisy DQN中用NoisyLinear层替换普通的nn.Linear层
+    '''
+    def __init__(self, in_dim, out_dim, sigma_init=0.4):
         super(NoisyLinear, self).__init__()
         
-        self.input_dim  = input_dim
-        self.output_dim = output_dim
-        self.std_init     = std_init
+        self.in_dim  = in_dim
+        self.out_dim = out_dim
+        self.sigma_init  = sigma_init
         
-        self.weight_mu    = nn.Parameter(torch.FloatTensor(output_dim, input_dim))
-        self.weight_sigma = nn.Parameter(torch.FloatTensor(output_dim, input_dim))
-        self.register_buffer('weight_epsilon', torch.FloatTensor(output_dim, input_dim))
+        self.weight_mu    = nn.Parameter(torch.empty(out_dim, in_dim))
+        self.weight_sigma = nn.Parameter(torch.empty(out_dim, in_dim))
+        # 将一个 tensor 注册成 buffer，使得这个 tensor 不被当做模型参数进行优化。
+        self.register_buffer('weight_epsilon', torch.empty(out_dim, in_dim)) 
         
-        self.bias_mu    = nn.Parameter(torch.FloatTensor(output_dim))
-        self.bias_sigma = nn.Parameter(torch.FloatTensor(output_dim))
-        self.register_buffer('bias_epsilon', torch.FloatTensor(output_dim))
+        self.bias_mu    = nn.Parameter(torch.empty(out_dim))
+        self.bias_sigma = nn.Parameter(torch.empty(out_dim))
+        self.register_buffer('bias_epsilon', torch.empty(out_dim))
         
-        self.reset_parameters()
-        self.reset_noise()
+        self.reset_parameters() # 初始化参数
+        self.reset_noise()  # 重置噪声
     
     def forward(self, x):
         if self.training: 
-            weight = self.weight_mu + self.weight_sigma.mul(torch.tensor(self.weight_epsilon))
-            bias   = self.bias_mu   + self.bias_sigma.mul(torch.tensor(self.bias_epsilon))
+            weight = self.weight_mu + self.weight_sigma * self.weight_epsilon
+            bias   = self.bias_mu + self.bias_sigma * self.bias_epsilon
         else:
             weight = self.weight_mu
             bias   = self.bias_mu
-        
         return F.linear(x, weight, bias)
     
     def reset_parameters(self):
-        mu_range = 1 / math.sqrt(self.weight_mu.size(1))
-        
+        mu_range = 1 / self.in_dim ** 0.5
         self.weight_mu.data.uniform_(-mu_range, mu_range)
-        self.weight_sigma.data.fill_(self.std_init / math.sqrt(self.weight_sigma.size(1)))
-        
+        self.weight_sigma.data.fill_(self.sigma_init / self.in_dim ** 0.5)
         self.bias_mu.data.uniform_(-mu_range, mu_range)
-        self.bias_sigma.data.fill_(self.std_init / math.sqrt(self.bias_sigma.size(0)))
+        self.bias_sigma.data.fill_(self.sigma_init / self.out_dim ** 0.5)
     
     def reset_noise(self):
-        epsilon_in  = self._scale_noise(self.input_dim)
-        epsilon_out = self._scale_noise(self.output_dim)
-        
+        epsilon_in  = self._scale_noise(self.in_dim)
+        epsilon_out = self._scale_noise(self.out_dim)
         self.weight_epsilon.copy_(epsilon_out.ger(epsilon_in))
-        self.bias_epsilon.copy_(self._scale_noise(self.output_dim))
+        self.bias_epsilon.copy_(self._scale_noise(self.out_dim))
     
     def _scale_noise(self, size):
         x = torch.randn(size)
         x = x.sign().mul(x.abs().sqrt())
         return x
 
-class NoisyMLP(nn.Module):
-    def __init__(self, input_dim,output_dim,hidden_dim=128):
-        super(NoisyMLP, self).__init__()
-        self.fc1 =  nn.Linear(input_dim, hidden_dim)
+class NoisyQNetwork(nn.Module):
+    def __init__(self, n_states, n_actions, hidden_dim=128):
+        super(NoisyQNetwork, self).__init__()
+        self.fc1 =  nn.Linear(n_states, hidden_dim)
         self.noisy_fc2 = NoisyLinear(hidden_dim, hidden_dim)
-        self.noisy_fc3 = NoisyLinear(hidden_dim, output_dim)
+        self.noisy_fc3 = NoisyLinear(hidden_dim, n_actions)
         
     def forward(self, x):
         x = F.relu(self.fc1(x))
@@ -93,18 +90,25 @@ class Agent:
         self.epsilon_decay = cfg.epsilon_decay
         self.batch_size = cfg.batch_size
         self.target_update = cfg.target_update
-
         self.device = torch.device(cfg.device) 
 
-        self.policy_net = NoisyMLP(cfg.n_states,cfg.n_actions,hidden_dim=cfg.hidden_dim).to(self.device)
-        self.target_net = NoisyMLP(cfg.n_states,cfg.n_actions,hidden_dim=cfg.hidden_dim).to(self.device)
-        ## copy parameters from policy net to target net
+        self.policy_net = NoisyQNetwork(cfg.n_states,cfg.n_actions,hidden_dim=cfg.hidden_dim).to(self.device)
+        self.target_net = NoisyQNetwork(cfg.n_states,cfg.n_actions,hidden_dim=cfg.hidden_dim).to(self.device)
+
+        # 设置模型的训练和测试模式，主要是对于noisylinear，或者一些dropout和batch normalization层
+        if cfg.mode == 'train':
+            self.policy_net.train()
+            self.target_net.train()
+        elif cfg.mode == 'test':
+            self.policy_net.eval()
+            self.target_net.eval()
+
+        # copy parameters from policy net to target net
         for target_param, param in zip(self.target_net.parameters(),self.policy_net.parameters()): 
             target_param.data.copy_(param.data)
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=cfg.lr)
         self.memory = ReplayBuffer(cfg.buffer_size)
 
-        self.update_flag = False
     def sample_action(self, state):
         ''' sample action with e-greedy policy 
         '''
@@ -130,10 +134,6 @@ class Agent:
     def update(self):
         if len(self.memory) < self.batch_size: # when transitions in memory donot meet a batch, not update
             return
-        else:
-            if not self.update_flag:
-                print("Begin to update!")
-                self.update_flag = True
         # beta = min(1.0, self.beta_start + self.sample_count * (1.0 - self.beta_start) / self.beta_frames)
         state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample(
             self.batch_size)
