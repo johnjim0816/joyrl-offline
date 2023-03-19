@@ -1,0 +1,27 @@
+general_cfg:
+  algo_name: BC
+  device: cuda
+  env_name: CartPole-v1
+  eval_eps: 10
+  eval_per_episode: 1
+  load_checkpoint: true
+  load_path: Train_CartPole-v1_BC_20230319-151456
+  max_steps: 200
+  mode: test
+  new_step_api: true
+  render: false
+  save_fig: true
+  seed: 1
+  show_fig: false
+  test_eps: 10
+  train_eps: 1
+  wrapper: null
+algo_cfg:
+  actor_hidden_dim: 256
+  continuous: false
+  critic_hidden_dim: 256
+  expert_episode_num: 10
+  expert_path: Train_CartPole-v1_PPO_20230319-114100
+  policynet_lr: 0.0003
+  train_batch_size: 256
+  train_iterations: 200
