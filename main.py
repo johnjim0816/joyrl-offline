@@ -14,7 +14,7 @@ import gym
 import torch.multiprocessing as mp
 from torch.utils.tensorboard import SummaryWriter 
 from config.config import GeneralConfig
-from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, check_n_workers
+from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, check_n_workers, save_traj
 from envs.register import register_env
 
 class MergedConfig:
@@ -170,19 +170,20 @@ class Main(object):
             agent.save_model(cfg.model_dir)  # save models
             # env.close()
         elif cfg.mode.lower() == 'collect':  # collect
-            memory = {'states': [], 'actions': [], 'rewards': [], 'terminals': []}
+            trajectories = {'states': [], 'actions': [], 'rewards': [], 'terminals': []}
             for i_ep in range(cfg.collect_eps):
+                print ("i_ep = ", i_ep, "cfg.collect_eps = ", cfg.collect_eps)
                 total_reward, ep_state, ep_action, ep_reward, ep_terminal = trainer.collect_one_episode(env, agent, cfg)
-                memory['states'] += ep_state
-                memory['actions'] += ep_action
-                memory['rewards'] += ep_reward
-                memory['terminals'] += ep_terminal
+                trajectories['states'] += ep_state
+                trajectories['actions'] += ep_action
+                trajectories['rewards'] += ep_reward
+                trajectories['terminals'] += ep_terminal
                 self.logger.info(f'trajectories {i_ep + 1} collected, reward {total_reward}')
                 rewards.append(total_reward)
                 steps.append(cfg.max_steps)
             env.close()
-            agent.save_traj(memory, self.traj_dir)
-            self.logger.info(f"trajectories saved to {self.traj_dir}")
+            save_traj(trajectories, cfg.traj_dir)
+            self.logger.info(f"trajectories saved to {cfg.traj_dir}")
         self.logger.info(f"Finish {cfg.mode}ing!")
         res_dic = {'episodes': range(len(rewards)), 'rewards': rewards, 'steps': steps}
         save_results(res_dic, cfg.res_dir)  # save results

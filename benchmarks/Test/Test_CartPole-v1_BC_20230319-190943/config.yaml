@@ -1,11 +1,11 @@
 general_cfg:
-  algo_name: PPO
+  algo_name: BC
   device: cuda
   env_name: CartPole-v1
   eval_eps: 10
-  eval_per_episode: 5
+  eval_per_episode: 1
   load_checkpoint: true
-  load_path: Train_CartPole-v1_PPO_20230319-112554
+  load_path: Train_CartPole-v1_BC_20230319-190431
   max_steps: 200
   mode: test
   new_step_api: true
@@ -14,17 +14,13 @@ general_cfg:
   seed: 1
   show_fig: false
   test_eps: 10
-  train_eps: 200
+  train_eps: 1
   wrapper: null
 algo_cfg:
-  ppo_type: clip
   actor_hidden_dim: 256
-  actor_lr: 0.0003
+  batch_size: 256
+  continuous: false
   critic_hidden_dim: 256
-  critic_lr: 0.001
-  entropy_coef: 0.01
-  eps_clip: 0.2
-  gamma: 0.99
-  k_epochs: 4
-  train_batch_size: 256
-  sgd_batch_size: 128
+  expert_path: tasks/Collect_CartPole-v1_PPO_20230319-170351/traj/traj.pkl
+  lr: 0.0003
+  train_iterations: 500
