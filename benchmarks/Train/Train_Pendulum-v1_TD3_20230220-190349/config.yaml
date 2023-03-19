@@ -1,0 +1,32 @@
+general_cfg:
+  algo_name: TD3
+  device: cpu
+  env_name: Pendulum-v1
+  eval_eps: 10
+  eval_per_episode: 5
+  load_checkpoint: false
+  load_path: tasks
+  max_steps: 200
+  mode: train
+  new_step_api: true
+  render: false
+  save_fig: true
+  seed: 0
+  show_fig: true
+  test_eps: 20
+  train_eps: 200
+  wrapper: null
+algo_cfg:
+  actor_hidden_dim: 256
+  actor_lr: 0.0001
+  batch_size: 100
+  buffer_size: 1000000
+  critic_hidden_dim: 256
+  critic_lr: 0.001
+  expl_noise: 0.1
+  explore_steps: 100
+  gamma: 0.99
+  noise_clip: 0.5
+  policy_freq: 2
+  policy_noise: 0.2
+  tau: 0.005

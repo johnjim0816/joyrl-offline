@@ -12,16 +12,7 @@ general_cfg:
   test_eps: 10
   train_eps: 100
 algo_cfg:
-  value_layers:
-    - layer_type: linear
-      layer_dim: ['n_states',256]
-      activation: relu
-    - layer_type: linear
-      layer_dim: [256,256]
-      activation: relu
-    - layer_type: linear
-      layer_dim: [256,'n_actions']
-      activation: none
+  hidden_dim: 256
   batch_size: 64
   buffer_size: 100000
   epsilon_decay: 500
