@@ -5,7 +5,7 @@ general_cfg:
   eval_eps: 10
   eval_per_episode: 1
   load_checkpoint: True
-  load_path: Train_CartPole-v1_BC_20230319-175024
+  load_path: Train_CartPole-v1_BC_20230319-190431
   max_steps: 200
   mode: test
   render: false
@@ -21,6 +21,6 @@ algo_cfg:
   critic_hidden_dim: 256
   batch_size: 256
   train_iterations: 500 
-  expert_path: expert_data.pkl
+  expert_path: tasks/Collect_CartPole-v1_PPO_20230319-170351/traj/traj.pkl
 
   

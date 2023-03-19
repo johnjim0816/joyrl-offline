@@ -171,11 +171,4 @@ class Agent:
         critic_ckpt = torch.load(f"{fpath}/critic.pth", map_location=self.device)
         self.actor.load_state_dict(actor_ckpt)
         self.critic.load_state_dict(critic_ckpt)
-    def save_traj(self, traj, fpath):
-        from pathlib import Path
-        import pickle
-        # create path
-        Path(fpath).mkdir(parents=True, exist_ok=True)
-        traj_pkl = os.path.join(fpath, 'traj.pkl')
-        with open(traj_pkl, 'wb') as f:
-            pickle.dump(traj, f)
+        

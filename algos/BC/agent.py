@@ -23,7 +23,7 @@ class Agent:
             self.policynet = ActorSoftmax(cfg.n_states,cfg.n_actions, hidden_dim = cfg.actor_hidden_dim).to(self.device)
         self.actor_optimizer = torch.optim.Adam(self.policynet.parameters(), lr=cfg.lr)
 
-        self.expert_path = f"algos/BC/{cfg.expert_path}"
+        self.expert_path = f"{cfg.expert_path}"
         with open(self.expert_path, 'rb') as f:
             expert_data = pickle.load(f)
         self.expert_states = np.array(expert_data['states']) ; self.expert_actions = np.array(expert_data['actions'])
