@@ -18,10 +18,10 @@ general_cfg:
   wrapper: null
 algo_cfg:
   actor_hidden_dim: 256
-  policynet_lr: 0.0003
+  lr: 0.0003
   critic_hidden_dim: 256
-  train_batch_size: 256
-  train_iterations: 200 
-  expert_path: Train_CartPole-v1_PPO_20230319-114100
-  expert_episode_num: 10
+  batch_size: 128
+  train_iterations: 500 
+  expert_path: expert_data.pkl
+
   

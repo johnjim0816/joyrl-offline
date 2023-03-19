@@ -4,10 +4,10 @@ general_cfg:
   env_name: CartPole-v1
   eval_eps: 10
   eval_per_episode: 1
-  load_checkpoint: false
-  load_path: Train_CartPole-v1_BC_20230319-114100
+  load_checkpoint: true
+  load_path: Train_CartPole-v1_BC_20230319-175024
   max_steps: 200
-  mode: train
+  mode: test
   new_step_api: true
   render: false
   save_fig: true
@@ -18,10 +18,9 @@ general_cfg:
   wrapper: null
 algo_cfg:
   actor_hidden_dim: 256
+  batch_size: 256
   continuous: false
   critic_hidden_dim: 256
-  expert_episode_num: 10
-  expert_path: Train_CartPole-v1_PPO_20230319-114100
-  policynet_lr: 0.0003
-  train_batch_size: 256
-  train_iterations: 200
+  expert_path: expert_data.pkl
+  lr: 0.0003
+  train_iterations: 500

@@ -181,8 +181,8 @@ class Main(object):
                 rewards.append(total_reward)
                 steps.append(cfg.max_steps)
             env.close()
-            agent.save_traj(memory, self.traj_dir)
-            self.logger.info(f"trajectories saved to {self.traj_dir}")
+            agent.save_traj(memory, cfg.traj_dir)
+            self.logger.info(f"trajectories saved to {cfg.traj_dir}")
         self.logger.info(f"Finish {cfg.mode}ing!")
         res_dic = {'episodes': range(len(rewards)), 'rewards': rewards, 'steps': steps}
         save_results(res_dic, cfg.res_dir)  # save results

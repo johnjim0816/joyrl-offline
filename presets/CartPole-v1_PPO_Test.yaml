@@ -5,7 +5,7 @@ general_cfg:
   eval_eps: 10
   eval_per_episode: 5
   load_checkpoint: true
-  load_path: Train_CartPole-v1_PPO_20230220-212959
+  load_path: Train_CartPole-v1_PPO_20230319-112554
   max_steps: 200
   mode: test
   new_step_api: true
