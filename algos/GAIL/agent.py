@@ -10,8 +10,8 @@ import os
 from torch import optim, autograd
 from torch.utils.data import DataLoader
 from torch.nn import functional as F
-from joyrl.algos.GAIL.dataset import TrajDataset
-from joyrl.algos.GAIL.gail_models import GAILDiscriminator
+from algos.GAIL.dataset import TrajDataset
+from algos.GAIL.gail_models import GAILDiscriminator
 
 
 class Agent:

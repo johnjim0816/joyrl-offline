@@ -1,3 +1,3 @@
 # benchmarks
 
-well trained benchmark results
+保存训练好的结果

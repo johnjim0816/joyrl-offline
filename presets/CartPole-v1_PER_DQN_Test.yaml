@@ -1,20 +1,16 @@
 general_cfg:
-  algo_name: C51
+  algo_name: PER_DQN
   device: cuda
   env_name: CartPole-v1
-  new_step_api: True
-  mode: train
-  load_checkpoint: false
-  load_path: Train_CartPole-v1_C51_20221026-054757
+  mode: test
+  load_checkpoint: true
+  load_path: Train_CartPole-v1_PER_DQN_20230314-202246
   max_steps: 200
   save_fig: true
   seed: 1
   show_fig: false
   test_eps: 10
   train_eps: 100
-  Vmin: 0 # support of C51  
-  Vmax: 200 # support of C51 
-  n_atoms: 51 # support of C51  
 algo_cfg:
   value_layers:
     - layer_type: linear
@@ -31,6 +27,6 @@ algo_cfg:
   epsilon_decay: 500
   epsilon_end: 0.01
   epsilon_start: 0.95
-  gamma: 0.95
+  gamma: 0.99
   lr: 0.0001
   target_update: 4
