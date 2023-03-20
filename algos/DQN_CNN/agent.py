@@ -5,8 +5,8 @@ Author: GuoShiCheng
 Email: guoshichenng@gmail.com
 Date: 2022-12-05 16:51:42
 LastEditor: GuoShiCheng
-LastEditTime: 2022-12-07 22:06:18
-Discription: Mario
+LastEditTime: 2023-3-19 22:18:21
+Discription: 
 Environment: python 3.7.7
 '''
 '''
@@ -28,7 +28,7 @@ import math
 import numpy as np
 from common.layers import ValueNetwork
 from common.memories import ReplayBuffer
-
+from common.optms import SharedAdam
 
 class QNetwork(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -51,7 +51,7 @@ class QNetwork(nn.Module):
 
 
 class Agent:
-    def __init__(self,cfg):
+    def __init__(self,cfg, is_share_agent = False):
         self.n_actions = cfg.n_actions
         self.n_states = cfg.n_states
         self.device = torch.device(cfg.device) 
@@ -66,10 +66,18 @@ class Agent:
         self.policy_net = QNetwork(self.n_states, self.n_actions).to(self.device)
         self.target_net = QNetwork(self.n_states, self.n_actions).to(self.device)
         ## copy parameters from policy net to target net
-        for target_param, param in zip(self.target_net.parameters(),self.policy_net.parameters()): 
-            target_param.data.copy_(param.data)
-        # self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
+        # for target_param, param in zip(self.target_net.parameters(),self.policy_net.parameters()): 
+        #     target_param.data.copy_(param.data)
+        self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=cfg.lr) 
+        if is_share_agent:
+            self.policy_net.share_memory()
+            self.optimizer = SharedAdam(self.policy_net.parameters(), lr=cfg.lr)
+            self.optimizer.share_memory()
+            ## DQN算法没有用到share_agent中target_net
+            # self.target_net.share_memory()
+            # self.target_optimizer = SharedAdam(self.target_net.parameters(), lr=cfg.lr)
+            # self.target_optimizer.share_memory()
         self.memory = ReplayBuffer(cfg.buffer_size)
         self.update_flag = False 
         
@@ -111,12 +119,12 @@ class Agent:
             q_values = self.policy_net(state)
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
         return action
-    def update(self):
+    def update(self, share_agent=None):
         if len(self.memory) < self.batch_size: # when transitions in memory donot meet a batch, not update
             return
         else:
             if not self.update_flag:
-                print("Begin to update!")
+                # print("Begin to update!")
                 self.update_flag = True
         # sample a batch of transitions from replay buffer
         state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample(
@@ -138,20 +146,38 @@ class Agent:
         # print(expected_q_value_batch.shape,expected_q_value_batch.requires_grad)
         loss = nn.MSELoss()(q_value_batch, expected_q_value_batch)  # shape same to  
         # backpropagation
-        self.optimizer.zero_grad()  
-        loss.backward()
-        # clip to avoid gradient explosion
-        for param in self.policy_net.parameters():  
-            param.grad.data.clamp_(-1, 1)
-        self.optimizer.step() 
-        if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
-            self.target_net.load_state_dict(self.policy_net.state_dict())   
+        if share_agent is not None:
+            # 将share_agent的参数梯度初始化为0
+            share_agent.optimizer.zero_grad()
+            loss.backward()
+            # clip to avoid gradient explosion
+            for param in self.policy_net.parameters():  
+                param.grad.data.clamp_(-1, 1)
+            # 将local_agnet的policy_net的梯度传给share_agent的policy_net
+            for param, share_param in zip(self.policy_net.parameters(), share_agent.policy_net.parameters()):
+                share_param._grad = param.grad
+            share_agent.optimizer.step()
+            # if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
+            #     share_agent.target_net.load_state_dict(share_agent.policy_net.state_dict())
+            self.policy_net.load_state_dict(share_agent.policy_net.state_dict())
+            # self.target_net.load_state_dict(share_agent.target_net.state_dict())
+            if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
+                self.target_net.load_state_dict(self.policy_net.state_dict())
+        else:
+            self.optimizer.zero_grad()  
+            loss.backward()
+            # clip to avoid gradient explosion
+            for param in self.policy_net.parameters():  
+                param.grad.data.clamp_(-1, 1)
+            self.optimizer.step() 
+            if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
+                self.target_net.load_state_dict(self.policy_net.state_dict())   
 
     def save_model(self, fpath):
         from pathlib import Path
         # create path
         Path(fpath).mkdir(parents=True, exist_ok=True)
-        torch.save(self.target_net.state_dict(), f"{fpath}/checkpoint.pt")
+        torch.save(self.policy_net.state_dict(), f"{fpath}/checkpoint.pt")
 
     def load_model(self, fpath):
         self.target_net.load_state_dict(torch.load(f"{fpath}/checkpoint.pt"))
