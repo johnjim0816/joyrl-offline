@@ -46,7 +46,7 @@ class Agent:
             self.policy_net.share_memory()
             self.optimizer = SharedAdam(self.policy_net.parameters(), lr=cfg.lr)
             self.optimizer.share_memory()
-            ## mp_DQN算法没有用到share_agent中target_net
+            ## The multiprocess DQN algorithm does not use the target_net in share_agent
             # self.target_net.share_memory()
             # self.target_optimizer = SharedAdam(self.target_net.parameters(), lr=cfg.lr)
             # self.target_optimizer.share_memory()
@@ -119,13 +119,13 @@ class Agent:
         loss = nn.MSELoss()(q_value_batch, expected_q_value_batch)  # shape same to  
         # backpropagation
         if share_agent is not None:
-            # 将share_agent的参数梯度初始化为0
+            # Clear the gradient of the previous step of share_agent
             share_agent.optimizer.zero_grad()
             loss.backward()
             # clip to avoid gradient explosion
             for param in self.policy_net.parameters():  
                 param.grad.data.clamp_(-1, 1)
-            # 将local_agnet的policy_net的梯度传给share_agent的policy_net
+            # Copy the gradient from policy_net of local_agnet to policy_net of share_agent
             for param, share_param in zip(self.policy_net.parameters(), share_agent.policy_net.parameters()):
                 share_param._grad = param.grad
             share_agent.optimizer.step()
