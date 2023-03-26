@@ -19,7 +19,6 @@ import pandas as pd
 from functools import wraps
 from time import time
 import logging
-from pathlib import Path
 import torch.multiprocessing as mp
 
 from matplotlib.font_manager import FontProperties  # 导入字体模块
@@ -203,3 +202,11 @@ def check_n_workers(cfg):
         raise ValueError("n_workers must less than total numbers of cpus on your machine!")
     if cfg.n_workers > 1 and cfg.device != 'cpu':
         raise ValueError("multi process can only support cpu!")
+    
+def save_traj(traj, fpath):
+    import pickle
+    # create path
+    Path(fpath).mkdir(parents=True, exist_ok=True)
+    traj_pkl = os.path.join(fpath, 'traj.pkl')
+    with open(traj_pkl, 'wb') as f:
+        pickle.dump(traj, f)

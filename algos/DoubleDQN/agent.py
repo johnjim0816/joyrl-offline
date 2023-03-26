@@ -104,9 +104,9 @@ class Agent:
         from pathlib import Path
         # create path
         Path(path).mkdir(parents=True, exist_ok=True)
-        torch.save(self.target_net.state_dict(), path+'checkpoint.pth')
+        torch.save(self.target_net.state_dict(), f"{path}/checkpoint.pth")
 
     def load_model(self,path):
-        self.target_net.load_state_dict(torch.load(path+'checkpoint.pth'))  
+        self.target_net.load_state_dict(torch.load(f"{path}/checkpoint.pth"))  
         for target_param, param in zip(self.target_net.parameters(), self.policy_net.parameters()):
             param.data.copy_(target_param.data)  
