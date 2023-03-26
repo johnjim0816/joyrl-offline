@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2022-11-22 12:33:47
+LastEditTime: 2023-03-24 22:53:55
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -80,12 +80,13 @@ class Agent:
         reward_batch = torch.tensor(reward_batch, device=self.device, dtype=torch.float).unsqueeze(1)  # shape(batchsize,1)
         next_state_batch = torch.tensor(np.array(next_state_batch), device=self.device, dtype=torch.float)
         done_batch = torch.tensor(np.float32(done_batch), device=self.device).unsqueeze(1) # shape(batchsize,1)
-        # compute current Q(s_t|a=a_t)
-        q_value_batch = self.policy_net(state_batch).gather(dim=1, index=action_batch) # shape(batchsize,1),requires_grad=True
+        # 计算当前Q(s_t|a=a_t)，即Q网络的输出，这里的gather函数的作用是根据action_batch中的值，从Q网络的输出中选出对应的Q值
+        q_value_batch = self.policy_net(state_batch).gather(dim=1, index=action_batch) # shape(batchsize,1)
+        # 计算 Q(s_t+1|a)
         next_q_value_batch = self.policy_net(next_state_batch)
-        '''the following is the way of computing Double DQN expected_q_value，a bit different from Nature DQN'''
+        # 计算 Q'(s_t+1|a)，也是与DQN不同的地方
         next_target_value_batch = self.target_net(next_state_batch)
-        # choose action a from Q(s_t‘, a), next_target_values obtain next_q_value，which is Q’(s_t|a=argmax Q(s_t‘, a))
+        # 计算 Q'(s_t+1|a=argmax Q(s_t+1|a))
         next_target_q_value_batch = next_target_value_batch.gather(1, torch.max(next_q_value_batch, 1)[1].unsqueeze(1)) # shape(batchsize,1)
         expected_q_value_batch  = reward_batch + self.gamma * next_target_q_value_batch * (1-done_batch)
         loss = nn.MSELoss()(q_value_batch , expected_q_value_batch)  

@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2022-11-14 23:50:59
 LastEditor: JiangJi
-LastEditTime: 2022-11-22 12:43:36
+LastEditTime: 2023-03-24 22:59:13
 Discription: 
 '''
 import torch
@@ -15,24 +15,21 @@ import math,random
 import numpy as np
 from common.memories import ReplayBuffer
 
-class DuelingNet(nn.Module):
+class DuelingQNetwork(nn.Module):
     def __init__(self, n_states, n_actions,hidden_dim=128):
-        super(DuelingNet, self).__init__()
-        
-        # hidden layer
+        super(DuelingQNetwork, self).__init__()
+        # 隐藏层
         self.hidden_layer = nn.Sequential(
             nn.Linear(n_states, hidden_dim),
             nn.ReLU()
         )
-        
-        #  advantage
+        #  优势层
         self.advantage_layer = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, n_actions)
         )
-        
-        # value
+        # 价值层
         self.value_layer = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
@@ -43,7 +40,7 @@ class DuelingNet(nn.Module):
         x = self.hidden_layer(state)
         advantage = self.advantage_layer(x)
         value     = self.value_layer(x)
-        return value + advantage - advantage.mean()
+        return value + advantage - advantage.mean() # Q(s,a) = V(s) + A(s,a) - mean(A(s,a))
         
 class Agent:
     def __init__(self,cfg) -> None:
@@ -57,8 +54,8 @@ class Agent:
         self.epsilon_decay = cfg.epsilon_decay
         self.batch_size = cfg.batch_size
         self.target_update = cfg.target_update
-        self.policy_net = DuelingNet(cfg.n_states,cfg.n_states,hidden_dim=cfg.hidden_dim).to(self.device)
-        self.target_net = DuelingNet(cfg.n_states,cfg.n_states,hidden_dim=cfg.hidden_dim).to(self.device)
+        self.policy_net = DuelingQNetwork(cfg.n_states,cfg.n_states,hidden_dim=cfg.hidden_dim).to(self.device)
+        self.target_net = DuelingQNetwork(cfg.n_states,cfg.n_states,hidden_dim=cfg.hidden_dim).to(self.device)
         ## copy parameters from policy net to target net
         for target_param, param in zip(self.target_net.parameters(),self.policy_net.parameters()): 
             target_param.data.copy_(param.data)
