@@ -5,20 +5,8 @@ Author: wangzhongren
 Email: wangzhongren@sjtu.edu.cn
 Date: 2022-11-20 17:20:00
 LastEditor: wangzhongren
-LastEditTime: 2022-11-20 17:20:00
-Discription: CartPole-v1
-'''
-
-'''
-@Author: John
-@Email: johnjim0816@gmail.com
-@Date: 2020-06-12 00:50:49
-@LastEditor: John
-LastEditTime: 2022-10-26 07:50:24
-@Discription: 
-@Environment: python 3.7.7
-'''
-'''off-policy
+LastEditTime: 2023-03-24 23:39:07
+Discription: 
 '''
 
 import torch
