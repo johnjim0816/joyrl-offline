@@ -98,7 +98,7 @@ python main.py --yaml config/custom_config_Train.yaml
 |  | SAC |  |  |  | |
 | Imitation Learning | [GAIL](./algos/GAIL/) |  | [GAIL Paper](https://arxiv.org/abs/1606.03476) | [Yi Zhang](https://github.com/ai4drug) | TODO |
 |  | TD3+BC |  | [TD3+BC Paper](https://arxiv.org/pdf/2106.06860.pdf) |  |  |
-| Model based | Dyna Q |  | [Dyna Q Paper](https://arxiv.org/abs/1801.06176) |  |  |
+| Model based | [Dyna Q](./algos/DynaQ/) |  | [Dyna Q Paper](https://arxiv.org/abs/1801.06176) | [guoshicheng](https://github.com/gsc579) |  |
 
 ## 如何贡献
 
