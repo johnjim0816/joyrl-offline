@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-01-12 00:21:07
+LastEditTime: 2023-03-28 13:07:39
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -51,7 +51,6 @@ class Agent:
             # self.target_optimizer = SharedAdam(self.target_net.parameters(), lr=cfg.lr)
             # self.target_optimizer.share_memory()
         self.memory = ReplayBuffer(cfg.buffer_size)
-        self.update_flag = False 
         
     def sample_action(self, state):
         ''' sample action with e-greedy policy
@@ -94,10 +93,6 @@ class Agent:
     def update(self, share_agent=None):
         if len(self.memory) < self.batch_size: # when transitions in memory donot meet a batch, not update
             return
-        else:
-            if not self.update_flag:
-                # print("Begin to update!")
-                self.update_flag = True
         # sample a batch of transitions from replay buffer
         state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample(
             self.batch_size)

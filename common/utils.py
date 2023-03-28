@@ -5,12 +5,14 @@ Author: John
 Email: johnjim0816@gmail.com
 Date: 2021-03-12 16:02:24
 LastEditor: John
-LastEditTime: 2023-01-11 13:53:23
+LastEditTime: 2023-03-28 12:56:23
 Discription: 
 Environment: 
 '''
 import os
 import numpy as np
+import torch
+import random
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -170,23 +172,15 @@ def timing(func):
         return result
     return wrap
 def all_seed(seed = 1):
-    ''' omnipotent seed for RL, attention the position of seed function, you'd better put it just following the env create function
-    Args:
-        env (_type_): 
-        seed (int, optional): _description_. Defaults to 1.
+    ''' 设置随机种子，保证实验可复现，同时保证GPU和CPU的随机种子一致
     '''
-    import torch
-    import numpy as np
-    import random
-    if seed == 0:
+    if seed == 0: # 值为0时不设置随机种子
         return
-    # print(f"seed = {seed}")
-    # env.seed(seed) # env config
+    os.environ['PYTHONHASHSEED'] = str(seed) # set PYTHONHASHSEED env var at fixed value
     np.random.seed(seed)
     random.seed(seed)
-    torch.manual_seed(seed) # config for CPU
+    torch.manual_seed(seed) # 
     torch.cuda.manual_seed(seed) # config for GPU
-    os.environ['PYTHONHASHSEED'] = str(seed) # config for python scripts
     # config for cudnn
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
