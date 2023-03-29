@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-03-28 13:07:39
+LastEditTime: 2023-03-29 13:06:23
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -23,12 +23,16 @@ from common.memories import ReplayBuffer
 from common.optms import SharedAdam
 class Agent:
     def __init__(self,cfg, is_share_agent = False):
-
+        '''智能体类
+        Args:
+            cfg (class): 超参数类
+            is_share_agent (bool, optional): 是否为共享的 Agent ，多进程下使用，默认为 False
+        '''
         self.n_actions = cfg.n_actions  
         self.device = torch.device(cfg.device) 
         self.gamma = cfg.gamma  
-        ## e-greedy parameters
-        self.sample_count = 0  # sample count for epsilon decay
+        ## e-greedy 策略相关参数
+        self.sample_count = 0  # 采样动作计数
         self.epsilon_start = cfg.epsilon_start
         self.epsilon_end = cfg.epsilon_end
         self.epsilon_decay = cfg.epsilon_decay
@@ -53,7 +57,11 @@ class Agent:
         self.memory = ReplayBuffer(cfg.buffer_size)
         
     def sample_action(self, state):
-        ''' sample action with e-greedy policy
+        ''' 采样动作
+        Args:
+            state (array): 状态
+        Returns:
+            action (int): 动作
         '''
         self.sample_count += 1
         # epsilon must decay(linear,exponential and etc.) for balancing exploration and exploitation
@@ -83,7 +91,11 @@ class Agent:
     #         action = random.randrange(self.n_actions)
     #     return action
     def predict_action(self,state):
-        ''' predict action
+        ''' 预测动作
+        Args:
+            state (array): 状态
+        Returns:
+            action (int): 动作
         '''
         with torch.no_grad():
             state = torch.tensor(np.array(state), device=self.device, dtype=torch.float32).unsqueeze(dim=0)
