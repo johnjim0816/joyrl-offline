@@ -14,12 +14,12 @@ import torch.optim as optim
 class NoisyLinear(nn.Module):
     '''在Noisy DQN中用NoisyLinear层替换普通的nn.Linear层
     '''
-    def __init__(self, in_dim, out_dim, sigma_init=0.4):
+    def __init__(self, in_dim, out_dim, std_init=0.4):
         super(NoisyLinear, self).__init__()
         
         self.in_dim  = in_dim
         self.out_dim = out_dim
-        self.sigma_init  = sigma_init
+        self.std_init  = std_init
         
         self.weight_mu    = nn.Parameter(torch.empty(out_dim, in_dim))
         self.weight_sigma = nn.Parameter(torch.empty(out_dim, in_dim))
@@ -45,9 +45,9 @@ class NoisyLinear(nn.Module):
     def reset_parameters(self):
         mu_range = 1 / self.in_dim ** 0.5
         self.weight_mu.data.uniform_(-mu_range, mu_range)
-        self.weight_sigma.data.fill_(self.sigma_init / self.in_dim ** 0.5)
+        self.weight_sigma.data.fill_(self.std_init / self.in_dim ** 0.5)
         self.bias_mu.data.uniform_(-mu_range, mu_range)
-        self.bias_sigma.data.fill_(self.sigma_init / self.out_dim ** 0.5)
+        self.bias_sigma.data.fill_(self.std_init / self.out_dim ** 0.5)
     
     def reset_noise(self):
         epsilon_in  = self._scale_noise(self.in_dim)
