@@ -26,7 +26,6 @@ from common.optms import SharedAdam
 
 class Agent:
     def __init__(self,cfg, is_share_agent = False):
-        
         '''智能体类
         Args:
             cfg (class): 超参数类
