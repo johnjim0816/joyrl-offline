@@ -74,3 +74,4 @@ Please click [envs](./envs/README.md) to read environments instruments.
 |        [TD3](./algos/TD3/)         |                                                     |                          [TD3 Paper](https://arxiv.org/pdf/1802.09477)                           |    [johnjim0816](https://github.com/johnjim0816)     |       |
 |      [SoftQ](./algos/SoftQ/)       |                                                   |                         [SoftQ Paper](https://arxiv.org/abs/1702.08165)                          |    [johnjim0816](https://github.com/johnjim0816)     |       |
 |       [GAIL](./algos/GAIL/)        |                                                    |                          [GAIL Paper](https://arxiv.org/abs/1606.03476)                          |      [Yi Zhang](https://github.com/ai4drug)      |       |
+| [Dyna Q](./algos/DynaQ/) |  | [Dyna Q Paper](https://arxiv.org/abs/1801.06176) | [guoshicheng](https://github.com/gsc579) |  |

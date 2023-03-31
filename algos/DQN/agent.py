@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-01-12 00:21:07
+LastEditTime: 2023-03-29 13:06:23
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -23,12 +23,16 @@ from common.memories import ReplayBuffer
 from common.optms import SharedAdam
 class Agent:
     def __init__(self,cfg, is_share_agent = False):
-
+        '''智能体类
+        Args:
+            cfg (class): 超参数类
+            is_share_agent (bool, optional): 是否为共享的 Agent ，多进程下使用，默认为 False
+        '''
         self.n_actions = cfg.n_actions  
         self.device = torch.device(cfg.device) 
         self.gamma = cfg.gamma  
-        ## e-greedy parameters
-        self.sample_count = 0  # sample count for epsilon decay
+        ## e-greedy 策略相关参数
+        self.sample_count = 0  # 采样动作计数
         self.epsilon_start = cfg.epsilon_start
         self.epsilon_end = cfg.epsilon_end
         self.epsilon_decay = cfg.epsilon_decay
@@ -44,14 +48,20 @@ class Agent:
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=cfg.lr) 
         if is_share_agent:
             self.policy_net.share_memory()
-            self.target_net.share_memory()
             self.optimizer = SharedAdam(self.policy_net.parameters(), lr=cfg.lr)
             self.optimizer.share_memory()
+            ## The multiprocess DQN algorithm does not use the target_net in share_agent
+            # self.target_net.share_memory()
+            # self.target_optimizer = SharedAdam(self.target_net.parameters(), lr=cfg.lr)
+            # self.target_optimizer.share_memory()
         self.memory = ReplayBuffer(cfg.buffer_size)
-        self.update_flag = False 
         
     def sample_action(self, state):
-        ''' sample action with e-greedy policy
+        ''' 采样动作
+        Args:
+            state (array): 状态
+        Returns:
+            action (int): 动作
         '''
         self.sample_count += 1
         # epsilon must decay(linear,exponential and etc.) for balancing exploration and exploitation
@@ -81,7 +91,11 @@ class Agent:
     #         action = random.randrange(self.n_actions)
     #     return action
     def predict_action(self,state):
-        ''' predict action
+        ''' 预测动作
+        Args:
+            state (array): 状态
+        Returns:
+            action (int): 动作
         '''
         with torch.no_grad():
             state = torch.tensor(np.array(state), device=self.device, dtype=torch.float32).unsqueeze(dim=0)
@@ -91,10 +105,6 @@ class Agent:
     def update(self, share_agent=None):
         if len(self.memory) < self.batch_size: # when transitions in memory donot meet a batch, not update
             return
-        else:
-            if not self.update_flag:
-                # print("Begin to update!")
-                self.update_flag = True
         # sample a batch of transitions from replay buffer
         state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample(
             self.batch_size)
@@ -116,22 +126,19 @@ class Agent:
         loss = nn.MSELoss()(q_value_batch, expected_q_value_batch)  # shape same to  
         # backpropagation
         if share_agent is not None:
+            # Clear the gradient of the previous step of share_agent
             share_agent.optimizer.zero_grad()
             loss.backward()
             # clip to avoid gradient explosion
             for param in self.policy_net.parameters():  
                 param.grad.data.clamp_(-1, 1)
-            for param in self.target_net.parameters():
-                param.grad.data.clamp_(-1, 1)
+            # Copy the gradient from policy_net of local_agnet to policy_net of share_agent
             for param, share_param in zip(self.policy_net.parameters(), share_agent.policy_net.parameters()):
                 share_param._grad = param.grad
-            for param, share_param in zip(self.target_net.parameters(), share_agent.target_net.parameters()):
-                share_param._grad = param.grad
             share_agent.optimizer.step()
-            if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
-                share_agent.target_net.load_state_dict(share_agent.policy_net.state_dict())
             self.policy_net.load_state_dict(share_agent.policy_net.state_dict())
-            self.target_net.load_state_dict(share_agent.target_net.state_dict())
+            if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
+                self.target_net.load_state_dict(self.policy_net.state_dict())
         else:
             self.optimizer.zero_grad()  
             loss.backward()
@@ -146,7 +153,7 @@ class Agent:
         from pathlib import Path
         # create path
         Path(fpath).mkdir(parents=True, exist_ok=True)
-        torch.save(self.target_net.state_dict(), f"{fpath}/checkpoint.pt")
+        torch.save(self.policy_net.state_dict(), f"{fpath}/checkpoint.pt")
 
     def load_model(self, fpath):
         self.target_net.load_state_dict(torch.load(f"{fpath}/checkpoint.pt"))
