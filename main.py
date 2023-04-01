@@ -76,7 +76,10 @@ class Main(object):
 
     def create_dirs(self, cfg):
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
-        task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.env_name}_{cfg.algo_name}_{curr_time}"
+        if cfg.n_workers == 1:
+            task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.env_name}_{cfg.algo_name}_{curr_time}"
+        else:
+            task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.env_name}_mp_{cfg.algo_name}_{curr_time}"
         setattr(cfg, 'task_dir', task_dir)
         Path(cfg.task_dir).mkdir(parents=True, exist_ok=True)
         model_dir = f"{task_dir}/models"

@@ -8,9 +8,10 @@ import numpy as np
 
 from common.models import ActorSoftmax, ActorNormal, Critic
 from common.memories import PGReplay
+from common.optms import SharedAdam
 
 class Agent:
-    def __init__(self,cfg) -> None:
+    def __init__(self, cfg, is_share_agent = False) -> None:
         self.ppo_type = 'clip' # clip or kl
         if self.ppo_type == 'kl':
             self.kl_target = cfg.kl_target 
@@ -37,6 +38,14 @@ class Agent:
         self.sample_count = 0
         self.train_batch_size = cfg.train_batch_size
         self.sgd_batch_size = cfg.sgd_batch_size
+
+        if is_share_agent:
+            self.actor.share_memory()
+            self.actor_optimizer = SharedAdam(self.actor.parameters(), lr=cfg.actor_lr)
+            self.actor_optimizer.share_memory()
+            self.critic.share_memory()
+            self.critic_optimizer = SharedAdam(self.critic.parameters(), lr=cfg.critic_lr)
+            self.critic_optimizer.share_memory()
 
     def sample_action(self,state):
         self.sample_count += 1
@@ -77,7 +86,7 @@ class Agent:
             action = dist.sample()
             self.log_probs = dist.log_prob(action).detach()
             return action.detach().cpu().numpy().item()
-    def update(self):
+    def update(self, share_agent=None):
         # update policy every train_batch_size steps
         if self.sample_count % self.train_batch_size != 0:
             return
@@ -136,17 +145,38 @@ class Agent:
                     raise NameError
                 # compute critic loss
                 critic_loss = nn.MSELoss()(returns, values) # shape: [train_batch_size, 1]
-                # tot_loss = actor_loss + 0.5 * critic_loss
-                # print(f"actor loss: {actor_loss.item():.3f}, critic loss: {critic_loss.item():.3f}")
-                # take gradient step
-                self.actor_optimizer.zero_grad()
-                self.critic_optimizer.zero_grad()
-                actor_loss.backward()
-                critic_loss.backward()
-                # tot_loss.backward()
-                self.actor_optimizer.step()
-                self.critic_optimizer.step()
+
+                if share_agent is not None:
+                    # Clear the gradient of the previous step of share_agent
+                    share_agent.actor_optimizer.zero_grad()
+                    share_agent.critic_optimizer.zero_grad()
+                    self.actor_optimizer.zero_grad()
+                    self.critic_optimizer.zero_grad()  
+                    actor_loss.backward()
+                    critic_loss.backward()
+                    # Copy the gradient from actor+critic of local_agnet to actor+critic of share_agent
+                    for param, share_param in zip(self.actor.parameters(), share_agent.actor.parameters()):
+                        share_param._grad = param.grad
+                    for param, share_param in zip(self.critic.parameters(), share_agent.critic.parameters()):
+                        share_param._grad = param.grad      
+                    share_agent.actor_optimizer.step()     
+                    share_agent.critic_optimizer.step()     
+
+                    self.actor.load_state_dict(share_agent.actor.state_dict())
+                    self.critic.load_state_dict(share_agent.critic.state_dict())
+                else:
+                    # tot_loss = actor_loss + 0.5 * critic_loss
+                    # take gradient step
+                    self.actor_optimizer.zero_grad()
+                    self.critic_optimizer.zero_grad()  
+                    actor_loss.backward()
+                    critic_loss.backward()
+                    # tot_loss.backward()
+                    self.actor_optimizer.step()
+                    self.critic_optimizer.step()
+                    
         self.memory.clear()
+
     def _compute_returns(self, rewards, dones):
         # monte carlo estimate of state rewards
         returns = []
