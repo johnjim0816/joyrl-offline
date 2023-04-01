@@ -194,7 +194,6 @@ class Agent:
             param.data.copy_(target_param.data)
 
 
-
 @ray.remote
 class ShareAgent:
     def __init__(self,cfg):
