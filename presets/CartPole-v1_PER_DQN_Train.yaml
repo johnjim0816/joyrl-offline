@@ -10,7 +10,7 @@ general_cfg:
   seed: 1
   show_fig: false
   test_eps: 10
-  train_eps: 100
+  train_eps: 200
 algo_cfg:
   value_layers:
     - layer_type: linear
@@ -24,9 +24,13 @@ algo_cfg:
       activation: none
   batch_size: 64
   buffer_size: 100000
+  per_alpha: 0.6
+  per_beta: 0.4
+  per_beta_annealing: 0.001
+  per_epsilon: 0.01
   epsilon_decay: 500
   epsilon_end: 0.01
   epsilon_start: 0.95
-  gamma: 0.95
+  gamma: 0.99
   lr: 0.0001
   target_update: 4
