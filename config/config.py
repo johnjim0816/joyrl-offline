@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# coding=utf-8
+'''
+Author: JiangJi
+Email: johnjim0816@gmail.com
+Date: 2023-02-21 20:32:12
+LastEditor: JiangJi
+LastEditTime: 2023-04-01 12:57:02
+Discription: 
+'''
 class DefaultConfig:
     def __init__(self) -> None:
         pass
@@ -11,6 +21,7 @@ class GeneralConfig():
         self.render = False # whether to render environment
         self.algo_name = "RainbowDQN" # name of algorithm
         self.mode = "train" # train or test
+        self.mp_backend = "mp" # 多线程框架，ray或者mp(multiprocessing)，默认mp
         self.seed = 0 # random seed
         self.device = "cpu" # device to use
         self.train_eps = 100 # number of episodes for training
@@ -22,5 +33,4 @@ class GeneralConfig():
         self.load_path = "tasks" # path to load model
         self.show_fig = False # show figure or not
         self.save_fig = True # save figure or not
-        self.mp_backend = "mp" # 多线程框架，ray或者mp(multiprocessing)，默认mp
         
