@@ -2,7 +2,7 @@ general_cfg:
   algo_name: DQN
   device: cpu
   env_name: CartPole-v1
-  backend: ray
+  mp_backend: ray # 多线程框架，ray或者mp(multiprocessing)，默认mp
   mode: test
   n_workers: 1 # number of workers for parallel training
   load_checkpoint: True

@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2022-11-22 23:19:20
 LastEditor: Guoshicheng
-LastEditTime: 2023-03-31 15:40:21
+LastEditTime: 2023-04-01 12:42:30
 Discription: 
 '''
 import torch.multiprocessing as mp
@@ -137,7 +137,7 @@ class Worker(mp.Process):
 
 @ray.remote
 class WorkerRay:
-    def __init__(self,cfg,worker_id,share_agent,env,local_agent, global_r_que, global_data):
+    def __init__(self,cfg,worker_id,share_agent,env,local_agent, global_r_que, global_data = None):
         self.mode = cfg.mode
         self.worker_id = worker_id
         self.global_data_objectRef = global_data

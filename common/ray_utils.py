@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 # coding=utf-8
 '''
-Author: GuoShiCheng
-Email: guoshichenng@gmail.com
-Date: 2023-4-01 15:00:40
-LastEditor: GuoShiCheng
-LastEditTime: 2023-4-01 15:00:40
+Author: JiangJi
+Email: johnjim0816@gmail.com
+Date: 2023-04-01 12:36:12
+LastEditor: JiangJi
+LastEditTime: 2023-04-01 12:38:11
 Discription: 
-Environment: python 3.7.7
 '''
-
 import ray
 
 @ray.remote
-class GlobalVarActor:
+class GlobalVarRecorder:
     """
     Global Variables
     """

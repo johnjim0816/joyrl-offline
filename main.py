@@ -17,7 +17,7 @@ import torch.multiprocessing as mp
 from torch.utils.tensorboard import SummaryWriter 
 from config.config import GeneralConfig
 from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, check_n_workers, save_traj
-from common.ray_utils import GlobalVarActor
+from common.ray_utils import GlobalVarRecorder
 from envs.register import register_env
 
 class MergedConfig:
@@ -247,11 +247,11 @@ class Main(object):
                 local_agent.load_model(f"tasks/{cfg.load_path}/models")
         self.logger.info(f"Start {cfg.mode}ing!")
         self.logger.info(f"Env: {cfg.env_name}, Algorithm: {cfg.algo_name}, Device: {cfg.device}")
-        global_var_actor = GlobalVarActor.remote()
         global_r_que = Queue()
         # print(f'cfg.n_workers:{cfg.n_workers}')
-        workerrays = [worker_mod.WorkerRay.remote(cfg, i, share_agent, envs[i], local_agents[i], global_r_que, global_var_actor) for i in range(cfg.n_workers)]
-        task_ids = [w.run.remote() for w in workerrays]
+        global_var_recorder = GlobalVarRecorder.remote() # 全局变量记录器
+        ray_workers = [worker_mod.WorkerRay.remote(cfg, i, share_agent, envs[i], local_agents[i], global_r_que,global_data = global_var_recorder) for i in range(cfg.n_workers)]
+        task_ids = [w.run.remote() for w in ray_workers]
         # 等待所有任务完成, 注意：ready_ids, task_ids变量不能随意改。
         while len(task_ids) > 0:
             ready_ids, task_ids = ray.wait(task_ids)
@@ -273,24 +273,6 @@ class Main(object):
                      title=f"{cfg.mode.lower()}ing curve of {cfg.algo_name} for {cfg.env_name} with {cfg.n_workers} {cfg.device}",
                      fpath=cfg.res_dir)
 
-    # def run(self) -> None:
-    #     self.get_default_cfg()  # get default config
-    #     self.process_yaml_cfg()  # process yaml config
-    #     cfg = MergedConfig()  # merge config
-    #     cfg = merge_class_attrs(cfg, self.cfgs['general_cfg'])
-    #     cfg = merge_class_attrs(cfg, self.cfgs['algo_cfg'])
-    #     self.create_dirs(cfg)  # create dirs
-    #     self.logger = get_logger(cfg.log_dir)  # create the logger
-    #     tb_writter = SummaryWriter(cfg.tb_dir)  # create the tensorboard writter
-    #     setattr(cfg, 'tb_writter', tb_writter) # add tensorboard writter to config
-    #     self.print_cfgs(cfg)  # print the configuration
-    #     all_seed(seed=cfg.seed)  # set seed == 0 means no seed
-    #     check_n_workers(cfg)  # check n_workers
-    #     if cfg.n_workers == 1:
-    #         self.single_run(cfg)
-    #     else:
-    #         self.multi_run(cfg)
-
     def run(self) -> None:
         self.get_default_cfg()  # get default config
         self.process_yaml_cfg()  # process yaml config
@@ -300,18 +282,19 @@ class Main(object):
         self.create_dirs(cfg)  # create dirs
         self.logger = get_logger(cfg.log_dir)  # create the logger
         # tensorboard Unable to be serialized in ray
-        if cfg.backend != 'ray':
+        if cfg.mp_backend != 'ray':
             tb_writter = SummaryWriter(cfg.tb_dir)  # create the tensorboard writter
             setattr(cfg, 'tb_writter', tb_writter) # add tensorboard writter to config
         self.print_cfgs(cfg)  # print the configuration
         all_seed(seed=cfg.seed)  # set seed == 0 means no seed
         check_n_workers(cfg)  # check n_workers
-        if cfg.backend == 'single' and cfg.n_workers == 1:
+        if cfg.n_workers == 1:
             self.single_run(cfg)
-        elif cfg.backend == 'multiprocessing':
-            self.multi_run(cfg)
-        elif cfg.backend == 'ray':
-            self.ray_run(cfg)
+        else:
+            if cfg.mp_backend == 'mp':
+                self.multi_run(cfg)
+            else:
+                self.ray_run(cfg)
 
 
 if __name__ == "__main__":

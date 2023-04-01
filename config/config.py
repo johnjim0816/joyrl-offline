@@ -22,4 +22,5 @@ class GeneralConfig():
         self.load_path = "tasks" # path to load model
         self.show_fig = False # show figure or not
         self.save_fig = True # save figure or not
+        self.mp_backend = "mp" # 多线程框架，ray或者mp(multiprocessing)，默认mp
         
