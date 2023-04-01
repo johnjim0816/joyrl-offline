@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2022-11-22 23:19:20
 LastEditor: Guoshicheng
-LastEditTime: 2023-03-31 15:40:21
+LastEditTime: 2023-04-01 12:42:30
 Discription: 
 '''
 import torch.multiprocessing as mp
@@ -133,41 +133,9 @@ class Worker(mp.Process):
             self.train()
         elif self.mode == 'test':
             self.test()
-
-
-@ray.remote
-class GlobalVarActor:
-    """
-    Global Variables
-    """
-    def __init__(self):
-        self.episode = 0
-        self.best_reward = 0.
-
-    def add_episode(self, episode=1):
-        self.episode += episode
-
-    def read_episode(self):
-        return self.episode
-    
-    def add_read_episode(self, episode=1):
-        # 
-        self.episode += episode
-        return self.episode
-    
-    def set_best_reward(self, mean_eval_reward):
-        self.best_reward = mean_eval_reward
-        return self.best_reward
-    
-    def read_best_reward(self):
-        return self.best_reward
-  
-global_var_actor = GlobalVarActor.remote()
-
-
 @ray.remote
 class WorkerRay:
-    def __init__(self,cfg,worker_id,share_agent,env,local_agent, global_r_que, global_data = global_var_actor):
+    def __init__(self,cfg,worker_id,share_agent,env,local_agent, global_r_que, global_data = None):
         self.mode = cfg.mode
         self.worker_id = worker_id
         self.global_data_objectRef = global_data

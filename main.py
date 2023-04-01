@@ -17,6 +17,7 @@ import torch.multiprocessing as mp
 from torch.utils.tensorboard import SummaryWriter 
 from config.config import GeneralConfig
 from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, check_n_workers, save_traj
+from common.ray_utils import GlobalVarRecorder
 from envs.register import register_env
 
 class MergedConfig:
@@ -248,8 +249,9 @@ class Main(object):
         self.logger.info(f"Env: {cfg.env_name}, Algorithm: {cfg.algo_name}, Device: {cfg.device}")
         global_r_que = Queue()
         # print(f'cfg.n_workers:{cfg.n_workers}')
-        workerrays = [worker_mod.WorkerRay.remote(cfg, i, share_agent, envs[i], local_agents[i], global_r_que) for i in range(cfg.n_workers)]
-        task_ids = [w.run.remote() for w in workerrays]
+        global_var_recorder = GlobalVarRecorder.remote() # 全局变量记录器
+        ray_workers = [worker_mod.WorkerRay.remote(cfg, i, share_agent, envs[i], local_agents[i], global_r_que,global_data = global_var_recorder) for i in range(cfg.n_workers)]
+        task_ids = [w.run.remote() for w in ray_workers]
         # 等待所有任务完成, 注意：ready_ids, task_ids变量不能随意改。
         while len(task_ids) > 0:
             ready_ids, task_ids = ray.wait(task_ids)
