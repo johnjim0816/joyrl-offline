@@ -17,10 +17,13 @@ import torch.nn as nn
 import torch.optim as optim
 import random
 import math
+import ray
 import numpy as np
 from common.layers import ValueNetwork
 from common.memories import ReplayBuffer
 from common.optms import SharedAdam
+
+
 class Agent:
     def __init__(self,cfg, is_share_agent = False):
         '''智能体类
@@ -147,7 +150,37 @@ class Agent:
                 param.grad.data.clamp_(-1, 1)
             self.optimizer.step() 
             if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
-                self.target_net.load_state_dict(self.policy_net.state_dict())   
+                self.target_net.load_state_dict(self.policy_net.state_dict())  
+ 
+    def update_ray(self, share_agent_policy_net, share_agent_optimizer):
+        """Update the share_agent parameters with ray"""
+        batch_size = min(len(self.memory), self.batch_size)
+        state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample(
+            batch_size)
+        state_batch = torch.tensor(np.array(state_batch), device=self.device, dtype=torch.float) # shape(batchsize,n_states)
+        action_batch = torch.tensor(action_batch, device=self.device).unsqueeze(1) # shape(batchsize,1)
+        reward_batch = torch.tensor(reward_batch, device=self.device, dtype=torch.float).unsqueeze(1) # shape(batchsize,1)
+        next_state_batch = torch.tensor(np.array(next_state_batch), device=self.device, dtype=torch.float) # shape(batchsize,n_states)
+        done_batch = torch.tensor(np.float32(done_batch), device=self.device).unsqueeze(1) # shape(batchsize,1)
+        # compute current Q(s_t,a), it is 'y_j' in pseucodes
+        q_value_batch = self.policy_net(state_batch).gather(dim=1, index=action_batch) # shape(batchsize,1),requires_grad=True
+        # compute max(Q(s_t+1,A_t+1)) respects to actions A, next_max_q_value comes from another net and is just regarded as constant for q update formula below, thus should detach to requires_grad=False
+        next_max_q_value_batch = self.target_net(next_state_batch).max(1)[0].detach().unsqueeze(1) 
+        # compute expected q value, for terminal state, done_batch[0]=1, and expected_q_value=rewardcorrespondingly
+        expected_q_value_batch = reward_batch + self.gamma * next_max_q_value_batch* (1-done_batch)
+        loss = nn.MSELoss()(q_value_batch, expected_q_value_batch)
+        share_agent_optimizer.zero_grad()
+        loss.backward()
+        # clip to avoid gradient explosion
+        for param in self.policy_net.parameters():  
+            param.grad.data.clamp_(-1, 1)
+        for param, share_param in zip(self.policy_net.parameters(), share_agent_policy_net.parameters()):
+            share_param._grad = param.grad
+        share_agent_optimizer.step()
+        self.policy_net.load_state_dict(share_agent_policy_net.state_dict())
+        if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
+            self.target_net.load_state_dict(self.policy_net.state_dict())
+        return share_agent_policy_net, share_agent_optimizer
 
     def save_model(self, fpath):
         from pathlib import Path
@@ -159,3 +192,49 @@ class Agent:
         self.target_net.load_state_dict(torch.load(f"{fpath}/checkpoint.pt"))
         for target_param, param in zip(self.target_net.parameters(), self.policy_net.parameters()):
             param.data.copy_(target_param.data)
+
+
+
+@ray.remote
+class ShareAgent:
+    def __init__(self,cfg):
+        self.policy_net = ValueNetwork(cfg).to(cfg.device)
+        self.target_net = ValueNetwork(cfg).to(cfg.device)
+        # print(f'self.policy_net:{self.policy_net}')
+        self.optimizer = SharedAdam(self.policy_net.parameters(), lr=cfg.lr)
+        # self.optimizer = optim.Adam(self.policy_net.parameters(), lr=cfg.lr) 
+        self.lr = cfg.lr
+        # self.memory = ReplayBuffer(cfg.buffer_size)
+
+    def get_parameters(self):
+        return self.policy_net, self.optimizer
+    
+    def receive_parameters(self, policy_net, optimizer):
+        # self.policy_net = policy_net
+        # self.optimizer = optimizer
+        # 
+        self.policy_net.load_state_dict(policy_net.state_dict())
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.lr) 
+
+    def save_model(self, fpath):
+        from pathlib import Path
+        # create path
+        Path(fpath).mkdir(parents=True, exist_ok=True)
+        torch.save(self.policy_net.state_dict(), f"{fpath}/checkpoint.pt")
+
+    def load_model(self, fpath):
+        self.policy_net.load_state_dict(torch.load(f"{fpath}/checkpoint.pt"))
+        for target_param, param in zip(self.target_net.parameters(), self.policy_net.parameters()):
+            target_param.data.copy_(param.data)
+
+    
+    def update_parameters(self, local_net):
+        """training algorithm in ShareAgent"""
+        self.optimizer.zero_grad()
+        for param, share_param in zip(local_net.parameters(), self.policy_net.parameters()):
+            share_param._grad = param.grad
+        self.optimizer.step()
+        return self.policy_net
+    
+    def get_share_net(self):
+        return self.policy_net
