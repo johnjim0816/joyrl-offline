@@ -281,16 +281,20 @@ class Main(object):
         cfg = merge_class_attrs(cfg, self.cfgs['algo_cfg'])
         self.create_dirs(cfg)  # create dirs
         self.logger = get_logger(cfg.log_dir)  # create the logger
-        tb_writter = SummaryWriter(cfg.tb_dir)  # create the tensorboard writter
-        setattr(cfg, 'tb_writter', tb_writter) # add tensorboard writter to config
+        # tensorboard Unable to be serialized in ray
+        if cfg.mp_backend != 'ray':
+            tb_writter = SummaryWriter(cfg.tb_dir)  # create the tensorboard writter
+            setattr(cfg, 'tb_writter', tb_writter) # add tensorboard writter to config
         self.print_cfgs(cfg)  # print the configuration
         all_seed(seed=cfg.seed)  # set seed == 0 means no seed
         check_n_workers(cfg)  # check n_workers
         if cfg.n_workers == 1:
             self.single_run(cfg)
         else:
-            self.multi_run(cfg)
-        
+            if cfg.mp_backend == 'mp':
+                self.multi_run(cfg)
+            else:
+                self.ray_run(cfg)
 
 
 if __name__ == "__main__":

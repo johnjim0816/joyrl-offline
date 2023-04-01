@@ -3,7 +3,7 @@ general_cfg:
   device: cpu
   env_name: CartPole-v1
   mode: train
-  backend: ray
+  mp_backend: ray # 多线程框架，ray或者mp(multiprocessing)，默认mp
   n_workers: 2 # number of workers for parallel training
   load_checkpoint: false
   load_path: Train_CartPole-v1_DQN_20221026-054757

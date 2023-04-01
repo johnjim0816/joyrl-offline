@@ -133,6 +133,8 @@ class Worker(mp.Process):
             self.train()
         elif self.mode == 'test':
             self.test()
+  
+
 @ray.remote
 class WorkerRay:
     def __init__(self,cfg,worker_id,share_agent,env,local_agent, global_r_que, global_data = None):
