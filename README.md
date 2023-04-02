@@ -42,7 +42,7 @@ pip install -r requirements.txt
 ### Multiprocessing框架
 
 ```bash
-pip install multiprocess==
+pip install multiprocess
 ```
 ###  Ray框架
 
@@ -74,21 +74,26 @@ python main.py --yaml config/custom_config_Train.yaml
 
 ## 算法列表
 
+### 传统强化学习
+
+|  算法类型  |              算法名称              | 参考文献                                                     | 作者                                          | 备注 |
+| :--------: | :--------------------------------: | ------------------------------------------------------------ | --------------------------------------------- | :--: |
+|            | [Monte Carlo](./algos/MonteCarlo/) | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [johnjim0816](https://github.com/johnjim0816) |      |
+|            |   [Value Iteration](./algos/VI/)   | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [guoshicheng](https://github.com/gsc579)      |      |
+| Off-policy |  [Q-learning](./algos/QLearning/)  | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [johnjim0816](https://github.com/johnjim0816) |      |
+| On-policy  |      [Sarsa](./algos/Sarsa/)       | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [johnjim0816](https://github.com/johnjim0816) |      |
+
+### DRL基础
+
 |  算法类别   |    算法名称     |                           参考文献                           |                     作者                      | 备注 |
 | :-------------: | :----------------------------------------------------------: | --------------- | --------------- | --------------- |
-| Value-based | [Monte Carlo](./algos/MonteCarlo/) | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [johnjim0816](https://github.com/johnjim0816) |  |
-|  | [Value Iteration](./algos/VI/) | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [guoshicheng](https://github.com/gsc579) |  |
-|  | [Q-learning](./algos/QLearning/) | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [johnjim0816](https://github.com/johnjim0816) |       |
-|  | [Sarsa](./algos/Sarsa/) | [RL introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) | [johnjim0816](https://github.com/johnjim0816) |       |
-|  | [DQN](./algos/DQN/) | [DQN Paper](https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf) | [johnjim0816](https://github.com/johnjim0816), [guoshicheng](https://github.com/gsc579) [(CNN)](./algos/DQN/) |       |
+| Value-based | [DQN](./algos/DQN/) | [DQN Paper](https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf) | [johnjim0816](https://github.com/johnjim0816), [guoshicheng](https://github.com/gsc579) [(CNN)](./algos/DQN/) |       |
 |  | [DoubleDQN](./algos/DoubleDQN/) | [DoubleDQN Paper](https://arxiv.org/abs/1509.06461) | [johnjim0816](https://github.com/johnjim0816) |       |
 |  | [Dueling DQN](./algos/DuelingDQN/) |  | [johnjim0816](https://github.com/johnjim0816) | |
 |  | [PER_DQN](./algos/PER_DQN/) | [PER_DQN Paper](https://arxiv.org/pdf/1511.05952) | [wangzhongren](https://github.com/wangzhongren-code) |       |
 |  | [NoisyDQN](./algos/NoisyDQN/) | [NoisyDQN Paper](https://arxiv.org/pdf/1706.10295.pdf) | [wangzhongren](https://github.com/wangzhongren-code) |       |
 |  | [C51](./algos/C51/) | [C51 Paper](https://arxiv.org/abs/1707.06887) | also called Categorical DQN | |
-|  | Rainbow DQN | [Rainbow Paper](https://arxiv.org/abs/1710.02298) | [wangzhongren](https://github.com/wangzhongren-code) | |
-|  | QRDQN | [QRDQN Paper](https://arxiv.org/pdf/1710.10044.pdf) |  | |
-|  | CQL | [CQL Paper](https://arxiv.org/pdf/2006.04779.pdf) |  | |
+|  | [Rainbow DQN](./algos/RainbowDQN/) | [Rainbow Paper](https://arxiv.org/abs/1710.02298) | [wangzhongren](https://github.com/wangzhongren-code) | |
 | Policy-based | [REINFORCE](./algos/REINFORCE/) | [REINFORCE Paper](http://www.cs.toronto.edu/~tingwuwang/REINFORCE.pdf) | [johnjim0816](https://github.com/johnjim0816) | 最基础的PG算法 |
 |  | [A2C](./algos/A2C/) | [A2C blog](https://towardsdatascience.com/understanding-actor-critic-methods-931b97b6df3f) | [johnjim0816](https://github.com/johnjim0816) |       |
 |  | [A3C](./algos/A3C/) | [A3C paper](https://arxiv.org/pdf/1602.01783) | [johnjim0816](https://github.com/johnjim0816), [Ariel Chen](https://github.com/cr-bh) |  |
@@ -98,20 +103,31 @@ python main.py --yaml config/custom_config_Train.yaml
 |                 |        [PPO](./algos/PPO/)         |                          [PPO Paper](https://arxiv.org/abs/1707.06347)                           |    [johnjim0816](https://github.com/johnjim0816), [Wen Qiu](https://github.com/clorisqiu1)     |  PPO-clip, PPO-kl     |
 |  | [DDPG](./algos/DDPG/) | [DDPG Paper](https://arxiv.org/abs/1509.02971) | [johnjim0816](https://github.com/johnjim0816) |       |
 |  | [TD3](./algos/TD3/) | [TD3 Paper](https://arxiv.org/pdf/1802.09477) | [johnjim0816](https://github.com/johnjim0816) |       |
-| Multi-Agent | IQL                                | [IQL Paper](https://web.media.mit.edu/~cynthiab/Readings/tan-MAS-reinfLearn.pdf) |                                                              |       |
-|  | VDN                                | [VDN Paper](https://arxiv.org/abs/1706.05296)                |                                                              | |
-|  | QTRAN                              |                                                              |                                                              | |
-|  | QMIX                               | [QMIX Paper](https://arxiv.org/abs/1803.11485)               |                                                              | |
-|  | MAPPO                              |                                                              |                                                              | |
-|  | MADDPG                             |                                                              |                                                              | |
-| Sparse reward | Hierarchical DQN                   | [H-DQN Paper](https://arxiv.org/abs/1604.06057)              |                                                              | |
-|  | ICM                                | [ICM Paper](https://arxiv.org/pdf/1705.05363.pdf)            |                                                              | |
-|  | HER                                | [HER Paper](https://arxiv.org/pdf/1707.01495.pdf)            |                                                              | |
-| MaxEntropy RL | [SoftQ](./algos/SoftQ/) | [SoftQ Paper](https://arxiv.org/abs/1702.08165) | [johnjim0816](https://github.com/johnjim0816) | |
-|  | SAC |  |  | |
-| Imitation Learning | [GAIL](./algos/GAIL/) | [GAIL Paper](https://arxiv.org/abs/1606.03476) | [Yi Zhang](https://github.com/ai4drug) | TODO |
-|  | TD3+BC | [TD3+BC Paper](https://arxiv.org/pdf/2106.06860.pdf) |  |  |
-| Model based | [Dyna Q](./algos/DynaQ/) | [Dyna Q Paper](https://arxiv.org/abs/1801.06176) | [guoshicheng](https://github.com/gsc579) |  |
+
+### DRL进阶
+
+|      算法类别      |         算法名称         | 参考文献                                                     | 作者                                          | 备注 |
+| :----------------: | :----------------------: | ------------------------------------------------------------ | --------------------------------------------- | ---- |
+|   MaxEntropy RL    | [SoftQ](./algos/SoftQ/)  | [SoftQ Paper](https://arxiv.org/abs/1702.08165)              | [johnjim0816](https://github.com/johnjim0816) |      |
+|                    |   [SAC](./algos/SAC/)    |                                                              |                                               |      |
+| Distributional RL  |   [C51](./algos/C51/)    | [C51 Paper](https://arxiv.org/abs/1707.06887)                | also called Categorical DQN                   |      |
+|                    |          QRDQN           | [QRDQN Paper](https://arxiv.org/pdf/1710.10044.pdf)          |                                               |      |
+|     Offline RL     |           CQL            | [CQL Paper](https://arxiv.org/pdf/2006.04779.pdf)            |                                               |      |
+|                    |           BCQ            |                                                              |                                               |      |
+|    Multi-Agent     |           IQL            | [IQL Paper](https://web.media.mit.edu/~cynthiab/Readings/tan-MAS-reinfLearn.pdf) |                                               |      |
+|                    |           VDN            | [VDN Paper](https://arxiv.org/abs/1706.05296)                |                                               |      |
+|                    |          QTRAN           |                                                              |                                               |      |
+|                    |           QMIX           | [QMIX Paper](https://arxiv.org/abs/1803.11485)               |                                               |      |
+|                    |  [MAPPO](/algos/MAPPO/)  |                                                              |                                               |      |
+|                    |          MADDPG          |                                                              |                                               |      |
+|   Sparse reward    |     Hierarchical DQN     | [H-DQN Paper](https://arxiv.org/abs/1604.06057)              |                                               |      |
+|                    |           ICM            | [ICM Paper](https://arxiv.org/pdf/1705.05363.pdf)            |                                               |      |
+|                    |           HER            | [HER Paper](https://arxiv.org/pdf/1707.01495.pdf)            |                                               |      |
+| Imitation Learning |  [GAIL](./algos/GAIL/)   | [GAIL Paper](https://arxiv.org/abs/1606.03476)               | [Yi Zhang](https://github.com/ai4drug)        | TODO |
+|                    |          TD3+BC          | [TD3+BC Paper](https://arxiv.org/pdf/2106.06860.pdf)         |                                               |      |
+|    Model based     | [Dyna Q](./algos/DynaQ/) | [Dyna Q Paper](https://arxiv.org/abs/1801.06176)             | [guoshicheng](https://github.com/gsc579)      |      |
+|  Multi Object RL   |      [MO-Qlearning](./algos/MO-QLearning/)      |                                                              |                                               |      |
 
 ## 如何贡献
 
+参考[贡献说明](./CONTRIBUTING.md)
