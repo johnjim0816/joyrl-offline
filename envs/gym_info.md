@@ -47,6 +47,12 @@
 
 由于从起点到终点最少需要13步，每步得到-1的reward，因此最佳训练算法下，每个episode下reward总和应该为-13。
 
+### [LunarLander-v2](https://gymnasium.farama.org/environments/box2d/lunar_lander)
+
+<img src="./assets/lunar_lander.gif" alt="image-lunar_lander" style="zoom:50%;" />
+
+火箭位置随机开始，目标是平稳地降落到地面上。动作是离散的，包含不做任何事，向左边开火，主引擎开火，向右边开火。每个step给的reward由6个标准进行度量，火箭坠毁会给到-100的reward，成功着落会给到100的reward。一个episode的reward至少为200才说明算法合格。
+
 ## 参考
 
 [Gym环境相关源码](https://github.com/openai/gym/tree/master/gym/envs)
