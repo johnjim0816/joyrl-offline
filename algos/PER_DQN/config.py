@@ -11,6 +11,10 @@ class AlgoConfig(DefaultConfig):
         self.gamma = 0.95 # discount factor
         self.lr = 0.0001 # learning rate
         self.buffer_size = 100000 # size of replay buffer
+        self.per_alpha = 0.6 # alpha for prioritized replay buffer
+        self.per_beta = 0.4 # beta for prioritized replay buffer
+        self.per_beta_annealing = 0.001 # beta increment for prioritized replay buffer
+        self.per_epsilon = 0.01 # epsilon for prioritized replay buffer
         self.batch_size = 64 # batch size
         self.target_update = 4 # target network update frequency
         self.value_layers = [

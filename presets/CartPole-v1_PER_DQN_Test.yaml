@@ -4,7 +4,7 @@ general_cfg:
   env_name: CartPole-v1
   mode: test
   load_checkpoint: true
-  load_path: Train_CartPole-v1_PER_DQN_20230314-202246
+  load_path: Train_CartPole-v1_PER_DQN_20230331-225815
   max_steps: 200
   save_fig: true
   seed: 1

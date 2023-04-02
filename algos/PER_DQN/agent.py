@@ -5,7 +5,7 @@ Author: wangzhongren
 Email: wangzhongren@sjtu.edu.cn
 Date: 2022-11-20 17:20:00
 LastEditor: wangzhongren
-LastEditTime: 2023-03-24 23:39:07
+LastEditTime: 2023-03-31 23:21:52
 Discription: 
 '''
 
@@ -16,7 +16,7 @@ import random
 import math
 import numpy as np
 from common.layers import ValueNetwork
-from common.memories import ReplayBuffer, ReplayTree
+from common.memories import PrioritizedReplayBuffer,PrioritizedReplayBufferQue
 
 class Agent:
     def __init__(self, cfg):
@@ -40,7 +40,8 @@ class Agent:
             target_param.data.copy_(param.data)
         # self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=cfg.lr) 
-        self.memory = ReplayTree(cfg.buffer_size) # replay SumTree 
+        # self.memory = PrioritizedReplayBuffer(cfg)
+        self.memory = PrioritizedReplayBufferQue(cfg)
         self.update_flag = False 
         
     def sample_action(self, state):
@@ -71,28 +72,23 @@ class Agent:
         if len(self.memory) < self.batch_size: # when transitions in memory donot meet a batch, not update
             # print ("self.batch_size = ", self.batch_size)
             return
-        else:
-            if not self.update_flag:
-                print("Begin to update!")
-                self.update_flag = True
         # sample a batch of transitions from replay buffer
-        (state_batch, action_batch, reward_batch, next_state_batch, done_batch), idxs_batch, is_weights_batch = self.memory.sample(
+        (state_batch, action_batch, reward_batch, next_state_batch, done_batch), idxs_batch, weights_batch = self.memory.sample(
             self.batch_size)
         state_batch = torch.tensor(np.array(state_batch), device=self.device, dtype=torch.float) # shape(batchsize,n_states)
         action_batch = torch.tensor(action_batch, device=self.device).unsqueeze(1) # shape(batchsize,1)
         reward_batch = torch.tensor(reward_batch, device=self.device, dtype=torch.float).unsqueeze(1) # shape(batchsize,1)
         next_state_batch = torch.tensor(np.array(next_state_batch), device=self.device, dtype=torch.float) # shape(batchsize,n_states)
         done_batch = torch.tensor(np.float32(done_batch), device=self.device).unsqueeze(1) # shape(batchsize,1)
+
+        weights_batch = torch.tensor(weights_batch, device=self.device, dtype=torch.float).unsqueeze(1) # shape(batchsize,1)
         q_value_batch = self.policy_net(state_batch).gather(dim=1, index=action_batch) # shape(batchsize,1),requires_grad=True
         next_max_q_value_batch = self.target_net(next_state_batch).max(1)[0].detach().unsqueeze(1) 
         expected_q_value_batch = reward_batch + self.gamma * next_max_q_value_batch* (1-done_batch)
-
-        loss = torch.mean(torch.pow((q_value_batch - expected_q_value_batch) * torch.from_numpy(is_weights_batch).to(self.device), 2))
-        # loss = nn.MSELoss()(q_value_batch, expected_q_value_batch)  # shape same to  
-
-        abs_errors = np.sum(np.abs(q_value_batch.cpu().detach().numpy() - expected_q_value_batch.cpu().detach().numpy()), axis=1)
-        self.memory.batch_update(idxs_batch, abs_errors) 
-
+        loss = torch.mean(torch.pow((q_value_batch - expected_q_value_batch) * weights_batch, 2))
+        
+        td_errors = torch.abs(q_value_batch - expected_q_value_batch).cpu().detach().numpy() # shape(batchsize,1)
+        self.memory.update_priorities(idxs_batch, td_errors) # update priorities of sampled transitions
         # backpropagation
         self.optimizer.zero_grad()  
         loss.backward()

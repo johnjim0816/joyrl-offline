@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-10 15:27:16
 @LastEditor: John
-LastEditTime: 2022-11-16 06:24:40
+LastEditTime: 2023-03-31 23:39:29
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -74,450 +74,145 @@ class PGReplay(ReplayBufferQue):
         '''
         batch = list(self.buffer)
         return zip(*batch)
-
-class SumTree:
-    '''SumTree for the per(Prioritized Experience Replay) DQN. 
-    This SumTree code is a modified version and the original code is from:
-    https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/5.2_Prioritized_Replay_DQN/RL_brain.py
-    '''
-    def __init__(self, capacity: int):
-        self.capacity = capacity
-        self.data_pointer = 0
-        self.n_entries = 0
-        self.tree = np.zeros(2 * capacity - 1)
-        self.data = np.zeros(capacity, dtype = object)
-
-    def update(self, tree_idx, p):
-        '''Update the sampling weight
-        '''
-        change = p - self.tree[tree_idx]
-        self.tree[tree_idx] = p
-
-        while tree_idx != 0:
-            tree_idx = (tree_idx - 1) // 2
-            self.tree[tree_idx] += change
-
-    def add(self, p, data):
-        '''Adding new data to the sumTree
-        '''
-        tree_idx = self.data_pointer + self.capacity - 1
-        self.data[self.data_pointer] = data
-        # print ("tree_idx=", tree_idx)
-        # print ("nonzero = ", np.count_nonzero(self.tree))
-        self.update(tree_idx, p)
-
-        self.data_pointer += 1
-        if self.data_pointer >= self.capacity:
-            self.data_pointer = 0
-
-        if self.n_entries < self.capacity:
-            self.n_entries += 1
-
-    def get_leaf(self, v):
-        '''Sampling the data
-        '''
-        parent_idx = 0
-        while True:
-            cl_idx = 2 * parent_idx + 1
-            cr_idx = cl_idx + 1
-            if cl_idx >= len(self.tree):
-                leaf_idx = parent_idx
-                break
-            else:
-                if v <= self.tree[cl_idx] :
-                    parent_idx = cl_idx
-                else:
-                    v -= self.tree[cl_idx]
-                    parent_idx = cr_idx
-
-        data_idx = leaf_idx - self.capacity + 1
-        return leaf_idx, self.tree[leaf_idx], self.data[data_idx]
-
-    def total(self):
-        return int(self.tree[0])
-
-class ReplayTree:
-    '''ReplayTree for the per(Prioritized Experience Replay) DQN. 
-    '''
-    def __init__(self, capacity):
-        self.capacity = capacity # the capacity for memory replay
-        self.tree = SumTree(capacity)
-        self.abs_err_upper = 1.
-
-        ## hyper parameter for calculating the importance sampling weight
-        self.beta_increment_per_sampling = 0.001
-        self.alpha = 0.6
-        self.beta = 0.4
-        self.epsilon = 0.01 
-        self.abs_err_upper = 1.
-
-    def __len__(self):
-        ''' return the num of storage
-        '''
-        return self.tree.total()
-
-    def push(self, error, sample):
-        '''Push the sample into the replay according to the importance sampling weight
-        '''
-        p = (np.abs(error) + self.epsilon) ** self.alpha
-        self.tree.add(p, sample)         
-
-
-    def sample(self, batch_size):
-        '''This is for sampling a batch data and the original code is from:
-        https://github.com/rlcode/per/blob/master/prioritized_memory.py
-        '''
-        pri_segment = self.tree.total() / batch_size
-
-        priorities = []
-        batch = []
-        idxs = []
-
-        is_weights = []
-
-        self.beta = np.min([1., self.beta + self.beta_increment_per_sampling])
-        min_prob = np.min(self.tree.tree[-self.tree.capacity:]) / self.tree.total() 
-
-        for i in range(batch_size):
-            a = pri_segment * i
-            b = pri_segment * (i+1)
-
-            s = random.uniform(a, b)
-            idx, p, data = self.tree.get_leaf(s)
-
-            priorities.append(p)
-            batch.append(data)
-            idxs.append(idx)
-            prob = p / self.tree.total()
-
-        sampling_probabilities = np.array(priorities) / self.tree.total()
-        is_weights = np.power(self.tree.n_entries * sampling_probabilities, -self.beta)
-        is_weights /= is_weights.max()
-
-        return zip(*batch), idxs, is_weights
     
-    def batch_update(self, tree_idx, abs_errors):
-        '''Update the importance sampling weight
+class SumTree:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.tree = np.zeros(2 * capacity - 1)
+        self.data = np.zeros(capacity, dtype=object) # 存储样本
+        self.write_idx = 0 # 写入样本的索引
+        self.count = 0 # 当前存储的样本数量
+    
+    def add(self, priority, exps):
+        ''' 添加一个样本到叶子节点，并更新其父节点的优先级
         '''
-        abs_errors += self.epsilon
-
-        clipped_errors = np.minimum(abs_errors, self.abs_err_upper)
-        ps = np.power(clipped_errors, self.alpha)
-
-        for ti, p in zip(tree_idx, ps):
-            self.tree.update(ti, p)
-
-import numpy as np
-import random
-
-import operator
-
-
-class SegmentTree(object):
-    def __init__(self, capacity, operation, neutral_element):
-        """Build a Segment Tree data structure.
-        https://en.wikipedia.org/wiki/Segment_tree
-        Can be used as regular array, but with two
-        important differences:
-            a) setting item's value is slightly slower.
-               It is O(lg capacity) instead of O(1).
-            b) user has access to an efficient `reduce`
-               operation which reduces `operation` over
-               a contiguous subsequence of items in the
-               array.
-        Paramters
-        ---------
-        capacity: int
-            Total size of the array - must be a power of two.
-        operation: lambda obj, obj -> obj
-            and operation for combining elements (eg. sum, max)
-            must for a mathematical group together with the set of
-            possible values for array elements.
-        neutral_element: obj
-            neutral element for the operation above. eg. float('-inf')
-            for max and 0 for sum.
-        """
-        assert capacity > 0 and capacity & (capacity - 1) == 0, "capacity must be positive and a power of 2."
-        self._capacity = capacity
-        self._value = [neutral_element for _ in range(2 * capacity)]
-        self._operation = operation
-
-    def _reduce_helper(self, start, end, node, node_start, node_end):
-        if start == node_start and end == node_end:
-            return self._value[node]
-        mid = (node_start + node_end) // 2
-        if end <= mid:
-            return self._reduce_helper(start, end, 2 * node, node_start, mid)
-        else:
-            if mid + 1 <= start:
-                return self._reduce_helper(start, end, 2 * node + 1, mid + 1, node_end)
+        idx = self.write_idx + self.capacity - 1 # 样本的索引
+        self.data[self.write_idx] = exps # 写入样本
+        self.update(idx, priority) # 更新样本的优先级
+        self.write_idx = (self.write_idx + 1) % self.capacity # 更新写入样本的索引
+        if self.count < self.capacity:
+            self.count += 1
+    
+    def update(self, idx, priority):
+        ''' 更新叶子节点的优先级，并更新其父节点的优先级
+        Args:
+            idx (int): 样本的索引
+            priority (float): 样本的优先级
+        '''
+        diff = priority - self.tree[idx] # 优先级的差值
+        self.tree[idx] = priority
+        while idx != 0: 
+            idx = (idx - 1) // 2
+            self.tree[idx] += diff
+    
+    def get_leaf(self, v):
+        ''' 根据优先级的值采样对应区间的叶子节点样本
+        '''
+        idx = 0
+        while True:
+            left = 2 * idx + 1
+            right = left + 1
+            if left >= len(self.tree):
+                break
+            if v <= self.tree[left]:
+                idx = left
             else:
-                return self._operation(
-                    self._reduce_helper(start, mid, 2 * node, node_start, mid),
-                    self._reduce_helper(mid + 1, end, 2 * node + 1, mid + 1, node_end)
-                )
-
-    def reduce(self, start=0, end=None):
-        """Returns result of applying `self.operation`
-        to a contiguous subsequence of the array.
-            self.operation(arr[start], operation(arr[start+1], operation(... arr[end])))
-        Parameters
-        ----------
-        start: int
-            beginning of the subsequence
-        end: int
-            end of the subsequences
-        Returns
-        -------
-        reduced: obj
-            result of reducing self.operation over the specified range of array elements.
-        """
-        if end is None:
-            end = self._capacity
-        if end < 0:
-            end += self._capacity
-        end -= 1
-        return self._reduce_helper(start, end, 1, 0, self._capacity - 1)
-
-    def __setitem__(self, idx, val):
-        # index of the leaf
-        idx += self._capacity
-        self._value[idx] = val
-        idx //= 2
-        while idx >= 1:
-            self._value[idx] = self._operation(
-                self._value[2 * idx],
-                self._value[2 * idx + 1]
-            )
-            idx //= 2
-
-    def __getitem__(self, idx):
-        assert 0 <= idx < self._capacity
-        return self._value[self._capacity + idx]
-
-
-class SumSegmentTree(SegmentTree):
-    def __init__(self, capacity):
-        super(SumSegmentTree, self).__init__(
-            capacity=capacity,
-            operation=operator.add,
-            neutral_element=0.0
-        )
-
-    def sum(self, start=0, end=None):
-        """Returns arr[start] + ... + arr[end]"""
-        return super(SumSegmentTree, self).reduce(start, end)
-
-    def find_prefixsum_idx(self, prefixsum):
-        """Find the highest index `i` in the array such that
-            sum(arr[0] + arr[1] + ... + arr[i - i]) <= prefixsum
-        if array values are probabilities, this function
-        allows to sample indexes according to the discrete
-        probability efficiently.
-        Parameters
-        ----------
-        perfixsum: float
-            upperbound on the sum of array prefix
-        Returns
-        -------
-        idx: int
-            highest index satisfying the prefixsum constraint
-        """
-        assert 0 <= prefixsum <= self.sum() + 1e-5
-        idx = 1
-        while idx < self._capacity:  # while non-leaf
-            if self._value[2 * idx] > prefixsum:
-                idx = 2 * idx
-            else:
-                prefixsum -= self._value[2 * idx]
-                idx = 2 * idx + 1
-        return idx - self._capacity
-
-
-class MinSegmentTree(SegmentTree):
-    def __init__(self, capacity):
-        super(MinSegmentTree, self).__init__(
-            capacity=capacity,
-            operation=min,
-            neutral_element=float('inf')
-        )
-
-    def min(self, start=0, end=None):
-        """Returns min(arr[start], ...,  arr[end])"""
-
-        return super(MinSegmentTree, self).reduce(start, end)
-
-
-class ReplayBufferNoise(object):
-    def __init__(self, size):
-        """Create Replay buffer.
-        Parameters
-        ----------
-        size: int
-            Max number of transitions to store in the buffer. When the buffer
-            overflows the old memories are dropped.
-        """
-        self._storage = []
-        self._maxsize = size
-        self._next_idx = 0
-
-    def __len__(self):
-        return len(self._storage)
-
-    def push(self, state, action, reward, next_state, done):
-        data = (state, action, reward, next_state, done)
-
-        if self._next_idx >= len(self._storage):
-            self._storage.append(data)
-        else:
-            self._storage[self._next_idx] = data
-        self._next_idx = (self._next_idx + 1) % self._maxsize
-
-    def _encode_sample(self, idxes):
-        obses_t, actions, rewards, obses_tp1, dones = [], [], [], [], []
-        for i in idxes:
-            data = self._storage[i]
-            obs_t, action, reward, obs_tp1, done = data
-            obses_t.append(np.array(obs_t, copy=False))
-            actions.append(np.array(action, copy=False))
-            rewards.append(reward)
-            obses_tp1.append(np.array(obs_tp1, copy=False))
-            dones.append(done)
-        return np.array(obses_t), np.array(actions), np.array(rewards), np.array(obses_tp1), np.array(dones)
-
+                v -= self.tree[left]
+                idx = right
+        data_idx = idx - self.capacity + 1
+        return idx, self.tree[idx], self.data[data_idx]
+    def get_data(self, indices):
+        return [self.data[idx - self.capacity + 1] for idx in indices]
+    
+    def total(self):
+        ''' 返回所有样本的优先级之和，即根节点的值
+        '''
+        return self.tree[0]
+    
+    def max_prior(self):
+        ''' 返回所有样本的最大优先级
+        '''
+        return np.max(self.tree[self.capacity-1:self.capacity+self.write_idx-1])
+    
+class PrioritizedReplayBuffer:
+    def __init__(self, cfg):
+        self.capacity = cfg.buffer_size
+        self.alpha = cfg.per_alpha # 优先级的指数参数，越大越重要，越小越不重要
+        self.epsilon = cfg.per_epsilon # 优先级的最小值，防止优先级为0
+        self.beta = cfg.per_beta # importance sampling的参数
+        self.beta_annealing = cfg.per_beta_annealing # beta的增长率
+        self.tree = SumTree(self.capacity)
+        self.max_priority = 1.0
+    
+    def push(self, exps):
+        ''' 添加样本
+        '''
+        priority = self.max_priority if self.tree.total() == 0 else self.tree.max_prior()
+        self.tree.add(priority, exps)
+    
     def sample(self, batch_size):
-        """Sample a batch of experiences.
-        Parameters
-        ----------
-        batch_size: int
-            How many transitions to sample.
-        Returns
-        -------
-        obs_batch: np.array
-            batch of observations
-        act_batch: np.array
-            batch of actions executed given obs_batch
-        rew_batch: np.array
-            rewards received as results of executing act_batch
-        next_obs_batch: np.array
-            next set of observations seen after executing act_batch
-        done_mask: np.array
-            done_mask[i] = 1 if executing act_batch[i] resulted in
-            the end of an episode and 0 otherwise.
-        """
-        idxes = [random.randint(0, len(self._storage) - 1) for _ in range(batch_size)]
-        return self._encode_sample(idxes)
+        ''' 采样一个批量样本
+        '''
+        indices = [] # 采样的索引
+        priorities = [] # 采样的优先级
+        exps = [] # 采样的样本
+        segment = self.tree.total() / batch_size
+        self.beta = min(1.0, self.beta  + self.beta_annealing)
+        for i in range(batch_size):
+            a = segment * i
+            b = segment * (i + 1)
+            p = np.random.uniform(a, b) # 采样一个优先级
+            idx, priority, exp = self.tree.get_leaf(p) # 采样一个样本
+            indices.append(idx)
+            priorities.append(priority)
+            exps.append(exp)
+        # 重要性采样, weight = (N * P(i)) ^ (-beta) / max_weight
+        sample_probs = np.array(priorities) / self.tree.total()
+        weights = (self.tree.count * sample_probs) ** (-self.beta) # importance sampling的权重
+        weights /= weights.max() # 归一化
+        indices = np.array(indices)
+        return zip(*exps), indices, weights
+    
+    def update_priorities(self, indices, priorities):
+        ''' 更新样本的优先级
+        '''
+        priorities = np.abs(priorities) # 取绝对值
+        for idx, priority in zip(indices, priorities):
+            # 控制衰减的速度, priority = (priority + epsilon) ^ alpha
+            priority = (priority + self.epsilon) ** self.alpha
+            priority = np.minimum(priority, self.max_priority)
+            self.tree.update(idx, priority)
+    def __len__(self):
+        return self.tree.count
 
-
-class PrioritizedReplayBuffer(ReplayBufferNoise):
-    def __init__(self, size, alpha):
-        """Create Prioritized Replay buffer.
-        Parameters
-        ----------
-        size: int
-            Max number of transitions to store in the buffer. When the buffer
-            overflows the old memories are dropped.
-        alpha: float
-            how much prioritization is used
-            (0 - no prioritization, 1 - full prioritization)
-        See Also
-        --------
-        ReplayBuffer.__init__
-        """
-        super(PrioritizedReplayBuffer, self).__init__(size)
-        assert alpha > 0
-        self._alpha = alpha
-
-        it_capacity = 1
-        while it_capacity < size:
-            it_capacity *= 2
-
-        self._it_sum = SumSegmentTree(it_capacity)
-        self._it_min = MinSegmentTree(it_capacity)
-        self._max_priority = 1.0
-
-    def push(self, *args, **kwargs):
-        """See ReplayBuffer.store_effect"""
-        idx = self._next_idx
-        super(PrioritizedReplayBuffer, self).push(*args, **kwargs)
-        self._it_sum[idx] = self._max_priority ** self._alpha
-        self._it_min[idx] = self._max_priority ** self._alpha
-
-    def _sample_proportional(self, batch_size):
-        res = []
-        for _ in range(batch_size):
-            # TODO(szymon): should we ensure no repeats?
-            mass = random.random() * self._it_sum.sum(0, len(self._storage) - 1)
-            idx = self._it_sum.find_prefixsum_idx(mass)
-            res.append(idx)
-        return res
-
-    def sample(self, batch_size, beta):
-        """Sample a batch of experiences.
-        compared to ReplayBuffer.sample
-        it also returns importance weights and idxes
-        of sampled experiences.
-        Parameters
-        ----------
-        batch_size: int
-            How many transitions to sample.
-        beta: float
-            To what degree to use importance weights
-            (0 - no corrections, 1 - full correction)
-        Returns
-        -------
-        obs_batch: np.array
-            batch of observations
-        act_batch: np.array
-            batch of actions executed given obs_batch
-        rew_batch: np.array
-            rewards received as results of executing act_batch
-        next_obs_batch: np.array
-            next set of observations seen after executing act_batch
-        done_mask: np.array
-            done_mask[i] = 1 if executing act_batch[i] resulted in
-            the end of an episode and 0 otherwise.
-        weights: np.array
-            Array of shape (batch_size,) and dtype np.float32
-            denoting importance weight of each sampled transition
-        idxes: np.array
-            Array of shape (batch_size,) and dtype np.int32
-            idexes in buffer of sampled experiences
-        """
-        assert beta > 0
-
-        idxes = self._sample_proportional(batch_size)
-
-        weights = []
-        p_min = self._it_min.min() / self._it_sum.sum()
-        max_weight = (p_min * len(self._storage)) ** (-beta)
-
-        for idx in idxes:
-            p_sample = self._it_sum[idx] / self._it_sum.sum()
-            weight = (p_sample * len(self._storage)) ** (-beta)
-            weights.append(weight / max_weight)
-        weights = np.array(weights)
-        encoded_sample = self._encode_sample(idxes)
-        return tuple(list(encoded_sample) + [weights, idxes])
-
-    def update_priorities(self, idxes, priorities):
-        """Update priorities of sampled transitions.
-        sets priority of transition at index idxes[i] in buffer
-        to priorities[i].
-        Parameters
-        ----------
-        idxes: [int]
-            List of idxes of sampled transitions
-        priorities: [float]
-            List of updated priorities corresponding to
-            transitions at the sampled idxes denoted by
-            variable `idxes`.
-        """
-        assert len(idxes) == len(priorities)
-        for idx, priority in zip(idxes, priorities):
-            assert priority > 0
-            assert 0 <= idx < len(self._storage)
-            self._it_sum[idx] = priority ** self._alpha
-            self._it_min[idx] = priority ** self._alpha
-
-            self._max_priority = max(self._max_priority, priority)
+class PrioritizedReplayBufferQue:
+    def __init__(self, cfg):
+        self.capacity = cfg.buffer_size
+        self.alpha = cfg.per_alpha # 优先级的指数参数，越大越重要，越小越不重要
+        self.epsilon = cfg.per_epsilon # 优先级的最小值，防止优先级为0
+        self.beta = cfg.per_beta # importance sampling的参数
+        self.beta_annealing = cfg.per_beta_annealing # beta的增长率
+        self.buffer = deque(maxlen=self.capacity)
+        self.priorities = deque(maxlen=self.capacity)
+        self.count = 0 # 当前存储的样本数量
+        self.max_priority = 1.0
+    def push(self,exps):
+        self.buffer.append(exps)
+        self.priorities.append(max(self.priorities, default=self.max_priority))
+        self.count += 1
+    def sample(self, batch_size):
+        priorities = np.array(self.priorities)
+        probs = priorities/sum(priorities)
+        indices = np.random.choice(len(self.buffer), batch_size, p=probs)
+        weights = (self.count*probs[indices])**(-self.beta)
+        weights /= weights.max()
+        exps = [self.buffer[i] for i in indices]
+        return zip(*exps), indices, weights
+    def update_priorities(self, indices, priorities):
+        priorities = np.abs(priorities)
+        priorities = (priorities + self.epsilon) ** self.alpha
+        priorities = np.minimum(priorities, self.max_priority).flatten()
+        for idx, priority in zip(indices, priorities):
+            self.priorities[idx] = priority
+    def __len__(self):
+        return self.count

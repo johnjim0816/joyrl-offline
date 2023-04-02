@@ -37,6 +37,19 @@ pip install torch==1.10.0+cu113 torchvision==0.11.0+cu113 torchaudio==0.10.0 --e
 pip install -r requirements.txt
 ```
 
+## 安装多线程
+
+### Multiprocessing框架
+
+```bash
+pip install multiprocess==
+```
+###  Ray框架
+
+```bash
+pip install ray==2.3.0
+```
+
 ## 使用说明
 
 直接更改 `config.config.GeneralConfig()`类以及对应算法比如`algos\DQN\config.py`中的参数，然后执行:
