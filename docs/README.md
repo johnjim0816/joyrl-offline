@@ -78,7 +78,7 @@ python main.py --yaml config/custom_config_Train.yaml
 |  | VDN                                |        | [VDN Paper](https://arxiv.org/abs/1706.05296)                |                                                              | |
 |  | QTRAN                              |        |                                                              |                                                              | |
 |  | QMIX                               |        | [QMIX Paper](https://arxiv.org/abs/1803.11485)               |                                                              | |
-|  | MAPPO                              |        |                                                              |                                                              | |
+|  |   [MAPPO](./algos/MAPPO/)  |       On      |   [MAPPO Paper](https://arxiv.org/abs/2103.01955)    |    [Wen Qiu](https://github.com/clorisqiu1)     |  MAPPO with recurrent    |  |
 |  | MADDPG                             |        |                                                              |                                                              | |
 | Sparse reward | Hierarchical DQN                   |        | [H-DQN Paper](https://arxiv.org/abs/1604.06057)              |                                                              | |
 |  | ICM                                |        | [ICM Paper](https://arxiv.org/pdf/1705.05363.pdf)            |                                                              | |
