@@ -131,18 +131,20 @@ python main.py --yaml config/custom_config_Train.yaml
 |   Sparse reward   |          Hierarchical DQN          | [H-DQN Paper](https://arxiv.org/abs/1604.06057)                                                                                                    |                                            |      |
 |                    |                ICM                | [ICM Paper](https://arxiv.org/pdf/1705.05363.pdf)                                                                                                  |                                            |      |
 |                    |                HER                | [HER Paper](https://arxiv.org/pdf/1707.01495.pdf)                                                                                                  |                                            |      |
-| Imitation Learning |         [GAIL](./algos/GAIL/)         | [GAIL Paper](https://arxiv.org/abs/1606.03476)                                                                                                     | [Yi Zhang](https://github.com/ai4drug)        | TODO |
+| Imitation Learning |         [GAIL](./algos/GAIL/)         | [GAIL Paper](https://arxiv.org/abs/1606.03476)                                                                                                     | [Yi Zhang](https://github.com/ai4drug)        |  |
 |                    |               TD3+BC               | [TD3+BC Paper](https://arxiv.org/pdf/2106.06860.pdf)                                                                                               |                                            |      |
 |    Model based    |       [Dyna Q](./algos/DynaQ/)       | [Dyna Q Paper](https://arxiv.org/abs/1801.06176)                                                                                                   | [guoshicheng](https://github.com/gsc579)      |      |
 |  Multi Object RL  | [MO-Qlearning](./algos/MO-QLearning/) | [MO-QLearning Paper](https://www.researchgate.net/publication/235698665_Scalarized_Multi-Objective_Reinforcement_Learning_Novel_Design_Techniques) | [curryliu30](https://github.com/curryliu30)   |      |
 
 ## Benchmark开发
 
-|     环境名称     |                 作者                  |
-| :--------------: | :-----------------------------------: |
-| [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) |
-|                  |                                       |
-|                  |                                       |
+|     环境名称     |                 作者                  |                 算法                 |
+| :--------------: | :-----------------------------------: | ---------------- |
+| [CartPole-v1](./envs/gym_info.md) | [johnjim0816](https://github.com/johnjim0816) | DQN, Double DQN, Dueling DQN, REINFORCE, A2C, A3C |
+|  | [wangzhongren](https://github.com/wangzhongren-code) | PER DQN |
+| [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) | PPO |
+|                  |                                       |                                       |
+|                  |                                       |                                       |
 
 
 
