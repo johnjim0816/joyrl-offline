@@ -1,0 +1,63 @@
+2023-04-02 23:19:50 - r - INFO: - Hyperparameters:
+2023-04-02 23:19:50 - r - INFO: - ================================================================================
+2023-04-02 23:19:50 - r - INFO: -         Name        	       Value        	        Type        
+2023-04-02 23:19:50 - r - INFO: -       env_name      	   LunarLander-v2   	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -     new_step_api    	         1          	   <class 'bool'>   
+2023-04-02 23:19:50 - r - INFO: -       wrapper       	        None        	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -        render       	         0          	   <class 'bool'>   
+2023-04-02 23:19:50 - r - INFO: -      algo_name      	        PPO         	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -         mode        	        test        	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -      mp_backend     	         mp         	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -         seed        	         1          	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -        device       	        cpu         	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -      train_eps      	        600         	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -       test_eps      	         20         	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -       eval_eps      	         10         	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -   eval_per_episode  	         5          	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -      max_steps      	        1000        	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -   load_checkpoint   	         1          	   <class 'bool'>   
+2023-04-02 23:19:50 - r - INFO: -      load_path      	Train_LunarLander-v2_PPO_20230402-223154	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -       show_fig      	         0          	   <class 'bool'>   
+2023-04-02 23:19:50 - r - INFO: -       save_fig      	         1          	   <class 'bool'>   
+2023-04-02 23:19:50 - r - INFO: -       ppo_type      	        clip        	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -      continuous     	         0          	   <class 'bool'>   
+2023-04-02 23:19:50 - r - INFO: -        gamma        	        0.99        	  <class 'float'>   
+2023-04-02 23:19:50 - r - INFO: -       k_epochs      	         4          	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -       actor_lr      	       0.0003       	  <class 'float'>   
+2023-04-02 23:19:50 - r - INFO: -      critic_lr      	       0.001        	  <class 'float'>   
+2023-04-02 23:19:50 - r - INFO: -       eps_clip      	        0.2         	  <class 'float'>   
+2023-04-02 23:19:50 - r - INFO: -     entropy_coef    	        0.01        	  <class 'float'>   
+2023-04-02 23:19:50 - r - INFO: -   train_batch_size  	        256         	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -    sgd_batch_size   	         32         	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -   actor_hidden_dim  	        256         	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -  critic_hidden_dim  	        256         	   <class 'int'>    
+2023-04-02 23:19:50 - r - INFO: -       task_dir      	/home/zf/Documents/Python/joyrl-offline_off/tasks/Test_LunarLander-v2_PPO_20230402-231950	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -       res_dir       	/home/zf/Documents/Python/joyrl-offline_off/tasks/Test_LunarLander-v2_PPO_20230402-231950/results	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -       log_dir       	/home/zf/Documents/Python/joyrl-offline_off/tasks/Test_LunarLander-v2_PPO_20230402-231950/logs	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -       traj_dir      	/home/zf/Documents/Python/joyrl-offline_off/tasks/Test_LunarLander-v2_PPO_20230402-231950/traj	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: -        tb_dir       	/home/zf/Documents/Python/joyrl-offline_off/tasks/Test_LunarLander-v2_PPO_20230402-231950/tb_logs	   <class 'str'>    
+2023-04-02 23:19:50 - r - INFO: - ================================================================================
+2023-04-02 23:19:50 - r - INFO: - n_states: 8, n_actions: 4
+2023-04-02 23:19:50 - r - INFO: - Start testing!
+2023-04-02 23:19:50 - r - INFO: - Env: LunarLander-v2, Algorithm: PPO, Device: cpu
+2023-04-02 23:19:50 - r - INFO: - Episode: 1/20, Reward: 252.001, Step: 220
+2023-04-02 23:19:50 - r - INFO: - Episode: 2/20, Reward: 248.030, Step: 255
+2023-04-02 23:19:51 - r - INFO: - Episode: 3/20, Reward: 270.691, Step: 234
+2023-04-02 23:19:51 - r - INFO: - Episode: 4/20, Reward: 251.967, Step: 237
+2023-04-02 23:19:51 - r - INFO: - Episode: 5/20, Reward: 243.157, Step: 235
+2023-04-02 23:19:51 - r - INFO: - Episode: 6/20, Reward: 249.370, Step: 229
+2023-04-02 23:19:51 - r - INFO: - Episode: 7/20, Reward: 249.592, Step: 227
+2023-04-02 23:19:51 - r - INFO: - Episode: 8/20, Reward: 250.621, Step: 229
+2023-04-02 23:19:51 - r - INFO: - Episode: 9/20, Reward: 252.866, Step: 225
+2023-04-02 23:19:51 - r - INFO: - Episode: 10/20, Reward: 266.123, Step: 237
+2023-04-02 23:19:51 - r - INFO: - Episode: 11/20, Reward: 269.425, Step: 247
+2023-04-02 23:19:51 - r - INFO: - Episode: 12/20, Reward: 260.002, Step: 209
+2023-04-02 23:19:51 - r - INFO: - Episode: 13/20, Reward: 270.213, Step: 244
+2023-04-02 23:19:51 - r - INFO: - Episode: 14/20, Reward: 38.579, Step: 158
+2023-04-02 23:19:52 - r - INFO: - Episode: 15/20, Reward: 42.728, Step: 181
+2023-04-02 23:19:52 - r - INFO: - Episode: 16/20, Reward: 262.007, Step: 209
+2023-04-02 23:19:52 - r - INFO: - Episode: 17/20, Reward: 267.853, Step: 236
+2023-04-02 23:19:52 - r - INFO: - Episode: 18/20, Reward: 46.030, Step: 169
+2023-04-02 23:19:52 - r - INFO: - Episode: 19/20, Reward: 254.678, Step: 277
+2023-04-02 23:19:52 - r - INFO: - Episode: 20/20, Reward: 18.323, Step: 158
+2023-04-02 23:19:52 - r - INFO: - Finish testing!
