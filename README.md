@@ -94,11 +94,11 @@ python main.py --yaml config/custom_config_Train.yaml
 ### DRL基础
 
 |   算法类别   |            算法名称            | 参考文献                                                                                | 作者                                                                                                 | 备注             |
-| :----------: | :-----------------------------: | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------- |
+| :----------: | :-----------------------------: | :-------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: | :--------------: |
 | Value-based |        [DQN](./algos/DQN/)        | [DQN Paper](https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf)                                | [johnjim0816](https://github.com/johnjim0816), [guoshicheng](https://github.com/gsc579) [(CNN)](./algos/DQN/) |                  |
 |              |  [DoubleDQN](./algos/DoubleDQN/)  | [DoubleDQN Paper](https://arxiv.org/abs/1509.06461)                                        | [johnjim0816](https://github.com/johnjim0816)                                                           |                  |
 |              | [Dueling DQN](./algos/DuelingDQN/) |                                                                                         | [johnjim0816](https://github.com/johnjim0816)                                                           |                  |
-|              |    [PER_DQN](./algos/PER_DQN/)    | [PER_DQN Paper](https://arxiv.org/pdf/1511.05952)                                          | [wangzhongren](https://github.com/wangzhongren-code)                                                    |                  |
+|              |    [PER_DQN](./algos/PER_DQN/)    | [PER_DQN Paper](https://arxiv.org/pdf/1511.05952)                                          | [wangzhongren](https://github.com/wangzhongren-code),[johnjim0816](https://github.com/johnjim0816)      |                  |
 |              |   [NoisyDQN](./algos/NoisyDQN/)   | [NoisyDQN Paper](https://arxiv.org/pdf/1706.10295.pdf)                                     | [wangzhongren](https://github.com/wangzhongren-code)                                                    |                  |
 |              |        [C51](./algos/C51/)        | [C51 Paper](https://arxiv.org/abs/1707.06887)                                              | also called Categorical DQN                                                                          |                  |
 |              | [Rainbow DQN](./algos/RainbowDQN/) | [Rainbow Paper](https://arxiv.org/abs/1710.02298)                                          | [wangzhongren](https://github.com/wangzhongren-code)                                                    |                  |
@@ -135,6 +135,16 @@ python main.py --yaml config/custom_config_Train.yaml
 |                    |               TD3+BC               | [TD3+BC Paper](https://arxiv.org/pdf/2106.06860.pdf)                                                                                               |                                            |      |
 |    Model based    |       [Dyna Q](./algos/DynaQ/)       | [Dyna Q Paper](https://arxiv.org/abs/1801.06176)                                                                                                   | [guoshicheng](https://github.com/gsc579)      |      |
 |  Multi Object RL  | [MO-Qlearning](./algos/MO-QLearning/) | [MO-QLearning Paper](https://www.researchgate.net/publication/235698665_Scalarized_Multi-Objective_Reinforcement_Learning_Novel_Design_Techniques) | [curryliu30](https://github.com/curryliu30)   |      |
+
+## Benchmark开发
+
+|     环境名称     |                 作者                  |
+| :--------------: | :-----------------------------------: |
+| [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) |
+|                  |                                       |
+|                  |                                       |
+
+
 
 ## 如何贡献
 
