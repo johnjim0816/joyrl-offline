@@ -143,6 +143,7 @@ python main.py --yaml config/custom_config_Train.yaml
 | [CartPole-v1](./envs/gym_info.md) | [johnjim0816](https://github.com/johnjim0816) | DQN, Double DQN, Dueling DQN, REINFORCE, A2C, A3C |
 |  | [wangzhongren](https://github.com/wangzhongren-code) | PER DQN |
 | [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) | PPO |
+| [LunarLanderContinuous-v2](./envs/gym_info.md) | [MekeyPan](https://github.com/pmy0721) | SAC |
 |                  |                                       |                                       |
 |                  |                                       |                                       |
 
