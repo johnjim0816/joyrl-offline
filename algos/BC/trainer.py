@@ -27,7 +27,8 @@ class Trainer:
             agent.update(expert_states[sample_indices], expert_actions[sample_indices])
             agent,ep_reward,ep_step = self.test_one_episode(env, agent, cfg)
             print (f"iter: {i + 1}/{cfg.train_iterations}, Reward: {ep_reward:.3f}, Step: {ep_step}")
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res
     
     def test_one_episode(self, env, agent, cfg):
         ep_reward = 0  # reward per episode
@@ -46,4 +47,5 @@ class Trainer:
             ep_reward += reward  #
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res

@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# coding=utf-8
+'''
+Author: JiangJi
+Email: johnjim0816@gmail.com
+Date: 2023-02-21 20:32:11
+LastEditor: JiangJi
+LastEditTime: 2023-04-05 01:19:14
+Discription: 
+'''
 import torch
 
 class Trainer:
@@ -17,7 +27,8 @@ class Trainer:
             ep_reward += reward  #
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res
     def test_one_episode(self, env, agent, cfg):
         ep_reward = 0  # reward per episode
         ep_step = 0
@@ -30,4 +41,5 @@ class Trainer:
             ep_reward += reward  #
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res

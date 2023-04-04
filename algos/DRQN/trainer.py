@@ -5,7 +5,7 @@ Author: John
 Email: johnjim0816@gmail.com
 Date: 2020-09-11 23:03:00
 LastEditor: John
-LastEditTime: 2022-11-28 15:46:19
+LastEditTime: 2023-04-05 01:17:52
 Discription: 
 Environment: 
 '''
@@ -37,7 +37,8 @@ class Trainer:
                 break
         agent.epsilon = max(agent.epsilon_end , agent.epsilon * cfg.epsilon_decay)
         agent.memory.push(episode_record)
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res
     def test_one_episode(self, env, agent, cfg):
         ep_reward = 0  # reward per episode
         ep_step = 0
@@ -56,7 +57,8 @@ class Trainer:
             ep_reward += reward  #
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res
    
 
         

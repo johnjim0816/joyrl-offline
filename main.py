@@ -152,7 +152,9 @@ class Main(object):
         if cfg.mode.lower() == 'train':
             best_ep_reward = -float('inf')
             for i_ep in range(cfg.train_eps):
-                agent, ep_reward, ep_step = trainer.train_one_episode(env, agent, cfg)
+                agent, res = trainer.train_one_episode(env, agent, cfg)
+                ep_reward = res['ep_reward']
+                ep_step = res['ep_step']
                 self.logger.info(f"Episode: {i_ep + 1}/{cfg.train_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
                 rewards.append(ep_reward)
                 steps.append(ep_step)

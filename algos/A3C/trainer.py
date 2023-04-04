@@ -130,7 +130,8 @@ class Trainer:
             ep_reward += reward  #
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res
     def test_one_episode(self, env, agent, cfg):
         ep_reward = 0  # reward per episode
         ep_step = 0
@@ -148,7 +149,8 @@ class Trainer:
             ep_reward += reward  #
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res
 if __name__ == "__main__":
 
     pass

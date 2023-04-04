@@ -5,7 +5,7 @@ Author: John
 Email: johnjim0816@gmail.com
 Date: 2020-09-11 23:03:00
 LastEditor: Yi Zhang
-LastEditTime: 2022-12-03 16:25:37
+LastEditTime: 2023-04-05 01:18:30
 Discription: 
 Environment: 
 '''
@@ -34,7 +34,8 @@ class Trainer:
             ep_reward += reward  #
             if terminated:
                 break
-        return agent, ep_reward, ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res
 
     def test_one_episode(self, env, agent, cfg):
         ep_reward = 0  # reward per episode
@@ -55,4 +56,5 @@ class Trainer:
             ep_reward += reward  #
             if terminated:
                 break
-        return agent, ep_reward, ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res

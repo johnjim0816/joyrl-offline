@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-03-10 23:35:45
 LastEditor: JiangJi
-LastEditTime: 2023-03-11 00:10:41
+LastEditTime: 2023-04-05 01:20:06
 Discription: 
 '''
 class Trainer:
@@ -29,7 +29,8 @@ class Trainer:
             ep_reward += reward  # accumulate reward
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res
     
     def test_one_episode(self, env, agent, cfg):
         ep_reward = 0  # reward per episode
@@ -48,4 +49,5 @@ class Trainer:
             ep_reward += reward  #
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res

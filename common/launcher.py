@@ -35,11 +35,13 @@ class Launcher:
     def train_one_episode(self,env, agent, cfg):
         ep_reward = 0
         ep_step = 0
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+return agent,res
     def test_one_episode(self, env, agent, cfg):
         ep_reward = 0
         ep_step = 0
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+return agent,res
     def evaluate(self, env, agent, cfg):
         sum_eval_reward = 0
         for _ in range(cfg.eval_eps):
