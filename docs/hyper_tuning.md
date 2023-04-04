@@ -19,8 +19,8 @@ class AlgoConfig:
 
 调参总结：
 
-* 适当调整`epsilon_decay`以保证`epsilon`在训练过程中不会过早衰减。
-* 由于传统强化学习算法面对的环境都比较简单，因此`gamma`一般设置为`0.9`，`lr`且设置得比较大，不用太担心过拟合的情况
+* 适当调整`epsilon_decay`以保证`epsilon`在训练过程中不会过早衰减。By [johnjim0816](https://github.com/johnjim0816)。
+* 由于传统强化学习算法面对的环境都比较简单，因此`gamma`一般设置为`0.9`，`lr`且设置得比较大，不用太担心过拟合的情况。By [johnjim0816](https://github.com/johnjim0816)。
 
 ## DRL基础
 
@@ -63,4 +63,4 @@ $$
 
 调参总结：
 
-* batch_size跟深度学习一样，一般都在64，128和256之间(太大了训练的物理机器吃不消)
+* batch_size跟深度学习一样，一般都在64，128和256之间(太大了训练的物理机器吃不消)。By [johnjim0816](https://github.com/johnjim0816)。
