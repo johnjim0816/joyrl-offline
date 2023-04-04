@@ -1,5 +1,17 @@
 # 框架说明
 
+## 
+
+<div align=center>
+<img width="600" src="../figs/joyrl_offline_framework.png"/>
+</div>
+<div align=center>JoyRL离线版框架</div>
+
+<div align=center>
+<img width="600" src="../figs/joyrl_online_framework.png"/>
+</div>
+<div align=center>JoyRL在线版框架</div>
+
 ## 目录树
 
 JoyRL目录树如下：
