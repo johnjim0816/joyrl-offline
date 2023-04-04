@@ -42,3 +42,5 @@ render_mode: human # 渲染模式
 当渲染模式为`human`时，会在屏幕上渲染。
 
 当渲染模式为`rgb_array`时，会返回一个`numpy`数组，可以用`plt.imshow`来渲染，在`JoyRL`中会在`[task_dir]/videos`下生成`video.gif`文件。
+
+另外注意，`JoyRL`中的只有单线程下支持渲染模式。
