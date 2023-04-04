@@ -1,6 +1,6 @@
 general_cfg:
   algo_name: DQN
-  device: cpu
+  device: cuda
   env_name: CartPole-v1
   eval_eps: 10
   eval_per_episode: 5
@@ -8,11 +8,16 @@ general_cfg:
   load_path: Train_CartPole-v1_DQN_20221119-171415
   max_steps: 200
   mode: test
+  mp_backend: mp
+  new_step_api: true
+  render: true
+  render_mode: rgb_array
   save_fig: true
   seed: 0
   show_fig: false
   test_eps: 10
   train_eps: 100
+  wrapper: null
 algo_cfg:
   batch_size: 64
   buffer_size: 100000

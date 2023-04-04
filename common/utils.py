@@ -5,7 +5,7 @@ Author: John
 Email: johnjim0816@gmail.com
 Date: 2021-03-12 16:02:24
 LastEditor: John
-LastEditTime: 2023-04-02 21:53:39
+LastEditTime: 2023-04-04 21:35:48
 Discription: 
 Environment: 
 '''
@@ -19,6 +19,7 @@ import torch.nn.functional as F
 import random
 from pathlib import Path
 import matplotlib.pyplot as plt
+from matplotlib import animation
 import seaborn as sns
 import yaml
 import pandas as pd
@@ -53,6 +54,21 @@ def plot_rewards_cn(rewards, ma_rewards, cfg, tag='train'):
     if cfg.save:
         plt.savefig(cfg.result_path+f"{tag}_rewards_curve_cn")
     # plt.show()
+def save_frames_as_gif(frames, fpath=None):
+    ''' 保存gif动图
+    '''
+    Path(fpath).mkdir(parents=True, exist_ok=True)
+    #Mess with this to change frame size
+    plt.figure(figsize=(frames[0].shape[1] / 72.0, frames[0].shape[0] / 72.0), dpi=72)
+
+    patch = plt.imshow(frames[0])
+    plt.axis('off')
+
+    def animate(i):
+        patch.set_data(frames[i])
+
+    anim = animation.FuncAnimation(plt.gcf(), animate, frames = len(frames), interval=50)
+    anim.save(f"{fpath}/video.gif", writer='imagemagick', fps=60)
 def smooth(data, weight=0.9):  
     '''用于平滑曲线，类似于Tensorboard中的smooth
 

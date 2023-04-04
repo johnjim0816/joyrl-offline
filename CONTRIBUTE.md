@@ -14,6 +14,7 @@
 
 调试好你的算法代码之后，分别训练和测试一次，将对应输出的文件夹放到`benchmarks`目录下
 
+注意`test`模式下请将`render`设置为`True`，并且`render_mode`设置为`rgb_array`，这样可以生成`gif`文件，方便可视化对比。
 ## 代码注释
 
 [注释说明](./annotation.md), 本仓库统一中文注释

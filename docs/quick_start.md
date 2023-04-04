@@ -30,3 +30,15 @@ for i_episode in range(n_episodes):
             break
 ```
 [joyrl-book](https://github.com/datawhalechina/joyrl-book/tree/main/pseudocodes)提供了丰富的强化学习算法伪代码，帮助读者们更好地理解算法，也欢迎多多`star`～。在`JoyRL`中，我们将训练接口封装到了`Trainer`中，而在多线程中，我们将训练接口封装到了`Worker`中，具体参考相关说明部分。
+
+
+## 渲染模式
+
+渲染模式主要有两个参数来控制：
+```yaml
+render: True # 是否渲染
+render_mode: human # 渲染模式
+```
+当渲染模式为`human`时，会在屏幕上渲染。
+
+当渲染模式为`rgb_array`时，会返回一个`numpy`数组，可以用`plt.imshow`来渲染，在`JoyRL`中会在`[task_dir]/videos`下生成`video.gif`文件。

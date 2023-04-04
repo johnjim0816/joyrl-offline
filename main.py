@@ -11,12 +11,12 @@ import yaml
 from pathlib import Path
 import datetime
 import gym
+from gym.wrappers import RecordVideo
 import ray
 from ray.util.queue import Queue
 import torch.multiprocessing as mp
-from torch.utils.tensorboard import SummaryWriter 
 from config.config import GeneralConfig
-from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, check_n_workers, save_traj
+from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, check_n_workers, save_traj,save_frames_as_gif
 from common.ray_utils import GlobalVarRecorder
 from envs.register import register_env
 
@@ -79,10 +79,7 @@ class Main(object):
 
     def create_dirs(self, cfg):
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
-        if cfg.n_workers == 1:
-            task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.env_name}_{cfg.algo_name}_{curr_time}"
-        else:
-            task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.env_name}_mp_{cfg.algo_name}_{curr_time}"
+        task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.env_name}_{cfg.algo_name}_{curr_time}"
         setattr(cfg, 'task_dir', task_dir)
         Path(cfg.task_dir).mkdir(parents=True, exist_ok=True)
         model_dir = f"{task_dir}/models"
@@ -93,8 +90,8 @@ class Main(object):
         setattr(cfg, 'log_dir', log_dir)
         traj_dir = f"{task_dir}/traj"
         setattr(cfg, 'traj_dir', traj_dir)
-        tb_dir = f"{task_dir}/tb_logs"
-        setattr(cfg, 'tb_dir', tb_dir)
+        video_dir = f"{task_dir}/videos"
+        setattr(cfg, 'video_dir', video_dir)
 
     def envs_config(self, cfg):
         ''' configure environment
@@ -169,12 +166,17 @@ class Main(object):
             # env.close()
         elif cfg.mode.lower() == 'test':
             for i_ep in range(cfg.test_eps):
-                agent, ep_reward, ep_step = trainer.test_one_episode(env, agent, cfg)
+                agent, res = trainer.test_one_episode(env, agent, cfg)
+                ep_reward = res['ep_reward']
+                ep_step = res['ep_step']
                 self.logger.info(f"Episode: {i_ep + 1}/{cfg.test_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
                 rewards.append(ep_reward)
                 steps.append(ep_step)
+                if i_ep == 0 and cfg.render and cfg.render_mode == 'rgb_array':
+                    frames = res['ep_frames']
+                    save_frames_as_gif(frames, cfg.video_dir)
             agent.save_model(cfg.model_dir)  # save models
-            # env.close()
+            env.close()
         elif cfg.mode.lower() == 'collect':  # collect
             trajectories = {'states': [], 'actions': [], 'rewards': [], 'terminals': []}
             for i_ep in range(cfg.collect_eps):
@@ -284,10 +286,6 @@ class Main(object):
         cfg = merge_class_attrs(cfg, self.cfgs['algo_cfg'])
         self.create_dirs(cfg)  # create dirs
         self.logger = get_logger(cfg.log_dir)  # create the logger
-        # tensorboard Unable to be serialized in ray
-        if cfg.mp_backend != 'ray':
-            tb_writter = SummaryWriter(cfg.tb_dir)  # create the tensorboard writter
-            setattr(cfg, 'tb_writter', tb_writter) # add tensorboard writter to config
         self.print_cfgs(cfg)  # print the configuration
         all_seed(seed=cfg.seed)  # set seed == 0 means no seed
         check_n_workers(cfg)  # check n_workers

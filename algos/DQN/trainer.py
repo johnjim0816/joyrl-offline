@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2022-11-22 23:19:20
 LastEditor: Guoshicheng
-LastEditTime: 2023-04-01 12:42:30
+LastEditTime: 2023-04-04 21:38:41
 Discription: 
 '''
 import torch.multiprocessing as mp
@@ -35,16 +35,21 @@ class Trainer:
     def test_one_episode(self, env, agent, cfg):
         ep_reward = 0  # reward per episode
         ep_step = 0
+        ep_frames = []
         state = env.reset(seed = cfg.seed)  # reset and obtain initial state
         for _ in range(cfg.max_steps):
             ep_step += 1
+            if cfg.render and cfg.render_mode == 'rgb_array':
+                frame = env.render()[0]
+                ep_frames.append(frame)
             action = agent.predict_action(state)  # sample action
             next_state, reward, terminated, truncated , info = env.step(action)  # update env and return transitions under new_step_api of OpenAI Gym
             state = next_state  # update next state for env
             ep_reward += reward  #
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step,'ep_frames':ep_frames}
+        return agent,res
     
 class Worker(mp.Process):
     def __init__(self,cfg,worker_id,share_agent,env,local_agent, global_ep = None,global_r_que = None,global_best_reward = None):
