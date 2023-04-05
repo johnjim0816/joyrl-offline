@@ -64,3 +64,5 @@ $$
 调参总结：
 
 * batch_size跟深度学习一样，一般都在64，128和256之间(太大了训练的物理机器吃不消)。By [johnjim0816](https://github.com/johnjim0816)。
+* lr一般取0.0001～0.01之间，建议从小的lr开始尝试，过大的lr虽然能帮助策略在训练初期快速更新，但也很容易导致最终的收敛效果一般，loss长期保持震荡状态。 By [GeYuhong](https://github.com/GeYuhong)
+* epsilon_decay和epsilon_start一般可以取500~800和0.95~0.99之间，通常希望算法在训练初期具有较强的探索能力，在后期逐渐稳定，对于某些特别需要探索的环境可以适当增大两者。By [GeYuhong](https://github.com/GeYuhong)

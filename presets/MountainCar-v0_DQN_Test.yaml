@@ -5,22 +5,23 @@ general_cfg:
   eval_eps: 10
   eval_per_episode: 5
   load_checkpoint: true
-  load_path: Train_MountainCar-v0_DQN_20230404-130132
+  load_path: Train_MountainCar-v0_DQN_20230404-211546
   max_steps: 200
   mode: test
   new_step_api: true
   render: true
   save_fig: true
-  seed: 1
+  seed: 3
   show_fig: false
   test_eps: 20
-  train_eps: 300
+  train_eps: 200
   wrapper: null
-  render_mode: human
+  render_mode: rgb_array
+  n_workers: 1
 algo_cfg:
   batch_size: 64
-  buffer_size: 50000
-  epsilon_decay: 1000
+  buffer_size: 40000
+  epsilon_decay: 800
   epsilon_end: 0.01
   epsilon_start: 0.99
   gamma: 0.99
