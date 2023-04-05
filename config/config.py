@@ -34,4 +34,3 @@ class GeneralConfig():
         self.load_path = "tasks" # path to load model
         self.show_fig = False # show figure or not
         self.save_fig = True # save figure or not
-        
