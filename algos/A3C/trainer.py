@@ -21,6 +21,8 @@ from common.models import ActorSoftmax, Critic
 
 
 class Worker(mp.Process):
+    '''多线程学习类
+    '''
     def __init__(self,cfg,worker_id,share_agent,env,local_agent, global_ep = None,global_r_que = None,global_best_reward = None):
         super(Worker,self).__init__()
         self.mode = cfg.mode
@@ -43,21 +45,23 @@ class Worker(mp.Process):
         while self.global_ep.value <= self.train_eps:
             state = self.env.reset(seed = self.worker_seed)
             ep_r = 0 # reward per episode
-            ep_step = 0
+            ep_step = 0 # 记录一个回合中的步数
             while True:
                 ep_step += 1
-                action = self.local_agent.sample_action(state)
-                next_state, reward, terminated, truncated, info = self.env.step(action)
-                self.local_agent.memory.push((state, action, reward, terminated))
-                self.local_agent.update(next_state,terminated,share_agent=self.share_agent)
-                state = next_state
-                ep_r += reward
+                action = self.local_agent.sample_action(state) # sample actions
+                next_state, reward, terminated, truncated, info = self.env.step(action) # execute an action
+                self.local_agent.memory.push((state, action, reward, terminated)) # save current information
+                self.local_agent.update(next_state,terminated,share_agent=self.share_agent) # update parameters
+                state = next_state # update state
+                ep_r += reward # accumulate rewards
+                ## record the final rewards when the episode ends
                 if terminated or ep_step >= self.max_steps:
                     print(f"Worker {self.worker_id} finished episode {self.global_ep.value} with reward {ep_r:.3f}")
-                    with self.global_ep.get_lock():
+                    with self.global_ep.get_lock(): # 多线程上锁，保证线程安全
                         self.global_ep.value += 1
                     self.global_r_que.put(ep_r)
                     break
+            ## evaluate policy every n episodes
             if (self.global_ep.value+1) % self.eval_eps == 0:
                 mean_eval_reward = self.evaluate()
                 if mean_eval_reward > self.global_best_reward.value:
@@ -108,36 +112,59 @@ class Worker(mp.Process):
         elif self.mode == 'test':
             self.test()
 class Trainer:
+    '''单线程学习类
+    '''
     def __init__(self) -> None:
         pass
-    def train_one_episode(self, env, agent, cfg): 
+    def train_one_episode(self, env, agent, cfg):
+        '''定义一个回合的训练过程
+        Args:
+            env(class):环境类
+            agent(class):智能体类
+            cfg(class):超参数类
+        Returns:
+            agent(class):智能体类
+            ep_reward(float):一个回合获得的回报
+            ep_step(int):一个回合中总共迭代的步数
+        '''
         ep_reward = 0  # reward per episode
-        ep_step = 0
-        state = env.reset(seed = cfg.seed)  # reset and obtain initial state
+        ep_step = 0 # 记录一个回合中的步数
+        env.seed(cfg.seed)
+        state = env.reset()  # reset and obtain initial state
         for _ in range(cfg.max_steps):
             ep_step += 1
             action = agent.sample_action(state)  # sample action
-            if cfg.new_step_api:
+            if cfg.new_step_api: # whether to use new api in openAI Gym
                 next_state, reward, terminated, truncated , info = env.step(action)  # update env and return transitions under new_step_api of OpenAI Gym
             else:
                 next_state, reward, terminated, info = env.step(action)  # update env and return transitions under old_step_api of OpenAI Gym
             agent.memory.push((state,action,reward,terminated))
-            if terminated:
-                agent.update(None)
+            if terminated: # 遇到回合终止标志则不进行参数更新
+                agent.update(None,terminated)
             else:
-                agent.update(next_state)
+                agent.update(next_state,terminated) # update policy
             state = next_state  # update next state for env
-            ep_reward += reward  #
+            ep_reward += reward  # accumulate rewards
             if terminated:
                 break
-        res = {'ep_reward':ep_reward,'ep_step':ep_step}
-        return agent,res
+        return agent,ep_reward,ep_step
     def test_one_episode(self, env, agent, cfg):
+        '''定义一个回合的测试过程
+        Args:
+            env(class):环境类
+            agent(class):智能体类
+            cfg(class):超参数类
+        Returns:
+            agent(class):智能体类
+            ep_reward(float):一个回合获得的回报
+            ep_step(int):一个回合中总共迭代的步数
+        '''
         ep_reward = 0  # reward per episode
-        ep_step = 0
-        state = env.reset(seed = cfg.seed)  # reset and obtain initial state
+        ep_step = 0 # 记录一个回合中的步数
+        env.seed(cfg.seed)
+        state = env.reset()  # reset and obtain initial state
         for _ in range(cfg.max_steps):
-            if cfg.render:
+            if cfg.render: # 是否渲染画面
                 env.render()
             ep_step += 1
             action = agent.predict_action(state)  # sample action
@@ -146,11 +173,10 @@ class Trainer:
             else:
                 next_state, reward, terminated, info = env.step(action) # update env and return transitions under old_step_api of OpenAI Gym
             state = next_state  # update next state for env
-            ep_reward += reward  #
+            ep_reward += reward  # accumulate rewards
             if terminated:
                 break
-        res = {'ep_reward':ep_reward,'ep_step':ep_step}
-        return agent,res
+        return agent,ep_reward,ep_step
 if __name__ == "__main__":
 
     pass
