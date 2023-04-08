@@ -129,8 +129,8 @@ class Main(object):
     def evaluate(self, cfg, trainer, env, agent):
         sum_eval_reward = 0
         for _ in range(cfg.eval_eps):
-            _, eval_ep_reward, _ = trainer.test_one_episode(env, agent, cfg)
-            sum_eval_reward += eval_ep_reward
+            _, res = trainer.test_one_episode(env, agent, cfg)
+            sum_eval_reward += res['ep_reward']
         mean_eval_reward = sum_eval_reward / cfg.eval_eps
         return mean_eval_reward
 
