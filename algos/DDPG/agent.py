@@ -80,7 +80,7 @@ class OUNoise(object):
         '''
         初始化输入参数
         Args:
-            action_space (Union[gym.spaces.box.Box, gym.spaces.discrete.Discrete]): env 中的 action_space
+            action_space (gym.spaces.box.Box): env 中的 action_space
             mu (float, optional): 噪声均值
             theta (float, optional): 系统对噪声的扰动程度，theta 越大，噪声扰动越小
             max_sigma (float, optional): 最大 sigma，用于更新衰变 sigma 值
@@ -93,7 +93,7 @@ class OUNoise(object):
         self.max_sigma = max_sigma
         self.min_sigma = min_sigma
         self.decay_period = decay_period
-        self.n_actions = action_space.shape[0]  # env环境中可执行动作的数量
+        self.n_actions = action_space.shape[0]  # env环境中可执行动作的数量，因是连续动作，所以一般为1
         self.low = action_space.low  # env环境中动作取值的最小值
         self.high = action_space.high  # env环境中动作取值的最大值
         self.reset()
@@ -119,11 +119,11 @@ class OUNoise(object):
         '''
         根据输入的动作，输出加入 OU 噪声后的动作
         Args:
-            action (array): 输入的动作值
+            action (np.ndarray[float]): 输入的动作值
             t (int, optional): 当前环境已执行的帧数
 
         Returns:
-            action (float): 返回加入 OU 噪声后的动作
+            action (np.ndarray[float]): 返回加入 OU 噪声后的动作
         '''
         ou_obs = self.evolve_obs()
         ## 根据env进程（t），通过设定的衰变周期（decay_period），进行更新衰变的sigma值
@@ -167,10 +167,10 @@ class Agent:
         '''
         根据输入的状态采样动作
         Args:
-            state (array): 输入的状态
+            state (np.ndarray): 输入的状态
 
         Returns:
-            action (float): 根据状态采样后的动作
+            action (np.ndarray[float]): 根据状态采样后的动作
         '''
         self.sample_count += 1
         state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
@@ -189,10 +189,10 @@ class Agent:
         '''
         根据输入的状态预测下一步的动作
         Args:
-            state (array):  输入的状态
+            state (np.ndarray):  输入的状态
 
         Returns:
-            action (float): 根据状态采样后的动作
+            action (np.ndarray[float]): 根据状态采样后的动作
         '''
         state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
         action_tanh = self.actor(state)  # action_tanh is in [-1, 1]
