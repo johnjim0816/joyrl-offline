@@ -223,9 +223,9 @@ class Agent:
         policy_loss = self.critic(state, self.actor(state))
         ## 计算均值作为 critic 网络的损失
         policy_loss = -policy_loss.mean()
-        ## 根据下一个 timestamp 的状态用 target_actor 网络输出目标动作
+        ## 根据下一个 time step 的状态用 target_actor 网络输出目标动作
         next_action = self.target_actor(next_state)
-        ## 输入下一个 timestamp 的状态及目标动作，计算 target_critc 网络输出的目标价值
+        ## 输入下一个 time step 的状态及目标动作，计算 target_critc 网络输出的目标价值
         target_value = self.target_critic(next_state, next_action.detach())
         ## 根据真实奖励更新目标价值
         expected_value = reward + (1.0 - done) * self.gamma * target_value
