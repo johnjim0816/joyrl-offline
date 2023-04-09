@@ -3,13 +3,19 @@
 ## 日志20230409
 
 ### 文档编辑
+
+* 增加DDPG中文注释。By [Irvinfaith](https://github.com/Irvinfaith)
+* 增加SAC中文注释。By [pengsuhua](https://github.com/pengsuhua)
+* 增加BC注释。By [FinnJob](https://github.com/FinnJob)
 ### benchmark开发
 
 
 
-* By [GeYuhong](https://github.com/GeYuhong): DQN+Mountain Car v0 开发，这是调参总结：https://johnjim0816.com/joyrl-offline/#/./hyper_tuning?id=dqn
+* DQN+Mountain Car v0 开发，这是调参总结：https://johnjim0816.com/joyrl-offline/#/./hyper_tuning?id=dqn。By [GeYuhong](https://github.com/GeYuhong)。
+* PPO+lunarlander-v2开发。By [FinnJob](https://github.com/FinnJob)
 
 
 ### 算法开发
 
-* 
+* 增加多目标强化学习算法以及文档。By [curryliu30](https://github.com/curryliu30)
+* 增加Double DQN以及Dueling DQN算法的多线程。By [gsc579](https://github.com/gsc579)
