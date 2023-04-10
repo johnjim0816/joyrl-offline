@@ -56,11 +56,11 @@ class Trainer:
     def collect_one_episode(self, env, agent, cfg):
         # dict of arrays
         collected = False
-        ep_memory = {'state': [], 'action': [], 'reward': [], 'terminated': []}
+        ep_memory = {'state': [], 'action': [], 'next_state': [], 'reward': [], 'terminated': []}
         while not collected:
             trajectories = 0
             state = env.reset()
-            ep_memory = {'state': [], 'action': [], 'reward': [], 'terminated': []}
+            ep_memory = {'state': [], 'action': [], 'next_state': [], 'reward': [], 'terminated': []}
             ep_reward = 0
             while trajectories < cfg.max_steps:
                 action = agent.sample_action(state)
@@ -69,6 +69,7 @@ class Trainer:
                 ep_reward += reward
                 ep_memory['state'].append(state)
                 ep_memory['action'].append(action)
+                ep_memory['next_state'].append(new_state)
                 ep_memory['reward'].append(reward)
                 ep_memory['terminated'].append(terminated)
                 state = new_state
@@ -77,7 +78,7 @@ class Trainer:
                     if ep_reward >= cfg.min_reward:
                         collected = True
                     break
-        return ep_reward, ep_memory['state'], ep_memory['action'], ep_memory['reward'], ep_memory['terminated']
+        return ep_reward, ep_memory['state'], ep_memory['action'], ep_memory['next_state'], ep_memory['reward'], ep_memory['terminated']
    
 
         
