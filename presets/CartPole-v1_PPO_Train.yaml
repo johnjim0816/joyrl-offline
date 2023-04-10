@@ -14,7 +14,7 @@ general_cfg:
   seed: 1
   show_fig: false
   test_eps: 10
-  train_eps: 200
+  train_eps: 210
   wrapper: null
 algo_cfg:
   ppo_type: clip
