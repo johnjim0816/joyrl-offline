@@ -180,12 +180,13 @@ class Main(object):
             agent.save_model(cfg.model_dir)  # save models
             env.close()
         elif cfg.mode.lower() == 'collect':  # collect
-            trajectories = {'states': [], 'actions': [], 'rewards': [], 'terminals': []}
+            trajectories = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'terminals': []}
             for i_ep in range(cfg.collect_eps):
                 print ("i_ep = ", i_ep, "cfg.collect_eps = ", cfg.collect_eps)
-                total_reward, ep_state, ep_action, ep_reward, ep_terminal = trainer.collect_one_episode(env, agent, cfg)
+                total_reward, ep_state, ep_action, ep_next_state, ep_reward, ep_terminal = trainer.collect_one_episode(env, agent, cfg)
                 trajectories['states'] += ep_state
                 trajectories['actions'] += ep_action
+                trajectories['next_states'] += ep_next_state
                 trajectories['rewards'] += ep_reward
                 trajectories['terminals'] += ep_terminal
                 self.logger.info(f'trajectories {i_ep + 1} collected, reward {total_reward}')
