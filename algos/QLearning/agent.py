@@ -16,8 +16,12 @@ from collections import defaultdict
 
 class Agent(object):
     def __init__(self,cfg):
+        '''智能体类
+        Args:
+            cfg (class): 超参数类
+        '''
         self.n_actions = cfg.n_actions 
-        self.exploration_type = 'e-greedy' # e-greedy, boltzmann, softmax, ucb etc.
+        self.exploration_type = 'e-greedy' # 探索策略如 e-greedy ，boltzmann ，softmax， ucb 等
         self.lr = cfg.lr 
         self.gamma = cfg.gamma    
         self.epsilon = cfg.epsilon_start
@@ -25,17 +29,13 @@ class Agent(object):
         self.epsilon_start = cfg.epsilon_start
         self.epsilon_end = cfg.epsilon_end
         self.epsilon_decay = cfg.epsilon_decay
-        self.Q_table  = defaultdict(lambda: np.zeros(self.n_actions)) # use nested dictionary to represent Q(s,a), here set all Q(s,a)=0 initially, not like pseudo code
-    def sample_action(self, state):
-        ''' sample action with e-greedy policy while training
-        '''
-        if self.exploration_type == 'e-greedy':
-            action = self._epsilon_greedy_sample_action(state)
-        else:
-            raise NotImplementedError
-        return action
+        self.Q_table  = defaultdict(lambda: np.zeros(self.n_actions)) # 使用嵌套字典来表示 Q(s,a)，并将指定所有的 Q_table 创建时， Q(s,a) 初始设置为 0
     def predict_action(self,state):
-        ''' predict action while testing 
+        ''' 预测动作
+        Args:
+            state (array): 状态
+        Returns:
+            action (int): 动作
         '''
         if self.exploration_type == 'e-greedy':
             action = self._epsilon_greedy_predict_action(state)
@@ -44,28 +44,41 @@ class Agent(object):
         return action
     def _epsilon_greedy_sample_action(self, state):
         self.sample_count += 1
-        # epsilon must decay(linear,exponential and etc.) for balancing exploration and exploitation
+        # epsilon 值需要衰减，衰减方式可以是线性、指数等，以平衡探索和开发
         self.epsilon = self.epsilon_end + (self.epsilon_start - self.epsilon_end) * \
             math.exp(-1. * self.sample_count / self.epsilon_decay) 
         if np.random.uniform(0, 1) > self.epsilon:
-            action = np.argmax(self.Q_table[str(state)]) # choose action corresponding to the maximum q value
+            action = np.argmax(self.Q_table[str(state)]) # 选择具有最大 Q 值的动作
         else:
-            action = np.random.choice(self.n_actions) # choose action randomly
+            action = np.random.choice(self.n_actions) # 随机选择一个动作
         return action
     def _epsilon_greedy_predict_action(self,state):
         action = np.argmax(self.Q_table[str(state)])
         return action
     def update(self, state, action, reward, next_state, done):
+        ''' 更新模型
+        Args:
+            state (array): 当前状态 
+            action (int): 当前动作 
+            reward (float): 当前奖励信号 
+            next_state (array): 下一个状态 
+            done (bool): 表示是否达到终止状态 
+        '''
         Q_predict = self.Q_table[str(state)][action] 
-        if done: # terminal state
+        if done: # 终止状态 
             Q_target = reward  
         else:
             Q_target = reward + self.gamma * np.max(self.Q_table[str(next_state)]) 
         self.Q_table[str(state)][action] += self.lr * (Q_target - Q_predict)
     def save_model(self,path):
+        '''
+        保存模型
+        Args:
+            path (str): 模型存储路径 
+        '''
         import dill
         from pathlib import Path
-        # create path
+        # 确保存储路径存在 
         Path(path).mkdir(parents=True, exist_ok=True)
         torch.save(
             obj=self.Q_table,
@@ -74,6 +87,11 @@ class Agent(object):
         )
         print("Model saved!")
     def load_model(self, path):
+        '''
+        根据模型路径导入模型
+        Args:
+            fpath (str): 模型路径
+        '''
         import dill
         self.Q_table =torch.load(f=path+'Qleaning_model.pkl',pickle_module=dill)
         print("Mode loaded!")
