@@ -32,10 +32,10 @@ class Agent(object):
         self.Q_table  = defaultdict(lambda: np.zeros(self.n_actions)) # 使用嵌套字典来表示 Q(s,a)，并将指定所有的 Q_table 创建时， Q(s,a) 初始设置为 0
     def sample_action(self, state):
         ''' 以 e-greedy 策略训练时选择动作 
-        Args: 
-            state (array): 当前状态 
-        Returns: 
-            action (int): 选择的动作下标 
+        Args:
+            state (array): 状态
+        Returns:
+            action (int): 动作
         ''' 
         if self.exploration_type == 'e-greedy':
             action = self._epsilon_greedy_sample_action(state)
