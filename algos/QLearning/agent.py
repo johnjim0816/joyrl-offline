@@ -30,6 +30,18 @@ class Agent(object):
         self.epsilon_end = cfg.epsilon_end
         self.epsilon_decay = cfg.epsilon_decay
         self.Q_table  = defaultdict(lambda: np.zeros(self.n_actions)) # 使用嵌套字典来表示 Q(s,a)，并将指定所有的 Q_table 创建时， Q(s,a) 初始设置为 0
+    def sample_action(self, state):
+        ''' 以 e-greedy 策略训练时选择动作 
+        Args: 
+            state (array): 当前状态 
+        Returns: 
+            action (int): 选择的动作下标 
+        ''' 
+        if self.exploration_type == 'e-greedy':
+            action = self._epsilon_greedy_sample_action(state)
+        else:
+            raise NotImplementedError
+        return 
     def predict_action(self,state):
         ''' 预测动作
         Args:
@@ -43,6 +55,13 @@ class Agent(object):
             raise NotImplementedError
         return action
     def _epsilon_greedy_sample_action(self, state):
+        ''' 
+        采用 epsilon-greedy 策略进行动作选择 
+        Args: 
+            state (array): 状态
+        Returns: 
+            action (int): 动作
+        ''' 
         self.sample_count += 1
         # epsilon 值需要衰减，衰减方式可以是线性、指数等，以平衡探索和开发
         self.epsilon = self.epsilon_end + (self.epsilon_start - self.epsilon_end) * \
@@ -53,6 +72,13 @@ class Agent(object):
             action = np.random.choice(self.n_actions) # 随机选择一个动作
         return action
     def _epsilon_greedy_predict_action(self,state):
+        ''' 
+        使用 epsilon-greedy 算法进行动作预测 
+        Args: 
+            state (array): 状态
+        Returns: 
+            action (int): 动作 
+        ''' 
         action = np.argmax(self.Q_table[str(state)])
         return action
     def update(self, state, action, reward, next_state, done):
