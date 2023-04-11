@@ -41,7 +41,7 @@ class Agent(object):
             action = self._epsilon_greedy_sample_action(state)
         else:
             raise NotImplementedError
-        return 
+        return action
     def predict_action(self,state):
         ''' 预测动作
         Args:
