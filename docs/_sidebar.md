@@ -3,4 +3,5 @@
 - [框架说明](./framework.md)
 - [调参说明](./hyper_tuning.md)
 - [自定义Gym环境](./custom_gym.md)
+- [开发日志](./dev_log.md)
 - [如何贡献](./CONTRIBUTE.md)

@@ -17,7 +17,6 @@ from common.memories import PGReplay
 #                 state['step'] = 0
 #                 state['exp_avg'] = torch.zeros_like(p.data)
 #                 state['exp_avg_sq'] = torch.zeros_like(p.data)
-
 #                 # share in memory
 #                 state['exp_avg'].share_memory_()
 #                 state['exp_avg_sq'].share_memory_()
@@ -25,7 +24,6 @@ from common.memories import PGReplay
 class SharedAdam(torch.optim.Adam):
     """Implements Adam algorithm with shared states.
     """
-
     def __init__(self,
                  params,
                  lr=1e-3,
@@ -33,7 +31,7 @@ class SharedAdam(torch.optim.Adam):
                  eps=1e-8,
                  weight_decay=0):
         super(SharedAdam, self).__init__(params, lr, betas, eps, weight_decay)
-
+        
         for group in self.param_groups:
             for p in group['params']:
                 state = self.state[p]
@@ -42,6 +40,8 @@ class SharedAdam(torch.optim.Adam):
                 state['exp_avg_sq'] = p.data.new().resize_as_(p.data).zero_()
 
     def share_memory(self):
+        '''Move states to shared cells
+        '''
         for group in self.param_groups:
             for p in group['params']:
                 state = self.state[p]
@@ -58,37 +58,35 @@ class SharedAdam(torch.optim.Adam):
         loss = None
         if closure is not None:
             loss = closure()
-
+            
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None:
                     continue
                 grad = p.grad.data
                 state = self.state[p]
-
                 exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
                 beta1, beta2 = group['betas']
-
                 state['step'] += 1
-
                 if group['weight_decay'] != 0:
                     grad = grad.add(group['weight_decay'], p.data)
-
                 # Decay the first and second moment running average coefficient
                 exp_avg.mul_(beta1).add_(grad,alpha = 1 - beta1)
                 exp_avg_sq.mul_(beta2).addcmul_(grad, grad,value = 1 - beta2)
-
                 denom = exp_avg_sq.sqrt().add_(group['eps'])
-
                 bias_correction1 = 1 - beta1 ** state['step'].item()
                 bias_correction2 = 1 - beta2 ** state['step'].item()
                 step_size = group['lr'] * math.sqrt(
                     bias_correction2) / bias_correction1
-
                 p.data.addcdiv_(exp_avg, denom,value = -step_size)
         return loss
 class Agent:
     def __init__(self, cfg, is_share_agent = False):
+        '''智能体类
+        Args:
+            cfg(class):超参数类
+            is_share_agent(bool,optional):是否为共享的Agent，多进程下使用，默认为False
+        '''
         self.gamma = cfg.gamma
         self.entropy_coef = cfg.entropy_coef
         self.device = torch.device(cfg.device) 
@@ -98,6 +96,7 @@ class Agent:
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=cfg.critic_lr)
         if is_share_agent: # the agent has no share agent, which means this agent itself is share agent
             self.agent_name = 'share' # share or local
+            # move the models to shared cells
             self.actor.share_memory()
             self.critic.share_memory()
             # self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=cfg.actor_lr)
@@ -107,58 +106,78 @@ class Agent:
             self.actor_optimizer.share_memory()
             self.critic_optimizer.share_memory()
         self.memory = PGReplay()
-        self.sample_count = 0
+        self.sample_count = 0 # 采样动作计数
         self.update_freq = cfg.update_freq
     def sample_action(self, state):
+        '''采样动作
+        Args:
+            state(array):状态
+        Returns:
+            action(int):动作
+        '''
         self.sample_count += 1
-        state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
+        state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(dim=0) # add one shape on dimension 0 to adapt to the softmax manipulation
         probs = self.actor(state)
         dist = Categorical(probs)
         action = dist.sample()
         return action.detach().cpu().numpy().item()
     @torch.no_grad()
     def predict_action(self, state):
+        '''预测动作
+        Args:
+            state(array):状态
+        Returns:
+            action(int):动作
+        '''
         state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
         probs = self.actor(state)
         dist = Categorical(probs)
         action = dist.sample()
         return action.detach().cpu().numpy().item()
     def update(self,next_state,terminated,share_agent=None):
+        '''参数更新
+        Args:
+            next_state(array):下一个状态
+            terminated(bool):回合终止标志
+            share_agent:是否存在共享Agent，多进程下使用，这里默认为单线程
+        '''
         # update policy every n steps
         if self.sample_count % self.update_freq != 0:
             return
         # print("update policy")
-        states, actions, rewards, dones = self.memory.sample()
-        # convert to tensor
+        states, actions, rewards, dones = self.memory.sample() #保存当前状态信息
+        ## convert to tensor
         states = torch.tensor(np.array(states), device=self.device, dtype=torch.float32)
         actions = torch.tensor(np.array(actions), device=self.device, dtype=torch.float32)
         rewards = torch.tensor(np.array(rewards), device=self.device, dtype=torch.float32)
         dones = torch.tensor(np.array(dones), device=self.device, dtype=torch.float32)
-        # compute returns
-        # compute returns
+        ## compute returns
         if not terminated:
-            next_state = torch.tensor(next_state, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
-            next_value = self.critic(next_state).detach()
+            next_state = torch.tensor(next_state, device=self.device, dtype=torch.float32).unsqueeze(dim=0) # convert to tensor
+            next_value = self.critic(next_state).detach() # compute values for next_state
         else:
-            next_value = torch.tensor(0.0, device=self.device, dtype=torch.float32)
-        returns = self.compute_returns(next_value,rewards,dones)
-        values = self.critic(states)
-        advantages = returns - values.detach()
-        probs = self.actor(states)
+            next_value = torch.tensor(0.0, device=self.device, dtype=torch.float32) # 遇到回合终止标志时奖励置为0
+        returns = self.compute_returns(next_value,rewards,dones) # compute returns when taking an action
+        values = self.critic(states) # compute values in current state
+        advantages = returns - values.detach() # compute advantages when taking an action
+        probs = self.actor(states) # compute the probability distribution of actions
         dist = Categorical(probs)
+        ## Define the loss functions
         log_probs = dist.log_prob(actions).unsqueeze(dim=1) # log_probs.shape = (batch_size,1), which is the same as advantages.shape
-        actor_loss = (-log_probs*advantages).mean()+ self.entropy_coef * dist.entropy().mean()
-        critic_loss = (returns - values).pow(2).mean()
+        actor_loss = (-log_probs*advantages).mean()+ self.entropy_coef * dist.entropy().mean() # compute policy_loss and entropy_loss
+        critic_loss = (returns - values).pow(2).mean() # compute value_loss
         # self.actor_optimizer.zero_grad()
         # self.critic_optimizer.zero_grad()
         # tot_loss.backward()
         # self.actor_optimizer.step()
         # self.critic_optimizer.step()
         if share_agent is not None:
+            ## 多线程学习
             share_agent.actor_optimizer.zero_grad()
             share_agent.critic_optimizer.zero_grad()
             actor_loss.backward()
             critic_loss.backward()
+            # update local agent's parameters to global agent network
             for param, share_param in zip(self.actor.parameters(), share_agent.actor.parameters()):
                 # if share_param.grad is None:
                 #     share_param._grad = param.grad
@@ -172,6 +191,7 @@ class Agent:
             self.actor.load_state_dict(share_agent.actor.state_dict())
             self.critic.load_state_dict(share_agent.critic.state_dict())
         else:
+            ## 单线程学习
             self.actor_optimizer.zero_grad()
             self.critic_optimizer.zero_grad()
             actor_loss.backward()
@@ -181,25 +201,30 @@ class Agent:
         # clear memory
         self.memory.clear()
     def compute_returns(self, next_value, rewards, dones):
-        '''monte carlo estimate of state rewards'''
+        '''monte carlo estimate of state rewards
+        Args:
+            next_value(tensor):下一个状态产生的价值
+            rewards(tensor):当前执行动作所获得的回报
+            dones(tensor):回合是否结束的标志
+        Returns:
+            returns(tensor):状态更新后的奖励
+        '''
         returns = torch.zeros_like(rewards)
         R = next_value
         for t in reversed(range(len(rewards))):
-
+            # Update the rewards
             R = rewards[t] + self.gamma * R * (1 - dones[t])
             returns[t] = R
         # Normalizing the rewards:
         returns = returns.clone().unsqueeze(1).to(self.device)
-        returns = (returns - returns.mean()) / (returns.std() + 1e-5) # 1e-5 to avoid division by 
+        returns = (returns - returns.mean()) / (returns.std() + 1e-5) # 1e-5 to avoid division by 0
         return returns
-        
     def save_model(self, fpath):
         from pathlib import Path
         # create path
         Path(fpath).mkdir(parents=True, exist_ok=True)
         torch.save(self.actor.state_dict(), f"{fpath}/actor_checkpoint.pt")
         torch.save(self.critic.state_dict(), f"{fpath}/critic_checkpoint.pt")
-
     def load_model(self, fpath):
         actor_ckpt = torch.load(f"{fpath}/actor_checkpoint.pt")
         critic_ckpt = torch.load(f"{fpath}/critic_checkpoint.pt")
