@@ -1,6 +1,6 @@
 # 框架说明
 
-## 
+## 框架流程图
 
 <div align=center>
 <img width="600" src="../figs/joyrl_offline_framework.png"/>

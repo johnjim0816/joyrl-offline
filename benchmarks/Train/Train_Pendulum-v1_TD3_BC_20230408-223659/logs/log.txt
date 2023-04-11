@@ -1,0 +1,53 @@
+2023-04-08 22:36:59 - r - INFO: - Hyperparameters:
+2023-04-08 22:36:59 - r - INFO: - ================================================================================
+2023-04-08 22:36:59 - r - INFO: -         Name        	       Value        	        Type        
+2023-04-08 22:36:59 - r - INFO: -       env_name      	    Pendulum-v1     	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -     new_step_api    	         1          	   <class 'bool'>   
+2023-04-08 22:36:59 - r - INFO: -       wrapper       	        None        	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -        render       	         0          	   <class 'bool'>   
+2023-04-08 22:36:59 - r - INFO: -     render_mode     	       human        	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -      algo_name      	       TD3_BC       	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -         mode        	       train        	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -      mp_backend     	         mp         	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -         seed        	         1          	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -        device       	        cuda        	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -      train_eps      	         1          	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -       test_eps      	         10         	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -       eval_eps      	         5          	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -   eval_per_episode  	         1          	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -      max_steps      	        200         	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -   load_checkpoint   	         0          	   <class 'bool'>   
+2023-04-08 22:36:59 - r - INFO: -      load_path      	Train_CartPole-v1_DQN_20221026-054757	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -       show_fig      	         0          	   <class 'bool'>   
+2023-04-08 22:36:59 - r - INFO: -       save_fig      	         1          	   <class 'bool'>   
+2023-04-08 22:36:59 - r - INFO: -    explore_steps    	        1000        	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -     policy_freq     	         2          	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -       actor_lr      	       0.0003       	  <class 'float'>   
+2023-04-08 22:36:59 - r - INFO: -      critic_lr      	       0.0003       	  <class 'float'>   
+2023-04-08 22:36:59 - r - INFO: -   actor_hidden_dim  	        256         	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -  critic_hidden_dim  	        256         	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -        gamma        	        0.99        	  <class 'float'>   
+2023-04-08 22:36:59 - r - INFO: -         tau         	       0.005        	  <class 'float'>   
+2023-04-08 22:36:59 - r - INFO: -     policy_noise    	        0.2         	  <class 'float'>   
+2023-04-08 22:36:59 - r - INFO: -      expl_noise     	        0.1         	  <class 'float'>   
+2023-04-08 22:36:59 - r - INFO: -      noise_clip     	        0.5         	  <class 'float'>   
+2023-04-08 22:36:59 - r - INFO: -      batch_size     	        100         	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -     buffer_size     	      1000000       	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -        alpha        	         5          	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -        lmbda        	         1          	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -   train_iterations  	        1500        	   <class 'int'>    
+2023-04-08 22:36:59 - r - INFO: -      normalize      	         0          	   <class 'bool'>   
+2023-04-08 22:36:59 - r - INFO: -     expert_path     	tasks/Collect_Pendulum-v1_TD3_20230408-123916/traj/traj.pkl	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -       task_dir      	/home/dingli/joyrl_offline/tasks/Train_Pendulum-v1_TD3_BC_20230408-223659	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -       res_dir       	/home/dingli/joyrl_offline/tasks/Train_Pendulum-v1_TD3_BC_20230408-223659/results	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -       log_dir       	/home/dingli/joyrl_offline/tasks/Train_Pendulum-v1_TD3_BC_20230408-223659/logs	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -       traj_dir      	/home/dingli/joyrl_offline/tasks/Train_Pendulum-v1_TD3_BC_20230408-223659/traj	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: -      video_dir      	/home/dingli/joyrl_offline/tasks/Train_Pendulum-v1_TD3_BC_20230408-223659/videos	   <class 'str'>    
+2023-04-08 22:36:59 - r - INFO: - ================================================================================
+2023-04-08 22:36:59 - r - INFO: - action_bound: 2.0
+2023-04-08 22:36:59 - r - INFO: - n_states: 3, n_actions: 1
+2023-04-08 22:37:02 - r - INFO: - Start training!
+2023-04-08 22:37:02 - r - INFO: - Env: Pendulum-v1, Algorithm: TD3_BC, Device: cuda
+2023-04-08 22:39:44 - r - INFO: - Episode: 1/1, Reward: 0.000, Step: 0
+2023-04-08 22:39:44 - r - INFO: - Current episode 1 has the best eval reward: -0.682
+2023-04-08 22:39:44 - r - INFO: - Finish training!
