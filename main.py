@@ -32,7 +32,10 @@ class Main(object):
         self.algo_name = self.general_cfg.algo_name
         algo_mod = __import__(f"algos.{self.algo_name}.config", fromlist=['AlgoConfig'])
         self.algo_cfg = algo_mod.AlgoConfig()
-        self.cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg}
+        self.env_name = self.general_cfg.env_name
+        env_mod = __import__(f"envs.{self.env_name}.config", fromlist=['EnvConfig'])
+        self.env_cfg = env_mod.EnvConfig()
+        self.cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
 
     def print_cfgs(self, cfg):
         ''' print parameters
@@ -62,20 +65,27 @@ class Main(object):
 
                             help='the path of config file')
         args = parser.parse_args()
+        ## 加载yaml参数
         if args.yaml is not None:
             with open(args.yaml) as f:
                 load_cfg = yaml.load(f, Loader=yaml.FullLoader)
-                # load algo config
+                ## 加载算法参数
                 self.algo_name = load_cfg['general_cfg']['algo_name']
                 algo_mod = __import__(f"algos.{self.algo_name}.config",
                                       fromlist=['AlgoConfig'])  # dynamic loading of modules
                 self.algo_cfg = algo_mod.AlgoConfig()
-                self.cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg}
-                # merge config
+                ## 加载环境参数
+                self.env_name = load_cfg['general_cfg']['env_name']
+                env_mod = __import__(f"envs.{self.env_name}.config",
+                                     fromlist=['EnvConfig']) # 动态加载模块
+                self.env_cfg = env_mod.EnvConfig()
+                ## 合并参数
+                self.cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
                 for cfg_type in self.cfgs:
-                    if load_cfg[cfg_type] is not None:
-                        for k, v in load_cfg[cfg_type].items():
-                            setattr(self.cfgs[cfg_type], k, v)
+                    if cfg_type in load_cfg:
+                        if load_cfg[cfg_type] is not None:
+                            for k, v in load_cfg[cfg_type].items():
+                                setattr(self.cfgs[cfg_type], k, v)
 
     def create_dirs(self, cfg):
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
@@ -96,13 +106,14 @@ class Main(object):
     def envs_config(self, cfg):
         ''' configure environment
         '''
-        register_env(cfg.env_name)
+        register_env(cfg.id)
         envs = [] # numbers of envs, equal to cfg.n_workers
         for i in range(cfg.n_workers):
+            kwargs = self.env_cfg.__dict__
             if cfg.render and i == 0: # only render the first env
-                env = gym.make(cfg.env_name, new_step_api=cfg.new_step_api, render_mode=cfg.render_mode)  # create env
+                env = gym.make(**kwargs)  # create env
             else:
-                env = gym.make(cfg.env_name, new_step_api=cfg.new_step_api)  # create env
+                env = gym.make(**kwargs)
             if cfg.wrapper is not None:
                 wrapper_class_path = cfg.wrapper.split('.')[:-1]
                 wrapper_class_name = cfg.wrapper.split('.')[-1]
@@ -280,13 +291,16 @@ class Main(object):
         plot_rewards(rewards,
                      title=f"{cfg.mode.lower()}ing curve of {cfg.algo_name} for {cfg.env_name} with {cfg.n_workers} {cfg.device}",
                      fpath=cfg.res_dir)
-
-    def run(self) -> None:
-        self.get_default_cfg()  # get default config
-        self.process_yaml_cfg()  # process yaml config
+    def merge_cfgs(self):
         cfg = MergedConfig()  # merge config
         cfg = merge_class_attrs(cfg, self.cfgs['general_cfg'])
         cfg = merge_class_attrs(cfg, self.cfgs['algo_cfg'])
+        cfg = merge_class_attrs(cfg, self.cfgs['env_cfg'])
+        return cfg
+    def run(self) -> None:
+        self.get_default_cfg()  # get default config
+        self.process_yaml_cfg()  # process yaml config
+        cfg = self.merge_cfgs()
         self.create_dirs(cfg)  # create dirs
         self.logger = get_logger(cfg.log_dir)  # create the logger
         self.print_cfgs(cfg)  # print the configuration

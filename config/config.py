@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-21 20:32:12
 LastEditor: JiangJi
-LastEditTime: 2023-04-02 09:46:47
+LastEditTime: 2023-04-13 00:46:36
 Discription: 
 '''
 class DefaultConfig:
@@ -15,7 +15,7 @@ class DefaultConfig:
         print(self.__dict__)
 class GeneralConfig():
     def __init__(self) -> None:
-        self.env_name = "CartPole-v1" # name of environment
+        self.env_name = "gym" # name of environment
         self.new_step_api = True # whether to use new step api of gym
         self.wrapper = None # wrapper of environment
         self.render = False # whether to render environment

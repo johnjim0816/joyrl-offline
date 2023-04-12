@@ -1,7 +1,7 @@
 general_cfg:
   algo_name: DQN
   device: cpu
-  env_name: CartPole-v1
+  env_name: gym
   mode: train
   n_workers: 1 # number of workers for parallel training
   load_checkpoint: false
@@ -31,3 +31,7 @@ algo_cfg:
   gamma: 0.95
   lr: 0.0001
   target_update: 4
+env_cfg:
+  id: CartPole-v1
+  new_step_api: true
+  render_mode: null
