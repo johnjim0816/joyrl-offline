@@ -17,7 +17,8 @@ class Trainer:
             ep_reward += reward  # 累加奖励
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
+        return agent,res
     def test_one_episode(self, env, agent, cfg):
         ep_reward = 0  # 每一回合奖励，初始化为 0      
         ep_step = 0
@@ -30,4 +31,5 @@ class Trainer:
             ep_reward += reward  # 累加奖励
             if terminated:
                 break
-        return agent,ep_reward,ep_step
+        res = {'ep_reward':ep_reward,'ep_step':ep_step,'ep_frames':ep_frames}
+        return agent,res
