@@ -31,5 +31,5 @@ class Trainer:
             ep_reward += reward  # 累加奖励
             if terminated:
                 break
-        res = {'ep_reward':ep_reward,'ep_step':ep_step,'ep_frames':ep_frames}
+        res = {'ep_reward':ep_reward,'ep_step':ep_step}
         return agent,res
