@@ -1,8 +1,8 @@
 general_cfg:
   algo_name: SAC
-  continuous: true
+  continous: true
   device: cuda
-  env_name: LunarLanderContinuous-v2
+  env_name: gym
   eval_eps: 10
   eval_per_episode: 5
   load_checkpoint: false
@@ -30,3 +30,5 @@ algo_cfg:
   start_steps: 10000
   target_update_fre: 1
   tau: 0.005
+env_cfg:
+  id: LunarLanderContinuous-v2
