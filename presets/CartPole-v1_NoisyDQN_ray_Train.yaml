@@ -1,8 +1,10 @@
 general_cfg:
   algo_name: NoisyDQN
-  device: cuda
+  device: cpu
   env_name: gym
   mode: train
+  mp_backend: ray # 多线程框架，ray或者mp(multiprocessing)，默认mp
+  n_workers: 2 # number of workers for parallel training
   load_checkpoint: false
   load_path: Train_CartPole-v1_NoisyDQN
   max_steps: 200
@@ -10,7 +12,7 @@ general_cfg:
   seed: 1
   show_fig: false
   test_eps: 10
-  train_eps: 100
+  train_eps: 220
 algo_cfg:
   hidden_dim: 256
   batch_size: 64

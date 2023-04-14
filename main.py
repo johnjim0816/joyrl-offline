@@ -211,7 +211,7 @@ class Main(object):
         save_results(res_dic, cfg.res_dir)  # save results
         save_cfgs(self.cfgs, cfg.task_dir)  # save config
         plot_rewards(rewards,
-                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {cfg.env_name}",
+                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {cfg.id}",
                      fpath=cfg.res_dir)
     
     def multi_run(self,cfg):
@@ -247,7 +247,7 @@ class Main(object):
         save_results(res_dic, cfg.res_dir)  # save results
         save_cfgs(self.cfgs, cfg.task_dir)  # save config
         plot_rewards(rewards,
-                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {cfg.env_name}",
+                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {cfg.id}",
                      fpath=cfg.res_dir)
         
     def ray_run(self,cfg):
@@ -289,7 +289,7 @@ class Main(object):
         save_results(res_dic, cfg.res_dir)  # save results
         save_cfgs(self.cfgs, cfg.task_dir)  # save config
         plot_rewards(rewards,
-                     title=f"{cfg.mode.lower()}ing curve of {cfg.algo_name} for {cfg.env_name} with {cfg.n_workers} {cfg.device}",
+                     title=f"{cfg.mode.lower()}ing curve of {cfg.algo_name} for {cfg.id} with {cfg.n_workers} {cfg.device}",
                      fpath=cfg.res_dir)
     def merge_cfgs(self):
         cfg = MergedConfig()  # merge config
