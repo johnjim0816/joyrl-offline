@@ -58,9 +58,13 @@ class Trainer:
         '''
         ep_reward = 0  # reward per episode
         ep_step = 0
-        state = env.reset()  # reset and obtain initial state
+        ep_frames = []
+        state = env.reset(seed = cfg.seed)  # reset and obtain initial state
         for _ in range(cfg.max_steps):
             ep_step += 1
+            if cfg.render and cfg.render_mode == 'rgb_array': # 用于可视化
+                frame = env.render()[0]
+                ep_frames.append(frame)
             action = agent.predict_action(state)  # sample action
             next_state, reward, terminated, truncated, info = env.step(
                 action)  # update env and return transitions under new_step_api of OpenAI Gym
@@ -68,5 +72,5 @@ class Trainer:
             ep_reward += reward
             if terminated:
                 break
-        res = {'ep_reward': ep_reward, 'ep_step': ep_step}
+        res = {'ep_reward':ep_reward,'ep_step':ep_step,'ep_frames':ep_frames}
         return agent, res

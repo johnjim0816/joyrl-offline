@@ -145,8 +145,7 @@ python main.py --yaml config/custom_config_Train.yaml
 | [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) | PPO |
 | [LunarLanderContinuous-v2](./envs/gym_info.md) | [MekeyPan](https://github.com/pmy0721) | SAC |
 | [MountainCar-v0](./envs/gym_info.md) | [GeYuhong](https://github.com/GeYuhong) | DQN |
-|                  |                                       |                                       |
-
+| [BipedalWalker-v3](./envs/gym_info.md) | [scchy](https://github.com/scchy)   | DDPG   |
 
 
 ## 如何贡献
