@@ -1,0 +1,48 @@
+general_cfg:
+  algo_name: BCQ
+  device: cpu
+  env_name: HalfCheetah-v3
+  eval_eps: 10
+  eval_per_episode: 5
+  load_checkpoint: false
+  load_path: null
+  max_steps: 200
+  mode: train
+  mp_backend: mp
+  n_workers: 1
+  new_step_api: true
+  render: false
+  render_mode: rgb_array
+  save_fig: true
+  seed: 0
+  show_fig: false
+  test_eps: 200
+  train_eps: 1000
+  wrapper: null
+algo_cfg:
+  actor_hidden_dims:
+  - 400
+  - 300
+  actor_lr: 0.001
+  batch_size: 128
+  behavior_agent_name: DDPG
+  behavior_agent_parameters_path: /behave_param.yaml
+  behavior_policy_path: /behaviour_models
+  buffer_size: 100000
+  collect_eps: 500
+  collect_explore_data: true
+  critic_hidden_dims:
+  - 400
+  - 300
+  critic_lr: 0.001
+  gamma: 0.99
+  iters_per_ep: 10
+  lmbda: 0.75
+  phi: 0.05
+  start_learn_buffer_size: 1000.0
+  tau: 0.005
+  traj_dir: null
+  vae_hidden_dims:
+  - 750
+  - 750
+  vae_lr: 0.001
