@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:34:27
 LastEditor: JiangJi
-LastEditTime: 2023-04-16 23:50:33
+LastEditTime: 2023-04-16 23:55:24
 Discription: 
 '''
 import random
@@ -40,57 +40,57 @@ class ReplayBuffer:
         '''
         return len(self.buffer)
 
-class ReplayBufferQue:
-    def __init__(self, cfg: MergedConfig):
-        self.capacity = cfg.buffer_size # 经验回放的容量
-        self.buffer = deque(maxlen=self.capacity)
-    def push(self, exps):
-        '''_summary_
-        Args:
-            trainsitions (tuple): _description_
-        '''
-        for exp in exps:
-            self.buffer.append(exp)
-    def sample(self, batch_size: int, sequential: bool = False):
-        if batch_size > len(self.buffer): # 如果小批量大于经验池的容量，则取经验池的容量
-            batch_size = len(self.buffer)
-        
-        if sequential: # sequential sampling
-            rand = random.randint(0, len(self.buffer) - batch_size)
-            batch = [self.buffer[i] for i in range(rand, rand + batch_size)]
-            return batch
-        else:
-            batch = random.sample(self.buffer, batch_size)
-            return batch
-    def clear(self):
-        self.buffer.clear()
-    def __len__(self):
-        return len(self.buffer)
-    
 # class ReplayBufferQue:
-#     def __init__(self, capacity: int):
-#         self.capacity = capacity
+#     def __init__(self, cfg: MergedConfig):
+#         self.capacity = cfg.buffer_size # 经验回放的容量
 #         self.buffer = deque(maxlen=self.capacity)
-#     def push(self,transitions):
+#     def push(self, exps):
 #         '''_summary_
 #         Args:
 #             trainsitions (tuple): _description_
 #         '''
-#         self.buffer.append(transitions)
+#         for exp in exps:
+#             self.buffer.append(exp)
 #     def sample(self, batch_size: int, sequential: bool = False):
-#         if batch_size > len(self.buffer):
+#         if batch_size > len(self.buffer): # 如果小批量大于经验池的容量，则取经验池的容量
 #             batch_size = len(self.buffer)
+        
 #         if sequential: # sequential sampling
 #             rand = random.randint(0, len(self.buffer) - batch_size)
 #             batch = [self.buffer[i] for i in range(rand, rand + batch_size)]
-#             return zip(*batch)
+#             return batch
 #         else:
 #             batch = random.sample(self.buffer, batch_size)
-#             return zip(*batch)
+#             return batch
 #     def clear(self):
 #         self.buffer.clear()
 #     def __len__(self):
 #         return len(self.buffer)
+    
+class ReplayBufferQue:
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.buffer = deque(maxlen=self.capacity)
+    def push(self,transitions):
+        '''_summary_
+        Args:
+            trainsitions (tuple): _description_
+        '''
+        self.buffer.append(transitions)
+    def sample(self, batch_size: int, sequential: bool = False):
+        if batch_size > len(self.buffer):
+            batch_size = len(self.buffer)
+        if sequential: # sequential sampling
+            rand = random.randint(0, len(self.buffer) - batch_size)
+            batch = [self.buffer[i] for i in range(rand, rand + batch_size)]
+            return zip(*batch)
+        else:
+            batch = random.sample(self.buffer, batch_size)
+            return zip(*batch)
+    def clear(self):
+        self.buffer.clear()
+    def __len__(self):
+        return len(self.buffer)
 
 # class PGReplay(ReplayBufferQue):
 #     '''replay buffer for policy gradient based methods, each time these methods will sample all transitions
