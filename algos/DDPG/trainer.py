@@ -5,10 +5,11 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-21 20:32:11
 LastEditor: JiangJi
-LastEditTime: 2023-04-16 11:19:39
+LastEditTime: 2023-04-16 17:24:08
 Discription:
 '''
-
+import torch.multiprocessing as mp
+from common.utils import all_seed
 
 class Trainer:
     def __init__(self) -> None:
@@ -104,7 +105,7 @@ class Worker(mp.Process):
                 ep_step += 1
                 action = self.local_agent.sample_action(state)
                 next_state, reward, terminated, truncated, info = self.env.step(action)
-                self.local_agent.memory.push((state, action, reward, terminated, self.local_agent.probs, self.local_agent.log_probs))
+                self.local_agent.memory.push((state, action, reward, next_state, terminated))
                 self.local_agent.update(share_agent=self.share_agent)
                 state = next_state
                 ep_r += reward

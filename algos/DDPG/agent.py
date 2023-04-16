@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-09 20:25:52
 @LastEditor: John
-LastEditTime: 2022-12-06 22:50:45
+LastEditTime: 2023-04-16 21:50:41
 @Discription:
 @Environment: python 3.7.7
 '''
@@ -15,7 +15,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from common.memories import ReplayBufferQue
-
+from common.optms import SharedAdam
 
 class Actor(nn.Module):
     def __init__(self, n_states, n_actions, hidden_dim, init_w=3e-3):
@@ -132,7 +132,7 @@ class OUNoise(object):
 
 
 class Agent:
-    def __init__(self, cfg):
+    def __init__(self, cfg, is_share_agent = False):
         '''
         构建智能体
         Args:
@@ -162,7 +162,15 @@ class Agent:
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=cfg.critic_lr)
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=cfg.actor_lr)
         self.memory = ReplayBufferQue(cfg.buffer_size)
-
+        
+        if is_share_agent:
+            self.actor.share_memory() 
+            self.actor_optimizer = SharedAdam(self.actor.parameters(), lr=cfg.actor_lr)
+            self.actor_optimizer.share_memory()
+            self.critic.share_memory() 
+            self.critic_optimizer = SharedAdam(self.critic.parameters(), lr=cfg.critic_lr)
+            self.critic_optimizer.share_memory()
+            
     def sample_action(self, state):
         '''
         根据输入的状态采样动作
@@ -203,7 +211,7 @@ class Agent:
         action = action.cpu().detach().numpy()[0]
         return action
 
-    def update(self):
+    def update(self, share_agent=None):
         ## 当经验回放池中的数量小于 batch_size 时，直接返回不更新
         if len(self.memory) < self.batch_size:  # when memory size is less than batch size, return
             return
@@ -234,26 +242,60 @@ class Agent:
         value = self.critic(state, action)
         ## 将 critic 网络输出的价值和 target_critic输出并更新后的价值通过MSE进行损失计算
         value_loss = nn.MSELoss()(value, expected_value.detach())
-        ## 更新 actor 网络参数
-        self.actor_optimizer.zero_grad()
-        policy_loss.backward()
-        self.actor_optimizer.step()
-        ## 更新 critic 网络参数
-        self.critic_optimizer.zero_grad()
-        value_loss.backward()
-        self.critic_optimizer.step()
-        ## 通过软更新的方法，缓慢更新 target critic 网络的参数
-        for target_param, param in zip(self.target_critic.parameters(), self.critic.parameters()):
-            target_param.data.copy_(
-                target_param.data * (1.0 - self.tau) +
-                param.data * self.tau
-            )
-        ## 通过软更新的方法，缓慢更新 target actor 网络的参数
-        for target_param, param in zip(self.target_actor.parameters(), self.actor.parameters()):
-            target_param.data.copy_(
-                target_param.data * (1.0 - self.tau) +
-                param.data * self.tau
-            )
+
+        if share_agent is not None:
+            share_agent.actor_optimizer.zero_grad()
+            share_agent.critic_optimizer.zero_grad()
+            # self.actor_optimizer.zero_grad()
+            # self.critic_optimizer.zero_grad()  
+
+            policy_loss.backward()
+            value_loss.backward()
+            for param, share_param in zip(self.actor.parameters(), share_agent.actor.parameters()):
+                share_param._grad = param.grad        
+            for param, share_param in zip(self.critic.parameters(), share_agent.critic.parameters()):
+                share_param._grad = param.grad   
+
+            share_agent.actor_optimizer.step()     
+            share_agent.critic_optimizer.step()      
+
+            self.actor.load_state_dict(share_agent.actor.state_dict())
+            self.critic.load_state_dict(share_agent.critic.state_dict())    
+
+            ## 通过软更新的方法，缓慢更新 target critic 网络的参数
+            for target_param, param in zip(self.target_critic.parameters(), self.critic.parameters()):
+                target_param.data.copy_(
+                    target_param.data * (1.0 - self.tau) +
+                    param.data * self.tau
+                )
+            ## 通过软更新的方法，缓慢更新 target actor 网络的参数
+            for target_param, param in zip(self.target_actor.parameters(), self.actor.parameters()):
+                target_param.data.copy_(
+                    target_param.data * (1.0 - self.tau) +
+                    param.data * self.tau
+                )
+                
+        else :                               
+            ## 更新 actor 网络参数
+            self.actor_optimizer.zero_grad()
+            policy_loss.backward()
+            self.actor_optimizer.step()
+            ## 更新 critic 网络参数
+            self.critic_optimizer.zero_grad()
+            value_loss.backward()
+            self.critic_optimizer.step()
+            ## 通过软更新的方法，缓慢更新 target critic 网络的参数
+            for target_param, param in zip(self.target_critic.parameters(), self.critic.parameters()):
+                target_param.data.copy_(
+                    target_param.data * (1.0 - self.tau) +
+                    param.data * self.tau
+                )
+            ## 通过软更新的方法，缓慢更新 target actor 网络的参数
+            for target_param, param in zip(self.target_actor.parameters(), self.actor.parameters()):
+                target_param.data.copy_(
+                    target_param.data * (1.0 - self.tau) +
+                    param.data * self.tau
+                )
 
     def save_model(self, fpath):
         '''

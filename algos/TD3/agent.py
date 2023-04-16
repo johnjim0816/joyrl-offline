@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2021-12-22 10:40:05
 LastEditor: JiangJi
-LastEditTime: 2023-04-16 11:03:41
+LastEditTime: 2023-04-16 19:46:17
 Discription: 
 '''
 import numpy as np
@@ -14,11 +14,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from common.memories import ReplayBufferQue
 from common.models import MLP, Critic
-
+from common.optms import SharedAdam
 
 
 class Agent(object):
-	def __init__(self,cfg):
+	def __init__(self,cfg, is_share_agent = False):
 		self.gamma = cfg.gamma
 		self.actor_lr = cfg.actor_lr
 		self.critic_lr = cfg.critic_lr
@@ -55,6 +55,18 @@ class Agent(object):
 		self.critic_1_optimizer = torch.optim.Adam(self.critic_1.parameters(), lr = self.critic_lr)
 		self.critic_2_optimizer = torch.optim.Adam(self.critic_2.parameters(), lr = self.critic_lr)
 		self.memory = ReplayBufferQue(cfg.buffer_size)
+
+		if is_share_agent:
+			self.actor.share_memory()
+			self.actor_optimizer = SharedAdam(self.actor.parameters(), lr=cfg.actor_lr)
+			self.actor_optimizer.share_memory()
+			self.critic_1.share_memory()
+			self.critic_1_optimizer = SharedAdam(self.critic_1.parameters(), lr=cfg.critic_lr)
+			self.critic_1_optimizer.share_memory()
+			self.critic_2.share_memory()
+			self.critic_2_optimizer = SharedAdam(self.critic_2.parameters(), lr=cfg.critic_lr)
+			self.critic_2_optimizer.share_memory()
+
 		# self.memory = ReplayBuffer(n_states, n_actions)
 
 	def sample_action(self, state):
@@ -77,7 +89,7 @@ class Agent(object):
 		action = self.action_scale * action + self.action_bias
 		return action.detach().cpu().numpy()[0]
 
-	def update(self):
+	def update(self, share_agent=None):
 		# if len(self.memory) < self.batch_size:
 		# 	return
 		if len(self.memory) < self.explore_steps:
@@ -102,25 +114,68 @@ class Agent(object):
 		# compute critic loss
 		critic_1_loss = F.mse_loss(current_q1, target_q)
 		critic_2_loss = F.mse_loss(current_q2, target_q)
-		self.critic_1_optimizer.zero_grad()
-		critic_1_loss.backward()
-		self.critic_1_optimizer.step()
-		self.critic_2_optimizer.zero_grad()
-		critic_2_loss.backward()
-		self.critic_2_optimizer.step()
-		# Delayed policy updates
-		if self.sample_count % self.policy_freq == 0:
+
+
+		if share_agent is not None:
+			share_agent.critic_1_optimizer.zero_grad()
+			share_agent.critic_2_optimizer.zero_grad()
+            
+			self.critic_1_optimizer.zero_grad()  		
+			self.critic_2_optimizer.zero_grad()  
+
+			critic_1_loss.backward()
+			critic_2_loss.backward()
+
+
+			for param, share_param in zip(self.critic_1.parameters(), share_agent.critic_1.parameters()):
+				share_param._grad = param.grad   			
+			for param, share_param in zip(self.critic_2.parameters(), share_agent.critic_2.parameters()):
+				share_param._grad = param.grad 
+
+			share_agent.critic_1_optimizer.step()   	
+			share_agent.critic_2_optimizer.step()   
+
+			self.critic_1.load_state_dict(share_agent.critic_1.state_dict())
+			self.critic_2.load_state_dict(share_agent.critic_2.state_dict())    
+
+			# if self.sample_count % self.policy_freq == 0 or self.sample_count % self.policy_freq == 1:
+				# print ("self.sample_count = ", self.sample_count)
 			# compute actor loss
+			share_agent.actor_optimizer.zero_grad()
 			actor_loss = -self.critic_1(torch.cat([state, torch.tanh(self.actor(state))], 1)).mean()
 			self.actor_optimizer.zero_grad()
 			actor_loss.backward()
-			self.actor_optimizer.step()
+			for param, share_param in zip(self.actor.parameters(), share_agent.actor.parameters()):
+				share_param._grad = param.grad   
+			share_agent.actor_optimizer.step()     
+			self.actor.load_state_dict(share_agent.actor.state_dict())
+
 			for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
 				target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 			for param, target_param in zip(self.critic_1.parameters(), self.critic_1_target.parameters()):
 				target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 			for param, target_param in zip(self.critic_2.parameters(), self.critic_2_target.parameters()):
-				target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+				target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)				  
+		else :
+			self.critic_1_optimizer.zero_grad()
+			critic_1_loss.backward()
+			self.critic_1_optimizer.step()
+			self.critic_2_optimizer.zero_grad()
+			critic_2_loss.backward()
+			self.critic_2_optimizer.step()
+			# Delayed policy updates
+			if self.sample_count % self.policy_freq == 0:
+				# compute actor loss
+				actor_loss = -self.critic_1(torch.cat([state, torch.tanh(self.actor(state))], 1)).mean()
+				self.actor_optimizer.zero_grad()
+				actor_loss.backward()
+				self.actor_optimizer.step()
+				for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
+					target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+				for param, target_param in zip(self.critic_1.parameters(), self.critic_1_target.parameters()):
+					target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+				for param, target_param in zip(self.critic_2.parameters(), self.critic_2_target.parameters()):
+					target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 
 	def save_model(self, fpath):
 		from pathlib import Path

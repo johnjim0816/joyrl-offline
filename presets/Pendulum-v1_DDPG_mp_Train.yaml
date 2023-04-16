@@ -1,6 +1,6 @@
 general_cfg:
   algo_name: DDPG
-  device: cuda
+  device: cpu
   env_name: gym
   eval_eps: 10
   eval_per_episode: 5
@@ -8,6 +8,8 @@ general_cfg:
   load_path: Train_CartPole-v1_DQN_20221026-054757
   max_steps: 200
   mode: train
+  mp_backend: mp # 多线程框架，ray或者mp(multiprocessing)，默认mp
+  n_workers: 2 # number of workers for parallel training
   new_step_api: true
   render: false
   save_fig: true
