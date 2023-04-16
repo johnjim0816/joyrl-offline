@@ -5,11 +5,12 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2022-11-22 23:19:20
 LastEditor: Guoshicheng
-LastEditTime: 2023-04-05 01:15:19
+LastEditTime: 2023-04-16 23:58:00
 Discription: 
 '''
 import torch.multiprocessing as mp
 import ray
+from algos.DQN.exp import Exp
 from common.utils import all_seed
 
 
@@ -24,7 +25,8 @@ class Trainer:
             ep_step += 1
             action = agent.sample_action(state)  # 采样动作
             next_state, reward, terminated, truncated , info = env.step(action)  # 更新环境并返回转移
-            agent.memory.push(state, action, reward, next_state, terminated)  # 存储样本(转移)
+            exp = Exp(state = state, action = action, reward = reward, next_state = next_state, done = terminated, info = info)
+            agent.memory.push(exp)  # 存储样本(转移)
             agent.update()  # 更新智能体
             state = next_state  # 更新下一个状态
             ep_reward += reward   

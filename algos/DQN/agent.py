@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-03-29 13:06:23
+LastEditTime: 2023-04-17 00:04:41
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -22,7 +22,7 @@ import numpy as np
 from common.layers import ValueNetwork
 from common.memories import ReplayBuffer
 from common.optms import SharedAdam
-
+from algos.base.buffers import BufferCreator
 
 class Agent:
     def __init__(self, cfg, is_share_agent = False):
@@ -57,7 +57,8 @@ class Agent:
             # self.target_net.share_memory()
             # self.target_optimizer = SharedAdam(self.target_net.parameters(), lr=cfg.lr)
             # self.target_optimizer.share_memory()
-        self.memory = ReplayBuffer(cfg.buffer_size)
+        self.memory = BufferCreator(cfg)
+
         
     def sample_action(self, state):
         ''' 采样动作
