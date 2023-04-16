@@ -13,7 +13,7 @@ class Trainer:
         pass
     def train_one_episode(self, env, agent, cfg): 
         '''
-        更新一回合参数
+        训练一回合
         Args:
             env (gym): 输入的env实例
             agent (class): 输入的agent实例
@@ -44,7 +44,7 @@ class Trainer:
     
     def test_one_episode(self, env, agent, cfg):
         '''
-        预测一回合
+        测试一回合
         Args:
             env (gym): 输入的env实例
             agent (class): 输入的agent实例
