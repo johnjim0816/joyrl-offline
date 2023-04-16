@@ -8,8 +8,10 @@ general_cfg:
   load_path: Train_gym_TD3_20230416-110359
   max_steps: 200
   mode: test
+  mp_backend: mp
   new_step_api: true
   render: false
+  render_mode: human
   save_fig: true
   seed: 1
   show_fig: false
@@ -33,4 +35,4 @@ algo_cfg:
 env_cfg:
   id: Pendulum-v1
   new_step_api: true
-
+  render_mode: null

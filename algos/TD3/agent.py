@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2021-12-22 10:40:05
 LastEditor: JiangJi
-LastEditTime: 2023-02-23 22:03:10
+LastEditTime: 2023-04-16 11:03:41
 Discription: 
 '''
 import numpy as np
@@ -91,7 +91,8 @@ class Agent(object):
 		done = torch.tensor(done, device=self.device, dtype=torch.float32).unsqueeze(1)
 		# update critic
 		noise = (torch.randn_like(action) * self.policy_noise).clamp(-self.noise_clip, self.noise_clip)
-		next_action = (self.actor_target(next_state) + noise).clamp(-self.action_scale+self.action_bias, self.action_scale+self.action_bias)
+		# print ("")
+		next_action = ((torch.tanh(self.actor_target(next_state)) + noise) * self.action_scale + self.action_bias).clamp(-self.action_scale+self.action_bias, self.action_scale+self.action_bias)
 		next_sa = torch.cat([next_state, next_action], 1) # shape:[train_batch_size,n_states+n_actions]
 		target_q1, target_q2 = self.critic_1_target(next_sa).detach(), self.critic_2_target(next_sa).detach()
 		target_q = torch.min(target_q1, target_q2) # shape:[train_batch_size,n_actions]
