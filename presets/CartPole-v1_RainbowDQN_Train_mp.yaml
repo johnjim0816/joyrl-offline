@@ -3,6 +3,8 @@ general_cfg:
   device: cpu
   env_name: gym
   mode: train
+  mp_backend: mp # 多线程框架，ray或者mp(multiprocessing)，默认mp
+  n_workers: 2 # number of workers for parallel training
   load_checkpoint: false
   load_path: Train_CartPole-v1_
   max_steps: 200

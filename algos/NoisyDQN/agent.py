@@ -232,6 +232,10 @@ class Agent:
         self.policy_net.load_state_dict(self.share_policy_ray.state_dict())
         if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
             self.target_net.load_state_dict(self.policy_net.state_dict())
+
+        self.policy_net.reset_noise()
+        self.target_net.reset_noise()
+        
         # 将更新后的share_policy_ray网络的参数传回ShareAgent类
         return self.share_policy_ray.state_dict()
     
