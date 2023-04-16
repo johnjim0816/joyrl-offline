@@ -13,16 +13,16 @@ class Trainer:
         pass
     def train_one_episode(self, env, agent, cfg): 
         '''
-        更新一轮参数
+        更新一回合参数
         Args:
             env (gym): 输入的env实例
             agent (class): 输入的agent实例
             cfg (class): 超参数配置实例
         Returns:
-            agent (class): 更新一轮参数后的agent实例
-            res (dict): 更新一轮后的总奖励值及更新的step总数
+            agent (class): 更新一回合参数后的agent实例
+            res (dict): 更新一回合后的总奖励值及更新的step总数
         '''
-        ep_reward = 0  # 一轮的累计奖励 
+        ep_reward = 0  # 一回合的累计奖励 
         ep_step = 0
         state = env.reset(seed = cfg.seed)  # 重置环境并获取初始状态,即开始新的回合
         for _ in range(cfg.max_steps):
@@ -35,7 +35,7 @@ class Trainer:
             next_action =  agent.sample_action(next_state)
             agent.update(state, action, reward, next_state, next_action,terminated)  # 更新 agent
             state = next_state   # 更新状态 
-            action = next_action # 更新状态 
+            action = next_action # 更新动作
             ep_reward += reward  # 累积奖励
             if terminated:
                 break
@@ -44,16 +44,16 @@ class Trainer:
     
     def test_one_episode(self, env, agent, cfg):
         '''
-        预测一轮
+        预测一回合
         Args:
             env (gym): 输入的env实例
             agent (class): 输入的agent实例
             cfg (class): 超参数配置实例
         Returns:
-            agent (class): 执行完一轮后的agent实例
-            res (dict): 执行一轮后的总奖励值及预测的step总数
+            agent (class): 执行完一回合后的agent实例
+            res (dict): 执行一回合后的总奖励值及预测的step总数
         '''
-        ep_reward = 0  # 一轮的累计奖励 
+        ep_reward = 0  # 一回合的累计奖励 
         ep_step = 0
         state = env.reset(seed = cfg.seed)   # 重置环境并获取初始状态,即开始新的回合
         for _ in range(cfg.max_steps):
