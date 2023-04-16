@@ -1,0 +1,570 @@
+2023-04-15 23:13:38 - r - INFO: - Hyperparameters:
+2023-04-15 23:13:38 - r - INFO: - ================================================================================
+2023-04-15 23:13:38 - r - INFO: -         Name        	       Value        	        Type        
+2023-04-15 23:13:38 - r - INFO: -       env_name      	   HalfCheetah-v3   	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -     new_step_api    	         1          	   <class 'bool'>   
+2023-04-15 23:13:38 - r - INFO: -       wrapper       	        None        	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -        render       	         0          	   <class 'bool'>   
+2023-04-15 23:13:38 - r - INFO: -     render_mode     	     rgb_array      	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -      algo_name      	        BCQ         	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -         mode        	       train        	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -      mp_backend     	         mp         	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -         seed        	         0          	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: -        device       	        cpu         	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -      train_eps      	        500         	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: -       test_eps      	        200         	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: -       eval_eps      	         10         	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: -   eval_per_episode  	         5          	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: -      max_steps      	        200         	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: -   load_checkpoint   	         0          	   <class 'bool'>   
+2023-04-15 23:13:38 - r - INFO: -      load_path      	        None        	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -       show_fig      	         0          	   <class 'bool'>   
+2023-04-15 23:13:38 - r - INFO: -       save_fig      	         1          	   <class 'bool'>   
+2023-04-15 23:13:38 - r - INFO: -      n_workers      	         1          	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: -  critic_hidden_dims 	     [400, 300]     	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -  actor_hidden_dims  	     [400, 300]     	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -   vae_hidden_dims   	     [750, 750]     	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -      critic_lr      	       0.001        	  <class 'float'>   
+2023-04-15 23:13:38 - r - INFO: -       actor_lr      	       0.001        	  <class 'float'>   
+2023-04-15 23:13:38 - r - INFO: -        vae_lr       	       0.001        	  <class 'float'>   
+2023-04-15 23:13:38 - r - INFO: -      batch_size     	        128         	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: -        gamma        	        0.99        	  <class 'float'>   
+2023-04-15 23:13:38 - r - INFO: -         tau         	       0.005        	  <class 'float'>   
+2023-04-15 23:13:38 - r - INFO: -        lmbda        	        0.75        	  <class 'float'>   
+2023-04-15 23:13:38 - r - INFO: -         phi         	        0.05        	  <class 'float'>   
+2023-04-15 23:13:38 - r - INFO: -     iters_per_ep    	         10         	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: -     buffer_size     	       100000       	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: - start_learn_buffer_size	       1000.0       	  <class 'float'>   
+2023-04-15 23:13:38 - r - INFO: - collect_explore_data	         0          	   <class 'bool'>   
+2023-04-15 23:13:38 - r - INFO: - behavior_agent_name 	        DDPG        	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: - behavior_agent_parameters_path	 /behave_param.yaml 	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: - behavior_policy_path	 /behaviour_models  	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -     collect_eps     	        500         	   <class 'int'>    
+2023-04-15 23:13:38 - r - INFO: -       traj_dir      	/home/chaoqun/joyrl-offline/tasks/Train_HalfCheetah-v3_BCQ_20230415-231338/traj	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -       task_dir      	/home/chaoqun/joyrl-offline/tasks/Train_HalfCheetah-v3_BCQ_20230415-231338	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -       res_dir       	/home/chaoqun/joyrl-offline/tasks/Train_HalfCheetah-v3_BCQ_20230415-231338/results	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -       log_dir       	/home/chaoqun/joyrl-offline/tasks/Train_HalfCheetah-v3_BCQ_20230415-231338/logs	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: -      video_dir      	/home/chaoqun/joyrl-offline/tasks/Train_HalfCheetah-v3_BCQ_20230415-231338/videos	   <class 'str'>    
+2023-04-15 23:13:38 - r - INFO: - ================================================================================
+2023-04-15 23:13:38 - r - INFO: - action_bound: 1.0
+2023-04-15 23:13:38 - r - INFO: - n_states: 17, n_actions: 6
+2023-04-15 23:13:38 - r - INFO: - Start training!
+2023-04-15 23:13:38 - r - INFO: - Env: HalfCheetah-v3, Algorithm: BCQ, Device: cpu
+2023-04-15 23:13:39 - r - INFO: - Episode: 1/500, Reward: -104.603, Step: 200
+2023-04-15 23:13:40 - r - INFO: - Episode: 2/500, Reward: -39.741, Step: 200
+2023-04-15 23:13:40 - r - INFO: - Episode: 3/500, Reward: -49.556, Step: 200
+2023-04-15 23:13:40 - r - INFO: - Episode: 4/500, Reward: -61.941, Step: 200
+2023-04-15 23:13:41 - r - INFO: - Episode: 5/500, Reward: 11.897, Step: 200
+2023-04-15 23:13:43 - r - INFO: - Current episode 5 has the best eval reward: 88.822
+2023-04-15 23:13:43 - r - INFO: - Episode: 6/500, Reward: -78.421, Step: 200
+2023-04-15 23:13:44 - r - INFO: - Episode: 7/500, Reward: -38.330, Step: 200
+2023-04-15 23:13:44 - r - INFO: - Episode: 8/500, Reward: -74.132, Step: 200
+2023-04-15 23:13:45 - r - INFO: - Episode: 9/500, Reward: 370.616, Step: 200
+2023-04-15 23:13:45 - r - INFO: - Episode: 10/500, Reward: -35.891, Step: 200
+2023-04-15 23:13:47 - r - INFO: - Episode: 11/500, Reward: -65.245, Step: 200
+2023-04-15 23:13:48 - r - INFO: - Episode: 12/500, Reward: 239.769, Step: 200
+2023-04-15 23:13:48 - r - INFO: - Episode: 13/500, Reward: 258.632, Step: 200
+2023-04-15 23:13:49 - r - INFO: - Episode: 14/500, Reward: 86.774, Step: 200
+2023-04-15 23:13:49 - r - INFO: - Episode: 15/500, Reward: -61.515, Step: 200
+2023-04-15 23:13:51 - r - INFO: - Current episode 15 has the best eval reward: 130.620
+2023-04-15 23:13:52 - r - INFO: - Episode: 16/500, Reward: 18.838, Step: 200
+2023-04-15 23:13:52 - r - INFO: - Episode: 17/500, Reward: -30.163, Step: 200
+2023-04-15 23:13:53 - r - INFO: - Episode: 18/500, Reward: 67.471, Step: 200
+2023-04-15 23:13:53 - r - INFO: - Episode: 19/500, Reward: 65.101, Step: 200
+2023-04-15 23:13:54 - r - INFO: - Episode: 20/500, Reward: 142.675, Step: 200
+2023-04-15 23:13:56 - r - INFO: - Current episode 20 has the best eval reward: 156.188
+2023-04-15 23:13:56 - r - INFO: - Episode: 21/500, Reward: -81.980, Step: 200
+2023-04-15 23:13:57 - r - INFO: - Episode: 22/500, Reward: 136.050, Step: 200
+2023-04-15 23:13:57 - r - INFO: - Episode: 23/500, Reward: 245.281, Step: 200
+2023-04-15 23:13:58 - r - INFO: - Episode: 24/500, Reward: 278.141, Step: 200
+2023-04-15 23:13:58 - r - INFO: - Episode: 25/500, Reward: 106.684, Step: 200
+2023-04-15 23:14:01 - r - INFO: - Episode: 26/500, Reward: 67.427, Step: 200
+2023-04-15 23:14:01 - r - INFO: - Episode: 27/500, Reward: 339.741, Step: 200
+2023-04-15 23:14:02 - r - INFO: - Episode: 28/500, Reward: 387.277, Step: 200
+2023-04-15 23:14:02 - r - INFO: - Episode: 29/500, Reward: 249.897, Step: 200
+2023-04-15 23:14:03 - r - INFO: - Episode: 30/500, Reward: 194.636, Step: 200
+2023-04-15 23:14:05 - r - INFO: - Current episode 30 has the best eval reward: 202.806
+2023-04-15 23:14:05 - r - INFO: - Episode: 31/500, Reward: 302.070, Step: 200
+2023-04-15 23:14:06 - r - INFO: - Episode: 32/500, Reward: 39.822, Step: 200
+2023-04-15 23:14:06 - r - INFO: - Episode: 33/500, Reward: 318.169, Step: 200
+2023-04-15 23:14:07 - r - INFO: - Episode: 34/500, Reward: 109.926, Step: 200
+2023-04-15 23:14:07 - r - INFO: - Episode: 35/500, Reward: 417.033, Step: 200
+2023-04-15 23:14:10 - r - INFO: - Episode: 36/500, Reward: -111.540, Step: 200
+2023-04-15 23:14:10 - r - INFO: - Episode: 37/500, Reward: 516.953, Step: 200
+2023-04-15 23:14:11 - r - INFO: - Episode: 38/500, Reward: 98.082, Step: 200
+2023-04-15 23:14:11 - r - INFO: - Episode: 39/500, Reward: 328.147, Step: 200
+2023-04-15 23:14:12 - r - INFO: - Episode: 40/500, Reward: -43.058, Step: 200
+2023-04-15 23:14:14 - r - INFO: - Current episode 40 has the best eval reward: 307.591
+2023-04-15 23:14:15 - r - INFO: - Episode: 41/500, Reward: 49.889, Step: 200
+2023-04-15 23:14:15 - r - INFO: - Episode: 42/500, Reward: 79.003, Step: 200
+2023-04-15 23:14:16 - r - INFO: - Episode: 43/500, Reward: -52.465, Step: 200
+2023-04-15 23:14:16 - r - INFO: - Episode: 44/500, Reward: 600.985, Step: 200
+2023-04-15 23:14:17 - r - INFO: - Episode: 45/500, Reward: 159.730, Step: 200
+2023-04-15 23:14:19 - r - INFO: - Episode: 46/500, Reward: 52.419, Step: 200
+2023-04-15 23:14:19 - r - INFO: - Episode: 47/500, Reward: 358.568, Step: 200
+2023-04-15 23:14:20 - r - INFO: - Episode: 48/500, Reward: 190.788, Step: 200
+2023-04-15 23:14:20 - r - INFO: - Episode: 49/500, Reward: 635.937, Step: 200
+2023-04-15 23:14:21 - r - INFO: - Episode: 50/500, Reward: 55.642, Step: 200
+2023-04-15 23:14:23 - r - INFO: - Episode: 51/500, Reward: 185.958, Step: 200
+2023-04-15 23:14:24 - r - INFO: - Episode: 52/500, Reward: 326.726, Step: 200
+2023-04-15 23:14:24 - r - INFO: - Episode: 53/500, Reward: 370.194, Step: 200
+2023-04-15 23:14:25 - r - INFO: - Episode: 54/500, Reward: -57.436, Step: 200
+2023-04-15 23:14:25 - r - INFO: - Episode: 55/500, Reward: 31.068, Step: 200
+2023-04-15 23:14:28 - r - INFO: - Episode: 56/500, Reward: 49.972, Step: 200
+2023-04-15 23:14:29 - r - INFO: - Episode: 57/500, Reward: 343.907, Step: 200
+2023-04-15 23:14:30 - r - INFO: - Episode: 58/500, Reward: 23.421, Step: 200
+2023-04-15 23:14:30 - r - INFO: - Episode: 59/500, Reward: 74.613, Step: 200
+2023-04-15 23:14:31 - r - INFO: - Episode: 60/500, Reward: 481.995, Step: 200
+2023-04-15 23:14:34 - r - INFO: - Episode: 61/500, Reward: 7.112, Step: 200
+2023-04-15 23:14:34 - r - INFO: - Episode: 62/500, Reward: 249.224, Step: 200
+2023-04-15 23:14:35 - r - INFO: - Episode: 63/500, Reward: 282.115, Step: 200
+2023-04-15 23:14:35 - r - INFO: - Episode: 64/500, Reward: 12.973, Step: 200
+2023-04-15 23:14:36 - r - INFO: - Episode: 65/500, Reward: 181.498, Step: 200
+2023-04-15 23:14:38 - r - INFO: - Episode: 66/500, Reward: 196.673, Step: 200
+2023-04-15 23:14:39 - r - INFO: - Episode: 67/500, Reward: 165.590, Step: 200
+2023-04-15 23:14:39 - r - INFO: - Episode: 68/500, Reward: 365.584, Step: 200
+2023-04-15 23:14:40 - r - INFO: - Episode: 69/500, Reward: 249.075, Step: 200
+2023-04-15 23:14:40 - r - INFO: - Episode: 70/500, Reward: 104.989, Step: 200
+2023-04-15 23:14:43 - r - INFO: - Episode: 71/500, Reward: 227.775, Step: 200
+2023-04-15 23:14:43 - r - INFO: - Episode: 72/500, Reward: 191.513, Step: 200
+2023-04-15 23:14:44 - r - INFO: - Episode: 73/500, Reward: 7.969, Step: 200
+2023-04-15 23:14:44 - r - INFO: - Episode: 74/500, Reward: 180.139, Step: 200
+2023-04-15 23:14:45 - r - INFO: - Episode: 75/500, Reward: 92.660, Step: 200
+2023-04-15 23:14:47 - r - INFO: - Episode: 76/500, Reward: 752.823, Step: 200
+2023-04-15 23:14:48 - r - INFO: - Episode: 77/500, Reward: 16.900, Step: 200
+2023-04-15 23:14:49 - r - INFO: - Episode: 78/500, Reward: 16.432, Step: 200
+2023-04-15 23:14:49 - r - INFO: - Episode: 79/500, Reward: 47.209, Step: 200
+2023-04-15 23:14:49 - r - INFO: - Episode: 80/500, Reward: 49.491, Step: 200
+2023-04-15 23:14:52 - r - INFO: - Episode: 81/500, Reward: 153.299, Step: 200
+2023-04-15 23:14:53 - r - INFO: - Episode: 82/500, Reward: 235.890, Step: 200
+2023-04-15 23:14:53 - r - INFO: - Episode: 83/500, Reward: 31.274, Step: 200
+2023-04-15 23:14:53 - r - INFO: - Episode: 84/500, Reward: 527.959, Step: 200
+2023-04-15 23:14:54 - r - INFO: - Episode: 85/500, Reward: 535.241, Step: 200
+2023-04-15 23:14:57 - r - INFO: - Episode: 86/500, Reward: 353.922, Step: 200
+2023-04-15 23:14:57 - r - INFO: - Episode: 87/500, Reward: 309.597, Step: 200
+2023-04-15 23:14:58 - r - INFO: - Episode: 88/500, Reward: -33.528, Step: 200
+2023-04-15 23:14:58 - r - INFO: - Episode: 89/500, Reward: 20.062, Step: 200
+2023-04-15 23:14:59 - r - INFO: - Episode: 90/500, Reward: 548.022, Step: 200
+2023-04-15 23:15:01 - r - INFO: - Episode: 91/500, Reward: 448.343, Step: 200
+2023-04-15 23:15:02 - r - INFO: - Episode: 92/500, Reward: 511.910, Step: 200
+2023-04-15 23:15:02 - r - INFO: - Episode: 93/500, Reward: 164.830, Step: 200
+2023-04-15 23:15:03 - r - INFO: - Episode: 94/500, Reward: 203.586, Step: 200
+2023-04-15 23:15:03 - r - INFO: - Episode: 95/500, Reward: 125.350, Step: 200
+2023-04-15 23:15:07 - r - INFO: - Episode: 96/500, Reward: -34.245, Step: 200
+2023-04-15 23:15:07 - r - INFO: - Episode: 97/500, Reward: 42.335, Step: 200
+2023-04-15 23:15:08 - r - INFO: - Episode: 98/500, Reward: 240.536, Step: 200
+2023-04-15 23:15:08 - r - INFO: - Episode: 99/500, Reward: 97.442, Step: 200
+2023-04-15 23:15:09 - r - INFO: - Episode: 100/500, Reward: 232.462, Step: 200
+2023-04-15 23:15:11 - r - INFO: - Episode: 101/500, Reward: 35.479, Step: 200
+2023-04-15 23:15:12 - r - INFO: - Episode: 102/500, Reward: 371.270, Step: 200
+2023-04-15 23:15:12 - r - INFO: - Episode: 103/500, Reward: 163.527, Step: 200
+2023-04-15 23:15:12 - r - INFO: - Episode: 104/500, Reward: -17.602, Step: 200
+2023-04-15 23:15:13 - r - INFO: - Episode: 105/500, Reward: 880.167, Step: 200
+2023-04-15 23:15:15 - r - INFO: - Current episode 105 has the best eval reward: 354.561
+2023-04-15 23:15:16 - r - INFO: - Episode: 106/500, Reward: 393.115, Step: 200
+2023-04-15 23:15:16 - r - INFO: - Episode: 107/500, Reward: 342.022, Step: 200
+2023-04-15 23:15:17 - r - INFO: - Episode: 108/500, Reward: 802.215, Step: 200
+2023-04-15 23:15:17 - r - INFO: - Episode: 109/500, Reward: -71.748, Step: 200
+2023-04-15 23:15:18 - r - INFO: - Episode: 110/500, Reward: 285.497, Step: 200
+2023-04-15 23:15:21 - r - INFO: - Episode: 111/500, Reward: 273.890, Step: 200
+2023-04-15 23:15:21 - r - INFO: - Episode: 112/500, Reward: 215.634, Step: 200
+2023-04-15 23:15:22 - r - INFO: - Episode: 113/500, Reward: 321.259, Step: 200
+2023-04-15 23:15:22 - r - INFO: - Episode: 114/500, Reward: 653.055, Step: 200
+2023-04-15 23:15:22 - r - INFO: - Episode: 115/500, Reward: 105.058, Step: 200
+2023-04-15 23:15:26 - r - INFO: - Episode: 116/500, Reward: 608.378, Step: 200
+2023-04-15 23:15:26 - r - INFO: - Episode: 117/500, Reward: 255.693, Step: 200
+2023-04-15 23:15:27 - r - INFO: - Episode: 118/500, Reward: 94.266, Step: 200
+2023-04-15 23:15:27 - r - INFO: - Episode: 119/500, Reward: 9.498, Step: 200
+2023-04-15 23:15:28 - r - INFO: - Episode: 120/500, Reward: 117.353, Step: 200
+2023-04-15 23:15:30 - r - INFO: - Episode: 121/500, Reward: 65.983, Step: 200
+2023-04-15 23:15:31 - r - INFO: - Episode: 122/500, Reward: 466.000, Step: 200
+2023-04-15 23:15:31 - r - INFO: - Episode: 123/500, Reward: 195.951, Step: 200
+2023-04-15 23:15:32 - r - INFO: - Episode: 124/500, Reward: 227.463, Step: 200
+2023-04-15 23:15:32 - r - INFO: - Episode: 125/500, Reward: 190.330, Step: 200
+2023-04-15 23:15:35 - r - INFO: - Episode: 126/500, Reward: 388.254, Step: 200
+2023-04-15 23:15:36 - r - INFO: - Episode: 127/500, Reward: 139.993, Step: 200
+2023-04-15 23:15:37 - r - INFO: - Episode: 128/500, Reward: 185.844, Step: 200
+2023-04-15 23:15:37 - r - INFO: - Episode: 129/500, Reward: 694.420, Step: 200
+2023-04-15 23:15:38 - r - INFO: - Episode: 130/500, Reward: 684.799, Step: 200
+2023-04-15 23:15:41 - r - INFO: - Episode: 131/500, Reward: 132.845, Step: 200
+2023-04-15 23:15:42 - r - INFO: - Episode: 132/500, Reward: 285.552, Step: 200
+2023-04-15 23:15:42 - r - INFO: - Episode: 133/500, Reward: 244.601, Step: 200
+2023-04-15 23:15:43 - r - INFO: - Episode: 134/500, Reward: 686.665, Step: 200
+2023-04-15 23:15:43 - r - INFO: - Episode: 135/500, Reward: 714.615, Step: 200
+2023-04-15 23:15:46 - r - INFO: - Episode: 136/500, Reward: 512.643, Step: 200
+2023-04-15 23:15:46 - r - INFO: - Episode: 137/500, Reward: 220.556, Step: 200
+2023-04-15 23:15:47 - r - INFO: - Episode: 138/500, Reward: 268.151, Step: 200
+2023-04-15 23:15:47 - r - INFO: - Episode: 139/500, Reward: 969.337, Step: 200
+2023-04-15 23:15:48 - r - INFO: - Episode: 140/500, Reward: 94.280, Step: 200
+2023-04-15 23:15:51 - r - INFO: - Episode: 141/500, Reward: 63.247, Step: 200
+2023-04-15 23:15:52 - r - INFO: - Episode: 142/500, Reward: 592.904, Step: 200
+2023-04-15 23:15:53 - r - INFO: - Episode: 143/500, Reward: 161.490, Step: 200
+2023-04-15 23:15:53 - r - INFO: - Episode: 144/500, Reward: 397.314, Step: 200
+2023-04-15 23:15:54 - r - INFO: - Episode: 145/500, Reward: 442.332, Step: 200
+2023-04-15 23:15:56 - r - INFO: - Episode: 146/500, Reward: 105.211, Step: 200
+2023-04-15 23:15:57 - r - INFO: - Episode: 147/500, Reward: 135.193, Step: 200
+2023-04-15 23:15:57 - r - INFO: - Episode: 148/500, Reward: 598.849, Step: 200
+2023-04-15 23:15:58 - r - INFO: - Episode: 149/500, Reward: 289.777, Step: 200
+2023-04-15 23:15:58 - r - INFO: - Episode: 150/500, Reward: 711.608, Step: 200
+2023-04-15 23:16:01 - r - INFO: - Episode: 151/500, Reward: 209.590, Step: 200
+2023-04-15 23:16:02 - r - INFO: - Episode: 152/500, Reward: 51.916, Step: 200
+2023-04-15 23:16:02 - r - INFO: - Episode: 153/500, Reward: 373.508, Step: 200
+2023-04-15 23:16:03 - r - INFO: - Episode: 154/500, Reward: 376.221, Step: 200
+2023-04-15 23:16:03 - r - INFO: - Episode: 155/500, Reward: 143.707, Step: 200
+2023-04-15 23:16:06 - r - INFO: - Episode: 156/500, Reward: 380.560, Step: 200
+2023-04-15 23:16:06 - r - INFO: - Episode: 157/500, Reward: 161.830, Step: 200
+2023-04-15 23:16:07 - r - INFO: - Episode: 158/500, Reward: 736.848, Step: 200
+2023-04-15 23:16:07 - r - INFO: - Episode: 159/500, Reward: 177.724, Step: 200
+2023-04-15 23:16:08 - r - INFO: - Episode: 160/500, Reward: 46.217, Step: 200
+2023-04-15 23:16:11 - r - INFO: - Episode: 161/500, Reward: 278.278, Step: 200
+2023-04-15 23:16:11 - r - INFO: - Episode: 162/500, Reward: 232.635, Step: 200
+2023-04-15 23:16:12 - r - INFO: - Episode: 163/500, Reward: 320.430, Step: 200
+2023-04-15 23:16:12 - r - INFO: - Episode: 164/500, Reward: 1013.781, Step: 200
+2023-04-15 23:16:13 - r - INFO: - Episode: 165/500, Reward: 398.271, Step: 200
+2023-04-15 23:16:15 - r - INFO: - Current episode 165 has the best eval reward: 403.149
+2023-04-15 23:16:16 - r - INFO: - Episode: 166/500, Reward: 518.101, Step: 200
+2023-04-15 23:16:16 - r - INFO: - Episode: 167/500, Reward: 165.081, Step: 200
+2023-04-15 23:16:17 - r - INFO: - Episode: 168/500, Reward: 238.104, Step: 200
+2023-04-15 23:16:17 - r - INFO: - Episode: 169/500, Reward: 172.770, Step: 200
+2023-04-15 23:16:18 - r - INFO: - Episode: 170/500, Reward: 176.891, Step: 200
+2023-04-15 23:16:21 - r - INFO: - Episode: 171/500, Reward: 126.964, Step: 200
+2023-04-15 23:16:21 - r - INFO: - Episode: 172/500, Reward: 326.233, Step: 200
+2023-04-15 23:16:22 - r - INFO: - Episode: 173/500, Reward: 204.703, Step: 200
+2023-04-15 23:16:22 - r - INFO: - Episode: 174/500, Reward: 754.762, Step: 200
+2023-04-15 23:16:23 - r - INFO: - Episode: 175/500, Reward: 80.742, Step: 200
+2023-04-15 23:16:26 - r - INFO: - Episode: 176/500, Reward: 148.775, Step: 200
+2023-04-15 23:16:26 - r - INFO: - Episode: 177/500, Reward: 354.483, Step: 200
+2023-04-15 23:16:27 - r - INFO: - Episode: 178/500, Reward: 476.217, Step: 200
+2023-04-15 23:16:27 - r - INFO: - Episode: 179/500, Reward: 42.845, Step: 200
+2023-04-15 23:16:28 - r - INFO: - Episode: 180/500, Reward: 376.882, Step: 200
+2023-04-15 23:16:30 - r - INFO: - Episode: 181/500, Reward: 267.370, Step: 200
+2023-04-15 23:16:31 - r - INFO: - Episode: 182/500, Reward: 246.558, Step: 200
+2023-04-15 23:16:31 - r - INFO: - Episode: 183/500, Reward: 434.894, Step: 200
+2023-04-15 23:16:32 - r - INFO: - Episode: 184/500, Reward: 382.747, Step: 200
+2023-04-15 23:16:32 - r - INFO: - Episode: 185/500, Reward: 199.438, Step: 200
+2023-04-15 23:16:34 - r - INFO: - Current episode 185 has the best eval reward: 477.079
+2023-04-15 23:16:35 - r - INFO: - Episode: 186/500, Reward: 59.836, Step: 200
+2023-04-15 23:16:35 - r - INFO: - Episode: 187/500, Reward: 144.021, Step: 200
+2023-04-15 23:16:36 - r - INFO: - Episode: 188/500, Reward: 394.476, Step: 200
+2023-04-15 23:16:36 - r - INFO: - Episode: 189/500, Reward: 205.695, Step: 200
+2023-04-15 23:16:37 - r - INFO: - Episode: 190/500, Reward: 920.907, Step: 200
+2023-04-15 23:16:39 - r - INFO: - Episode: 191/500, Reward: 574.023, Step: 200
+2023-04-15 23:16:40 - r - INFO: - Episode: 192/500, Reward: 575.992, Step: 200
+2023-04-15 23:16:40 - r - INFO: - Episode: 193/500, Reward: 691.792, Step: 200
+2023-04-15 23:16:40 - r - INFO: - Episode: 194/500, Reward: 358.932, Step: 200
+2023-04-15 23:16:41 - r - INFO: - Episode: 195/500, Reward: -73.345, Step: 200
+2023-04-15 23:16:43 - r - INFO: - Episode: 196/500, Reward: -61.978, Step: 200
+2023-04-15 23:16:44 - r - INFO: - Episode: 197/500, Reward: 511.812, Step: 200
+2023-04-15 23:16:45 - r - INFO: - Episode: 198/500, Reward: 556.690, Step: 200
+2023-04-15 23:16:45 - r - INFO: - Episode: 199/500, Reward: 765.597, Step: 200
+2023-04-15 23:16:46 - r - INFO: - Episode: 200/500, Reward: 302.816, Step: 200
+2023-04-15 23:16:48 - r - INFO: - Current episode 200 has the best eval reward: 481.381
+2023-04-15 23:16:49 - r - INFO: - Episode: 201/500, Reward: 369.015, Step: 200
+2023-04-15 23:16:49 - r - INFO: - Episode: 202/500, Reward: -46.410, Step: 200
+2023-04-15 23:16:50 - r - INFO: - Episode: 203/500, Reward: 439.468, Step: 200
+2023-04-15 23:16:50 - r - INFO: - Episode: 204/500, Reward: 146.105, Step: 200
+2023-04-15 23:16:51 - r - INFO: - Episode: 205/500, Reward: 172.927, Step: 200
+2023-04-15 23:16:53 - r - INFO: - Episode: 206/500, Reward: 215.984, Step: 200
+2023-04-15 23:16:54 - r - INFO: - Episode: 207/500, Reward: 316.268, Step: 200
+2023-04-15 23:16:55 - r - INFO: - Episode: 208/500, Reward: 70.363, Step: 200
+2023-04-15 23:16:55 - r - INFO: - Episode: 209/500, Reward: 572.859, Step: 200
+2023-04-15 23:16:56 - r - INFO: - Episode: 210/500, Reward: 316.388, Step: 200
+2023-04-15 23:16:59 - r - INFO: - Episode: 211/500, Reward: 453.467, Step: 200
+2023-04-15 23:16:59 - r - INFO: - Episode: 212/500, Reward: 879.960, Step: 200
+2023-04-15 23:17:00 - r - INFO: - Episode: 213/500, Reward: 553.157, Step: 200
+2023-04-15 23:17:00 - r - INFO: - Episode: 214/500, Reward: 3.760, Step: 200
+2023-04-15 23:17:01 - r - INFO: - Episode: 215/500, Reward: 625.300, Step: 200
+2023-04-15 23:17:03 - r - INFO: - Current episode 215 has the best eval reward: 604.924
+2023-04-15 23:17:04 - r - INFO: - Episode: 216/500, Reward: 717.677, Step: 200
+2023-04-15 23:17:04 - r - INFO: - Episode: 217/500, Reward: 279.617, Step: 200
+2023-04-15 23:17:05 - r - INFO: - Episode: 218/500, Reward: 43.297, Step: 200
+2023-04-15 23:17:05 - r - INFO: - Episode: 219/500, Reward: 149.584, Step: 200
+2023-04-15 23:17:06 - r - INFO: - Episode: 220/500, Reward: 117.105, Step: 200
+2023-04-15 23:17:09 - r - INFO: - Episode: 221/500, Reward: 859.731, Step: 200
+2023-04-15 23:17:09 - r - INFO: - Episode: 222/500, Reward: 51.356, Step: 200
+2023-04-15 23:17:10 - r - INFO: - Episode: 223/500, Reward: 55.657, Step: 200
+2023-04-15 23:17:10 - r - INFO: - Episode: 224/500, Reward: 511.982, Step: 200
+2023-04-15 23:17:11 - r - INFO: - Episode: 225/500, Reward: 254.159, Step: 200
+2023-04-15 23:17:14 - r - INFO: - Episode: 226/500, Reward: 857.828, Step: 200
+2023-04-15 23:17:15 - r - INFO: - Episode: 227/500, Reward: -0.910, Step: 200
+2023-04-15 23:17:15 - r - INFO: - Episode: 228/500, Reward: 349.842, Step: 200
+2023-04-15 23:17:16 - r - INFO: - Episode: 229/500, Reward: -50.784, Step: 200
+2023-04-15 23:17:16 - r - INFO: - Episode: 230/500, Reward: 741.419, Step: 200
+2023-04-15 23:17:19 - r - INFO: - Episode: 231/500, Reward: 974.435, Step: 200
+2023-04-15 23:17:19 - r - INFO: - Episode: 232/500, Reward: 34.905, Step: 200
+2023-04-15 23:17:20 - r - INFO: - Episode: 233/500, Reward: 799.908, Step: 200
+2023-04-15 23:17:20 - r - INFO: - Episode: 234/500, Reward: -47.492, Step: 200
+2023-04-15 23:17:21 - r - INFO: - Episode: 235/500, Reward: 254.894, Step: 200
+2023-04-15 23:17:24 - r - INFO: - Episode: 236/500, Reward: 314.206, Step: 200
+2023-04-15 23:17:24 - r - INFO: - Episode: 237/500, Reward: 108.119, Step: 200
+2023-04-15 23:17:25 - r - INFO: - Episode: 238/500, Reward: 119.768, Step: 200
+2023-04-15 23:17:25 - r - INFO: - Episode: 239/500, Reward: 342.338, Step: 200
+2023-04-15 23:17:25 - r - INFO: - Episode: 240/500, Reward: 748.508, Step: 200
+2023-04-15 23:17:28 - r - INFO: - Episode: 241/500, Reward: 379.758, Step: 200
+2023-04-15 23:17:28 - r - INFO: - Episode: 242/500, Reward: 5.806, Step: 200
+2023-04-15 23:17:29 - r - INFO: - Episode: 243/500, Reward: 401.905, Step: 200
+2023-04-15 23:17:29 - r - INFO: - Episode: 244/500, Reward: 176.260, Step: 200
+2023-04-15 23:17:30 - r - INFO: - Episode: 245/500, Reward: 300.131, Step: 200
+2023-04-15 23:17:33 - r - INFO: - Episode: 246/500, Reward: 328.727, Step: 200
+2023-04-15 23:17:33 - r - INFO: - Episode: 247/500, Reward: 715.493, Step: 200
+2023-04-15 23:17:34 - r - INFO: - Episode: 248/500, Reward: 950.862, Step: 200
+2023-04-15 23:17:34 - r - INFO: - Episode: 249/500, Reward: 306.151, Step: 200
+2023-04-15 23:17:35 - r - INFO: - Episode: 250/500, Reward: 549.224, Step: 200
+2023-04-15 23:17:38 - r - INFO: - Episode: 251/500, Reward: 483.538, Step: 200
+2023-04-15 23:17:38 - r - INFO: - Episode: 252/500, Reward: 222.681, Step: 200
+2023-04-15 23:17:39 - r - INFO: - Episode: 253/500, Reward: 626.877, Step: 200
+2023-04-15 23:17:39 - r - INFO: - Episode: 254/500, Reward: -58.323, Step: 200
+2023-04-15 23:17:39 - r - INFO: - Episode: 255/500, Reward: 123.456, Step: 200
+2023-04-15 23:17:42 - r - INFO: - Episode: 256/500, Reward: 121.741, Step: 200
+2023-04-15 23:17:43 - r - INFO: - Episode: 257/500, Reward: -91.591, Step: 200
+2023-04-15 23:17:43 - r - INFO: - Episode: 258/500, Reward: 746.802, Step: 200
+2023-04-15 23:17:44 - r - INFO: - Episode: 259/500, Reward: 199.448, Step: 200
+2023-04-15 23:17:44 - r - INFO: - Episode: 260/500, Reward: 151.474, Step: 200
+2023-04-15 23:17:47 - r - INFO: - Episode: 261/500, Reward: 893.203, Step: 200
+2023-04-15 23:17:48 - r - INFO: - Episode: 262/500, Reward: 695.574, Step: 200
+2023-04-15 23:17:48 - r - INFO: - Episode: 263/500, Reward: 404.025, Step: 200
+2023-04-15 23:17:49 - r - INFO: - Episode: 264/500, Reward: 582.056, Step: 200
+2023-04-15 23:17:49 - r - INFO: - Episode: 265/500, Reward: 547.268, Step: 200
+2023-04-15 23:17:52 - r - INFO: - Current episode 265 has the best eval reward: 633.738
+2023-04-15 23:17:53 - r - INFO: - Episode: 266/500, Reward: 165.622, Step: 200
+2023-04-15 23:17:53 - r - INFO: - Episode: 267/500, Reward: -60.543, Step: 200
+2023-04-15 23:17:53 - r - INFO: - Episode: 268/500, Reward: 148.143, Step: 200
+2023-04-15 23:17:54 - r - INFO: - Episode: 269/500, Reward: 0.592, Step: 200
+2023-04-15 23:17:54 - r - INFO: - Episode: 270/500, Reward: 146.710, Step: 200
+2023-04-15 23:17:57 - r - INFO: - Episode: 271/500, Reward: -21.543, Step: 200
+2023-04-15 23:17:58 - r - INFO: - Episode: 272/500, Reward: 478.148, Step: 200
+2023-04-15 23:17:58 - r - INFO: - Episode: 273/500, Reward: 395.609, Step: 200
+2023-04-15 23:17:59 - r - INFO: - Episode: 274/500, Reward: 551.977, Step: 200
+2023-04-15 23:17:59 - r - INFO: - Episode: 275/500, Reward: 632.183, Step: 200
+2023-04-15 23:18:02 - r - INFO: - Episode: 276/500, Reward: -72.307, Step: 200
+2023-04-15 23:18:02 - r - INFO: - Episode: 277/500, Reward: 671.048, Step: 200
+2023-04-15 23:18:03 - r - INFO: - Episode: 278/500, Reward: -19.564, Step: 200
+2023-04-15 23:18:04 - r - INFO: - Episode: 279/500, Reward: 1111.080, Step: 200
+2023-04-15 23:18:04 - r - INFO: - Episode: 280/500, Reward: 388.329, Step: 200
+2023-04-15 23:18:07 - r - INFO: - Episode: 281/500, Reward: 540.261, Step: 200
+2023-04-15 23:18:08 - r - INFO: - Episode: 282/500, Reward: 220.467, Step: 200
+2023-04-15 23:18:08 - r - INFO: - Episode: 283/500, Reward: 1198.987, Step: 200
+2023-04-15 23:18:09 - r - INFO: - Episode: 284/500, Reward: 461.708, Step: 200
+2023-04-15 23:18:09 - r - INFO: - Episode: 285/500, Reward: -10.286, Step: 200
+2023-04-15 23:18:12 - r - INFO: - Episode: 286/500, Reward: 30.967, Step: 200
+2023-04-15 23:18:12 - r - INFO: - Episode: 287/500, Reward: 905.784, Step: 200
+2023-04-15 23:18:13 - r - INFO: - Episode: 288/500, Reward: 410.858, Step: 200
+2023-04-15 23:18:13 - r - INFO: - Episode: 289/500, Reward: 197.248, Step: 200
+2023-04-15 23:18:14 - r - INFO: - Episode: 290/500, Reward: -35.941, Step: 200
+2023-04-15 23:18:16 - r - INFO: - Episode: 291/500, Reward: 693.085, Step: 200
+2023-04-15 23:18:17 - r - INFO: - Episode: 292/500, Reward: 578.304, Step: 200
+2023-04-15 23:18:17 - r - INFO: - Episode: 293/500, Reward: 635.060, Step: 200
+2023-04-15 23:18:18 - r - INFO: - Episode: 294/500, Reward: 353.465, Step: 200
+2023-04-15 23:18:18 - r - INFO: - Episode: 295/500, Reward: 95.650, Step: 200
+2023-04-15 23:18:21 - r - INFO: - Episode: 296/500, Reward: 928.715, Step: 200
+2023-04-15 23:18:21 - r - INFO: - Episode: 297/500, Reward: 94.654, Step: 200
+2023-04-15 23:18:22 - r - INFO: - Episode: 298/500, Reward: 109.211, Step: 200
+2023-04-15 23:18:22 - r - INFO: - Episode: 299/500, Reward: 541.608, Step: 200
+2023-04-15 23:18:22 - r - INFO: - Episode: 300/500, Reward: 71.736, Step: 200
+2023-04-15 23:18:25 - r - INFO: - Episode: 301/500, Reward: 986.838, Step: 200
+2023-04-15 23:18:26 - r - INFO: - Episode: 302/500, Reward: 133.487, Step: 200
+2023-04-15 23:18:26 - r - INFO: - Episode: 303/500, Reward: 642.975, Step: 200
+2023-04-15 23:18:26 - r - INFO: - Episode: 304/500, Reward: 530.602, Step: 200
+2023-04-15 23:18:27 - r - INFO: - Episode: 305/500, Reward: 1024.591, Step: 200
+2023-04-15 23:18:30 - r - INFO: - Episode: 306/500, Reward: 24.682, Step: 200
+2023-04-15 23:18:30 - r - INFO: - Episode: 307/500, Reward: 961.995, Step: 200
+2023-04-15 23:18:31 - r - INFO: - Episode: 308/500, Reward: 694.999, Step: 200
+2023-04-15 23:18:31 - r - INFO: - Episode: 309/500, Reward: 461.669, Step: 200
+2023-04-15 23:18:32 - r - INFO: - Episode: 310/500, Reward: 908.586, Step: 200
+2023-04-15 23:18:34 - r - INFO: - Episode: 311/500, Reward: 214.278, Step: 200
+2023-04-15 23:18:35 - r - INFO: - Episode: 312/500, Reward: 676.674, Step: 200
+2023-04-15 23:18:35 - r - INFO: - Episode: 313/500, Reward: 91.502, Step: 200
+2023-04-15 23:18:36 - r - INFO: - Episode: 314/500, Reward: 98.467, Step: 200
+2023-04-15 23:18:36 - r - INFO: - Episode: 315/500, Reward: 1047.955, Step: 200
+2023-04-15 23:18:39 - r - INFO: - Episode: 316/500, Reward: -76.134, Step: 200
+2023-04-15 23:18:40 - r - INFO: - Episode: 317/500, Reward: 1161.096, Step: 200
+2023-04-15 23:18:40 - r - INFO: - Episode: 318/500, Reward: 1137.001, Step: 200
+2023-04-15 23:18:41 - r - INFO: - Episode: 319/500, Reward: 424.427, Step: 200
+2023-04-15 23:18:41 - r - INFO: - Episode: 320/500, Reward: 79.049, Step: 200
+2023-04-15 23:18:43 - r - INFO: - Episode: 321/500, Reward: 331.122, Step: 200
+2023-04-15 23:18:44 - r - INFO: - Episode: 322/500, Reward: 495.691, Step: 200
+2023-04-15 23:18:44 - r - INFO: - Episode: 323/500, Reward: 621.114, Step: 200
+2023-04-15 23:18:45 - r - INFO: - Episode: 324/500, Reward: 1123.979, Step: 200
+2023-04-15 23:18:45 - r - INFO: - Episode: 325/500, Reward: 153.178, Step: 200
+2023-04-15 23:18:48 - r - INFO: - Current episode 325 has the best eval reward: 815.324
+2023-04-15 23:18:48 - r - INFO: - Episode: 326/500, Reward: 602.484, Step: 200
+2023-04-15 23:18:48 - r - INFO: - Episode: 327/500, Reward: 277.126, Step: 200
+2023-04-15 23:18:49 - r - INFO: - Episode: 328/500, Reward: -20.163, Step: 200
+2023-04-15 23:18:49 - r - INFO: - Episode: 329/500, Reward: 766.230, Step: 200
+2023-04-15 23:18:50 - r - INFO: - Episode: 330/500, Reward: 38.049, Step: 200
+2023-04-15 23:18:53 - r - INFO: - Episode: 331/500, Reward: 985.002, Step: 200
+2023-04-15 23:18:53 - r - INFO: - Episode: 332/500, Reward: 972.185, Step: 200
+2023-04-15 23:18:53 - r - INFO: - Episode: 333/500, Reward: 204.542, Step: 200
+2023-04-15 23:18:54 - r - INFO: - Episode: 334/500, Reward: 699.537, Step: 200
+2023-04-15 23:18:54 - r - INFO: - Episode: 335/500, Reward: 1153.478, Step: 200
+2023-04-15 23:18:57 - r - INFO: - Episode: 336/500, Reward: 736.258, Step: 200
+2023-04-15 23:18:57 - r - INFO: - Episode: 337/500, Reward: 94.134, Step: 200
+2023-04-15 23:18:58 - r - INFO: - Episode: 338/500, Reward: 1182.112, Step: 200
+2023-04-15 23:18:58 - r - INFO: - Episode: 339/500, Reward: 512.485, Step: 200
+2023-04-15 23:18:59 - r - INFO: - Episode: 340/500, Reward: 536.397, Step: 200
+2023-04-15 23:19:02 - r - INFO: - Episode: 341/500, Reward: 609.061, Step: 200
+2023-04-15 23:19:02 - r - INFO: - Episode: 342/500, Reward: 70.120, Step: 200
+2023-04-15 23:19:02 - r - INFO: - Episode: 343/500, Reward: 509.803, Step: 200
+2023-04-15 23:19:03 - r - INFO: - Episode: 344/500, Reward: 642.298, Step: 200
+2023-04-15 23:19:03 - r - INFO: - Episode: 345/500, Reward: 992.564, Step: 200
+2023-04-15 23:19:06 - r - INFO: - Episode: 346/500, Reward: 365.463, Step: 200
+2023-04-15 23:19:06 - r - INFO: - Episode: 347/500, Reward: 866.310, Step: 200
+2023-04-15 23:19:07 - r - INFO: - Episode: 348/500, Reward: 329.945, Step: 200
+2023-04-15 23:19:07 - r - INFO: - Episode: 349/500, Reward: 972.481, Step: 200
+2023-04-15 23:19:08 - r - INFO: - Episode: 350/500, Reward: -77.255, Step: 200
+2023-04-15 23:19:10 - r - INFO: - Episode: 351/500, Reward: 176.593, Step: 200
+2023-04-15 23:19:11 - r - INFO: - Episode: 352/500, Reward: 1018.314, Step: 200
+2023-04-15 23:19:11 - r - INFO: - Episode: 353/500, Reward: 725.953, Step: 200
+2023-04-15 23:19:12 - r - INFO: - Episode: 354/500, Reward: 341.553, Step: 200
+2023-04-15 23:19:12 - r - INFO: - Episode: 355/500, Reward: 35.679, Step: 200
+2023-04-15 23:19:15 - r - INFO: - Episode: 356/500, Reward: -30.345, Step: 200
+2023-04-15 23:19:15 - r - INFO: - Episode: 357/500, Reward: 931.656, Step: 200
+2023-04-15 23:19:15 - r - INFO: - Episode: 358/500, Reward: -43.227, Step: 200
+2023-04-15 23:19:16 - r - INFO: - Episode: 359/500, Reward: 681.594, Step: 200
+2023-04-15 23:19:16 - r - INFO: - Episode: 360/500, Reward: 1171.040, Step: 200
+2023-04-15 23:19:19 - r - INFO: - Episode: 361/500, Reward: -19.770, Step: 200
+2023-04-15 23:19:20 - r - INFO: - Episode: 362/500, Reward: -36.035, Step: 200
+2023-04-15 23:19:20 - r - INFO: - Episode: 363/500, Reward: -66.345, Step: 200
+2023-04-15 23:19:21 - r - INFO: - Episode: 364/500, Reward: 864.586, Step: 200
+2023-04-15 23:19:21 - r - INFO: - Episode: 365/500, Reward: 127.634, Step: 200
+2023-04-15 23:19:24 - r - INFO: - Episode: 366/500, Reward: 1145.618, Step: 200
+2023-04-15 23:19:24 - r - INFO: - Episode: 367/500, Reward: 822.566, Step: 200
+2023-04-15 23:19:25 - r - INFO: - Episode: 368/500, Reward: 1059.745, Step: 200
+2023-04-15 23:19:25 - r - INFO: - Episode: 369/500, Reward: 905.776, Step: 200
+2023-04-15 23:19:26 - r - INFO: - Episode: 370/500, Reward: 195.103, Step: 200
+2023-04-15 23:19:28 - r - INFO: - Episode: 371/500, Reward: 1154.178, Step: 200
+2023-04-15 23:19:29 - r - INFO: - Episode: 372/500, Reward: -32.568, Step: 200
+2023-04-15 23:19:29 - r - INFO: - Episode: 373/500, Reward: -57.440, Step: 200
+2023-04-15 23:19:29 - r - INFO: - Episode: 374/500, Reward: -1.462, Step: 200
+2023-04-15 23:19:30 - r - INFO: - Episode: 375/500, Reward: 56.540, Step: 200
+2023-04-15 23:19:32 - r - INFO: - Episode: 376/500, Reward: 879.303, Step: 200
+2023-04-15 23:19:33 - r - INFO: - Episode: 377/500, Reward: -9.497, Step: 200
+2023-04-15 23:19:33 - r - INFO: - Episode: 378/500, Reward: 131.343, Step: 200
+2023-04-15 23:19:34 - r - INFO: - Episode: 379/500, Reward: 455.509, Step: 200
+2023-04-15 23:19:34 - r - INFO: - Episode: 380/500, Reward: 1140.193, Step: 200
+2023-04-15 23:19:36 - r - INFO: - Episode: 381/500, Reward: 369.164, Step: 200
+2023-04-15 23:19:37 - r - INFO: - Episode: 382/500, Reward: 43.197, Step: 200
+2023-04-15 23:19:37 - r - INFO: - Episode: 383/500, Reward: 1144.082, Step: 200
+2023-04-15 23:19:38 - r - INFO: - Episode: 384/500, Reward: 51.698, Step: 200
+2023-04-15 23:19:38 - r - INFO: - Episode: 385/500, Reward: 556.169, Step: 200
+2023-04-15 23:19:41 - r - INFO: - Episode: 386/500, Reward: 1260.157, Step: 200
+2023-04-15 23:19:41 - r - INFO: - Episode: 387/500, Reward: -57.485, Step: 200
+2023-04-15 23:19:42 - r - INFO: - Episode: 388/500, Reward: 407.513, Step: 200
+2023-04-15 23:19:42 - r - INFO: - Episode: 389/500, Reward: 155.133, Step: 200
+2023-04-15 23:19:43 - r - INFO: - Episode: 390/500, Reward: 920.272, Step: 200
+2023-04-15 23:19:46 - r - INFO: - Episode: 391/500, Reward: 1123.356, Step: 200
+2023-04-15 23:19:46 - r - INFO: - Episode: 392/500, Reward: 460.945, Step: 200
+2023-04-15 23:19:46 - r - INFO: - Episode: 393/500, Reward: 275.538, Step: 200
+2023-04-15 23:19:47 - r - INFO: - Episode: 394/500, Reward: 213.565, Step: 200
+2023-04-15 23:19:47 - r - INFO: - Episode: 395/500, Reward: 523.999, Step: 200
+2023-04-15 23:19:50 - r - INFO: - Episode: 396/500, Reward: 0.418, Step: 200
+2023-04-15 23:19:51 - r - INFO: - Episode: 397/500, Reward: 987.677, Step: 200
+2023-04-15 23:19:51 - r - INFO: - Episode: 398/500, Reward: 1238.034, Step: 200
+2023-04-15 23:19:52 - r - INFO: - Episode: 399/500, Reward: 837.340, Step: 200
+2023-04-15 23:19:52 - r - INFO: - Episode: 400/500, Reward: 409.945, Step: 200
+2023-04-15 23:19:55 - r - INFO: - Episode: 401/500, Reward: 150.730, Step: 200
+2023-04-15 23:19:55 - r - INFO: - Episode: 402/500, Reward: 1001.220, Step: 200
+2023-04-15 23:19:56 - r - INFO: - Episode: 403/500, Reward: 210.298, Step: 200
+2023-04-15 23:19:56 - r - INFO: - Episode: 404/500, Reward: 112.176, Step: 200
+2023-04-15 23:19:56 - r - INFO: - Episode: 405/500, Reward: 657.680, Step: 200
+2023-04-15 23:19:58 - r - INFO: - Current episode 405 has the best eval reward: 976.916
+2023-04-15 23:19:59 - r - INFO: - Episode: 406/500, Reward: 464.356, Step: 200
+2023-04-15 23:19:59 - r - INFO: - Episode: 407/500, Reward: 257.457, Step: 200
+2023-04-15 23:20:00 - r - INFO: - Episode: 408/500, Reward: 1052.790, Step: 200
+2023-04-15 23:20:00 - r - INFO: - Episode: 409/500, Reward: 204.871, Step: 200
+2023-04-15 23:20:01 - r - INFO: - Episode: 410/500, Reward: 718.674, Step: 200
+2023-04-15 23:20:03 - r - INFO: - Episode: 411/500, Reward: 441.956, Step: 200
+2023-04-15 23:20:04 - r - INFO: - Episode: 412/500, Reward: 1286.058, Step: 200
+2023-04-15 23:20:04 - r - INFO: - Episode: 413/500, Reward: 311.079, Step: 200
+2023-04-15 23:20:05 - r - INFO: - Episode: 414/500, Reward: 781.303, Step: 200
+2023-04-15 23:20:05 - r - INFO: - Episode: 415/500, Reward: 171.353, Step: 200
+2023-04-15 23:20:08 - r - INFO: - Episode: 416/500, Reward: 174.213, Step: 200
+2023-04-15 23:20:08 - r - INFO: - Episode: 417/500, Reward: 927.905, Step: 200
+2023-04-15 23:20:08 - r - INFO: - Episode: 418/500, Reward: 1160.127, Step: 200
+2023-04-15 23:20:09 - r - INFO: - Episode: 419/500, Reward: 1165.442, Step: 200
+2023-04-15 23:20:09 - r - INFO: - Episode: 420/500, Reward: 544.769, Step: 200
+2023-04-15 23:20:12 - r - INFO: - Episode: 421/500, Reward: 1111.458, Step: 200
+2023-04-15 23:20:12 - r - INFO: - Episode: 422/500, Reward: 1281.263, Step: 200
+2023-04-15 23:20:13 - r - INFO: - Episode: 423/500, Reward: 1221.828, Step: 200
+2023-04-15 23:20:13 - r - INFO: - Episode: 424/500, Reward: 911.148, Step: 200
+2023-04-15 23:20:14 - r - INFO: - Episode: 425/500, Reward: 1120.394, Step: 200
+2023-04-15 23:20:16 - r - INFO: - Current episode 425 has the best eval reward: 1008.854
+2023-04-15 23:20:16 - r - INFO: - Episode: 426/500, Reward: 7.198, Step: 200
+2023-04-15 23:20:17 - r - INFO: - Episode: 427/500, Reward: 891.676, Step: 200
+2023-04-15 23:20:17 - r - INFO: - Episode: 428/500, Reward: 623.757, Step: 200
+2023-04-15 23:20:18 - r - INFO: - Episode: 429/500, Reward: 198.794, Step: 200
+2023-04-15 23:20:18 - r - INFO: - Episode: 430/500, Reward: 870.072, Step: 200
+2023-04-15 23:20:21 - r - INFO: - Episode: 431/500, Reward: 976.483, Step: 200
+2023-04-15 23:20:22 - r - INFO: - Episode: 432/500, Reward: 1306.946, Step: 200
+2023-04-15 23:20:22 - r - INFO: - Episode: 433/500, Reward: 1048.749, Step: 200
+2023-04-15 23:20:23 - r - INFO: - Episode: 434/500, Reward: 1080.640, Step: 200
+2023-04-15 23:20:23 - r - INFO: - Episode: 435/500, Reward: 12.140, Step: 200
+2023-04-15 23:20:26 - r - INFO: - Episode: 436/500, Reward: 1218.048, Step: 200
+2023-04-15 23:20:26 - r - INFO: - Episode: 437/500, Reward: 1163.155, Step: 200
+2023-04-15 23:20:27 - r - INFO: - Episode: 438/500, Reward: 988.665, Step: 200
+2023-04-15 23:20:27 - r - INFO: - Episode: 439/500, Reward: 70.086, Step: 200
+2023-04-15 23:20:28 - r - INFO: - Episode: 440/500, Reward: 1069.319, Step: 200
+2023-04-15 23:20:31 - r - INFO: - Episode: 441/500, Reward: 960.120, Step: 200
+2023-04-15 23:20:31 - r - INFO: - Episode: 442/500, Reward: 51.665, Step: 200
+2023-04-15 23:20:32 - r - INFO: - Episode: 443/500, Reward: -11.999, Step: 200
+2023-04-15 23:20:32 - r - INFO: - Episode: 444/500, Reward: 765.779, Step: 200
+2023-04-15 23:20:33 - r - INFO: - Episode: 445/500, Reward: 941.249, Step: 200
+2023-04-15 23:20:35 - r - INFO: - Episode: 446/500, Reward: 781.765, Step: 200
+2023-04-15 23:20:36 - r - INFO: - Episode: 447/500, Reward: 384.898, Step: 200
+2023-04-15 23:20:36 - r - INFO: - Episode: 448/500, Reward: 1242.807, Step: 200
+2023-04-15 23:20:37 - r - INFO: - Episode: 449/500, Reward: 1308.224, Step: 200
+2023-04-15 23:20:37 - r - INFO: - Episode: 450/500, Reward: 1308.530, Step: 200
+2023-04-15 23:20:40 - r - INFO: - Episode: 451/500, Reward: 40.378, Step: 200
+2023-04-15 23:20:40 - r - INFO: - Episode: 452/500, Reward: -23.222, Step: 200
+2023-04-15 23:20:41 - r - INFO: - Episode: 453/500, Reward: 74.578, Step: 200
+2023-04-15 23:20:41 - r - INFO: - Episode: 454/500, Reward: 934.782, Step: 200
+2023-04-15 23:20:42 - r - INFO: - Episode: 455/500, Reward: 108.463, Step: 200
+2023-04-15 23:20:44 - r - INFO: - Episode: 456/500, Reward: 451.094, Step: 200
+2023-04-15 23:20:45 - r - INFO: - Episode: 457/500, Reward: 1329.834, Step: 200
+2023-04-15 23:20:45 - r - INFO: - Episode: 458/500, Reward: 426.214, Step: 200
+2023-04-15 23:20:46 - r - INFO: - Episode: 459/500, Reward: 1161.309, Step: 200
+2023-04-15 23:20:46 - r - INFO: - Episode: 460/500, Reward: 1341.959, Step: 200
+2023-04-15 23:20:49 - r - INFO: - Episode: 461/500, Reward: 1068.499, Step: 200
+2023-04-15 23:20:49 - r - INFO: - Episode: 462/500, Reward: 519.686, Step: 200
+2023-04-15 23:20:50 - r - INFO: - Episode: 463/500, Reward: 691.565, Step: 200
+2023-04-15 23:20:50 - r - INFO: - Episode: 464/500, Reward: 510.184, Step: 200
+2023-04-15 23:20:51 - r - INFO: - Episode: 465/500, Reward: 152.479, Step: 200
+2023-04-15 23:20:53 - r - INFO: - Episode: 466/500, Reward: 1304.580, Step: 200
+2023-04-15 23:20:54 - r - INFO: - Episode: 467/500, Reward: 131.678, Step: 200
+2023-04-15 23:20:54 - r - INFO: - Episode: 468/500, Reward: 787.498, Step: 200
+2023-04-15 23:20:55 - r - INFO: - Episode: 469/500, Reward: 1241.066, Step: 200
+2023-04-15 23:20:55 - r - INFO: - Episode: 470/500, Reward: 1171.289, Step: 200
+2023-04-15 23:20:58 - r - INFO: - Episode: 471/500, Reward: 1199.948, Step: 200
+2023-04-15 23:20:58 - r - INFO: - Episode: 472/500, Reward: 1200.997, Step: 200
+2023-04-15 23:20:58 - r - INFO: - Episode: 473/500, Reward: 1127.615, Step: 200
+2023-04-15 23:20:59 - r - INFO: - Episode: 474/500, Reward: 761.759, Step: 200
+2023-04-15 23:20:59 - r - INFO: - Episode: 475/500, Reward: 1131.169, Step: 200
+2023-04-15 23:21:02 - r - INFO: - Current episode 475 has the best eval reward: 1149.056
+2023-04-15 23:21:02 - r - INFO: - Episode: 476/500, Reward: 148.249, Step: 200
+2023-04-15 23:21:03 - r - INFO: - Episode: 477/500, Reward: 1088.001, Step: 200
+2023-04-15 23:21:03 - r - INFO: - Episode: 478/500, Reward: 1362.948, Step: 200
+2023-04-15 23:21:03 - r - INFO: - Episode: 479/500, Reward: 1063.060, Step: 200
+2023-04-15 23:21:04 - r - INFO: - Episode: 480/500, Reward: 1294.607, Step: 200
+2023-04-15 23:21:07 - r - INFO: - Episode: 481/500, Reward: 891.412, Step: 200
+2023-04-15 23:21:07 - r - INFO: - Episode: 482/500, Reward: 1172.272, Step: 200
+2023-04-15 23:21:08 - r - INFO: - Episode: 483/500, Reward: 1356.479, Step: 200
+2023-04-15 23:21:08 - r - INFO: - Episode: 484/500, Reward: 1209.078, Step: 200
+2023-04-15 23:21:09 - r - INFO: - Episode: 485/500, Reward: 851.491, Step: 200
+2023-04-15 23:21:11 - r - INFO: - Current episode 485 has the best eval reward: 1152.896
+2023-04-15 23:21:11 - r - INFO: - Episode: 486/500, Reward: 1257.039, Step: 200
+2023-04-15 23:21:12 - r - INFO: - Episode: 487/500, Reward: 1055.984, Step: 200
+2023-04-15 23:21:12 - r - INFO: - Episode: 488/500, Reward: 1096.764, Step: 200
+2023-04-15 23:21:13 - r - INFO: - Episode: 489/500, Reward: 1108.270, Step: 200
+2023-04-15 23:21:13 - r - INFO: - Episode: 490/500, Reward: 1258.958, Step: 200
+2023-04-15 23:21:15 - r - INFO: - Current episode 490 has the best eval reward: 1241.615
+2023-04-15 23:21:16 - r - INFO: - Episode: 491/500, Reward: 893.507, Step: 200
+2023-04-15 23:21:17 - r - INFO: - Episode: 492/500, Reward: 376.534, Step: 200
+2023-04-15 23:21:17 - r - INFO: - Episode: 493/500, Reward: 130.601, Step: 200
+2023-04-15 23:21:18 - r - INFO: - Episode: 494/500, Reward: 1399.318, Step: 200
+2023-04-15 23:21:18 - r - INFO: - Episode: 495/500, Reward: 1084.886, Step: 200
+2023-04-15 23:21:21 - r - INFO: - Episode: 496/500, Reward: 1155.929, Step: 200
+2023-04-15 23:21:22 - r - INFO: - Episode: 497/500, Reward: 1260.575, Step: 200
+2023-04-15 23:21:22 - r - INFO: - Episode: 498/500, Reward: 946.322, Step: 200
+2023-04-15 23:21:23 - r - INFO: - Episode: 499/500, Reward: 1116.337, Step: 200
+2023-04-15 23:21:23 - r - INFO: - Episode: 500/500, Reward: 1418.704, Step: 200
+2023-04-15 23:21:26 - r - INFO: - Finish training!
