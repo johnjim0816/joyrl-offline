@@ -1,0 +1,35 @@
+general_cfg:
+  algo_name: A2C
+  device: cpu
+  env_name: gym
+  eval_eps: 10
+  eval_per_episode: 20
+  load_checkpoint: true
+  load_path: tasks
+  max_steps: 1000
+  mode: test
+  mp_backend: mp
+  new_step_api: false
+  render: false
+  render_mode: human
+  save_fig: true
+  seed: 0
+  show_fig: false
+  test_eps: 20
+  train_eps: 1000
+  wrapper: null
+algo_cfg:
+  actor_hidden_dim: 256
+  actor_lr: 0.0001
+  continuous: false
+  critic_coef: 0.5
+  critic_hidden_dim: 256
+  critic_lr: 0.001
+  entropy_coef: 0.001
+  gamma: 0.99
+  lr: 0.003
+  update_freq: 64
+env_cfg:
+  id: Acrobot-v1
+  new_step_api: false
+  render_mode: null

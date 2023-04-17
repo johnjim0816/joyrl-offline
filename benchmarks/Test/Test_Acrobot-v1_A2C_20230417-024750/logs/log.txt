@@ -1,0 +1,63 @@
+2023-04-17 02:47:50 - r - INFO: - Hyperparameters:
+2023-04-17 02:47:50 - r - INFO: - ================================================================================
+2023-04-17 02:47:50 - r - INFO: -         Name        	       Value        	        Type        
+2023-04-17 02:47:50 - r - INFO: -       env_name      	        gym         	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -     new_step_api    	         0          	   <class 'bool'>   
+2023-04-17 02:47:50 - r - INFO: -       wrapper       	        None        	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -        render       	         0          	   <class 'bool'>   
+2023-04-17 02:47:50 - r - INFO: -     render_mode     	        None        	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -      algo_name      	        A2C         	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -         mode        	        test        	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -      mp_backend     	         mp         	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -         seed        	         0          	   <class 'int'>    
+2023-04-17 02:47:50 - r - INFO: -        device       	        cpu         	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -      train_eps      	        1000        	   <class 'int'>    
+2023-04-17 02:47:50 - r - INFO: -       test_eps      	         20         	   <class 'int'>    
+2023-04-17 02:47:50 - r - INFO: -       eval_eps      	         10         	   <class 'int'>    
+2023-04-17 02:47:50 - r - INFO: -   eval_per_episode  	         20         	   <class 'int'>    
+2023-04-17 02:47:50 - r - INFO: -      max_steps      	        1000        	   <class 'int'>    
+2023-04-17 02:47:50 - r - INFO: -   load_checkpoint   	         1          	   <class 'bool'>   
+2023-04-17 02:47:50 - r - INFO: -      load_path      	       tasks        	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -       show_fig      	         0          	   <class 'bool'>   
+2023-04-17 02:47:50 - r - INFO: -       save_fig      	         1          	   <class 'bool'>   
+2023-04-17 02:47:50 - r - INFO: -      continuous     	         0          	   <class 'bool'>   
+2023-04-17 02:47:50 - r - INFO: -        gamma        	        0.99        	  <class 'float'>   
+2023-04-17 02:47:50 - r - INFO: -       actor_lr      	       0.0001       	  <class 'float'>   
+2023-04-17 02:47:50 - r - INFO: -      critic_lr      	       0.001        	  <class 'float'>   
+2023-04-17 02:47:50 - r - INFO: -          lr         	       0.003        	  <class 'float'>   
+2023-04-17 02:47:50 - r - INFO: -   actor_hidden_dim  	        256         	   <class 'int'>    
+2023-04-17 02:47:50 - r - INFO: -  critic_hidden_dim  	        256         	   <class 'int'>    
+2023-04-17 02:47:50 - r - INFO: -     entropy_coef    	       0.001        	  <class 'float'>   
+2023-04-17 02:47:50 - r - INFO: -     critic_coef     	        0.5         	  <class 'float'>   
+2023-04-17 02:47:50 - r - INFO: -     update_freq     	         64         	   <class 'int'>    
+2023-04-17 02:47:50 - r - INFO: -          id         	     Acrobot-v1     	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -       task_dir      	/content/gdrive/MyDrive/joyrl-offline/tasks/Test_gym_A2C_20230417-024750	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -       res_dir       	/content/gdrive/MyDrive/joyrl-offline/tasks/Test_gym_A2C_20230417-024750/results	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -       log_dir       	/content/gdrive/MyDrive/joyrl-offline/tasks/Test_gym_A2C_20230417-024750/logs	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -       traj_dir      	/content/gdrive/MyDrive/joyrl-offline/tasks/Test_gym_A2C_20230417-024750/traj	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: -      video_dir      	/content/gdrive/MyDrive/joyrl-offline/tasks/Test_gym_A2C_20230417-024750/videos	   <class 'str'>    
+2023-04-17 02:47:50 - r - INFO: - ================================================================================
+2023-04-17 02:47:50 - r - INFO: - n_states: 6, n_actions: 3
+2023-04-17 02:47:50 - r - INFO: - Start testing!
+2023-04-17 02:47:50 - r - INFO: - Env: gym, Algorithm: A2C, Device: cpu
+2023-04-17 02:47:50 - r - INFO: - Episode: 1/20, Reward: -107.000, Step: 108
+2023-04-17 02:47:50 - r - INFO: - Episode: 2/20, Reward: -108.000, Step: 109
+2023-04-17 02:47:50 - r - INFO: - Episode: 3/20, Reward: -109.000, Step: 110
+2023-04-17 02:47:51 - r - INFO: - Episode: 4/20, Reward: -172.000, Step: 173
+2023-04-17 02:47:51 - r - INFO: - Episode: 5/20, Reward: -122.000, Step: 123
+2023-04-17 02:47:51 - r - INFO: - Episode: 6/20, Reward: -93.000, Step: 94
+2023-04-17 02:47:51 - r - INFO: - Episode: 7/20, Reward: -94.000, Step: 95
+2023-04-17 02:47:51 - r - INFO: - Episode: 8/20, Reward: -90.000, Step: 91
+2023-04-17 02:47:51 - r - INFO: - Episode: 9/20, Reward: -101.000, Step: 102
+2023-04-17 02:47:51 - r - INFO: - Episode: 10/20, Reward: -112.000, Step: 113
+2023-04-17 02:47:51 - r - INFO: - Episode: 11/20, Reward: -69.000, Step: 70
+2023-04-17 02:47:51 - r - INFO: - Episode: 12/20, Reward: -91.000, Step: 92
+2023-04-17 02:47:51 - r - INFO: - Episode: 13/20, Reward: -108.000, Step: 109
+2023-04-17 02:47:51 - r - INFO: - Episode: 14/20, Reward: -95.000, Step: 96
+2023-04-17 02:47:51 - r - INFO: - Episode: 15/20, Reward: -90.000, Step: 91
+2023-04-17 02:47:51 - r - INFO: - Episode: 16/20, Reward: -97.000, Step: 98
+2023-04-17 02:47:51 - r - INFO: - Episode: 17/20, Reward: -113.000, Step: 114
+2023-04-17 02:47:51 - r - INFO: - Episode: 18/20, Reward: -83.000, Step: 84
+2023-04-17 02:47:51 - r - INFO: - Episode: 19/20, Reward: -201.000, Step: 202
+2023-04-17 02:47:52 - r - INFO: - Episode: 20/20, Reward: -90.000, Step: 91
+2023-04-17 02:47:52 - r - INFO: - Finish testing!
