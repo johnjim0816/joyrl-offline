@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-04-17 22:52:50
+LastEditTime: 2023-04-17 23:39:42
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -62,7 +62,10 @@ class Agent(BaseAgent):
             # self.target_optimizer = SharedAdam(self.target_net.parameters(), lr=cfg.lr)
             # self.target_optimizer.share_memory()
         self.memory = BufferCreator(cfg)
-    
+    def create_graph(self):
+        pass
+    def create_optm(self):
+        self.optm = optim.Adam(self.policy_net.parameters(), lr=self.lr)
         
     def sample_action(self, state):
         ''' 采样动作
