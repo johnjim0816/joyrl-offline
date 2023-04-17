@@ -5,14 +5,14 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:34:27
 LastEditor: JiangJi
-LastEditTime: 2023-04-17 00:02:57
+LastEditTime: 2023-04-17 22:27:36
 Discription: 
 '''
 import random
 import torch
 import numpy as np
 from collections import deque
-import operator
+
 from common.core_types import BufferType
 from common.config import MergedConfig
 
@@ -1123,4 +1123,10 @@ class BufferCreator:
         else:
             raise NotImplementedError
 if __name__ == "__main__":
-    bu
+    from config.config import MergedConfig
+    cfg = MergedConfig()
+    cfg.buffer_type = 'REPLAY'
+    cfg.buffer_size = 100
+    buffer = BufferCreator(cfg)()
+    for i in range(100):
+        buffer.add(i)
