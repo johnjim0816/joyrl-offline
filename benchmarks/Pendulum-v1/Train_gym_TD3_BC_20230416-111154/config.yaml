@@ -1,36 +1,43 @@
 general_cfg:
-  algo_name: TD3
+  algo_name: TD3_BC
   device: cuda
   env_name: gym
   eval_eps: 5
-  eval_per_episode: 10
-  load_checkpoint: true
-  load_path: Train_gym_TD3_20230416-110359
+  eval_per_episode: 1
+  load_checkpoint: false
+  load_path: Train_CartPole-v1_DQN_20221026-054757
   max_steps: 200
-  mode: test
+  mode: train
+  mp_backend: mp
   new_step_api: true
   render: false
+  render_mode: human
   save_fig: true
   seed: 1
   show_fig: false
   test_eps: 10
-  train_eps: 100
+  train_eps: 1
   wrapper: null
 algo_cfg:
   actor_hidden_dim: 256
-  actor_lr: 0.001
+  actor_lr: 0.0003
+  alpha: 5
   batch_size: 100
   buffer_size: 1000000
   critic_hidden_dim: 256
-  critic_lr: 0.001
+  critic_lr: 0.0003
+  expert_path: tasks/Collect_gym_TD3_20230416-111040/traj/traj.pkl
   expl_noise: 0.1
   explore_steps: 1000
   gamma: 0.99
+  lmbda: 1
   noise_clip: 0.5
+  normalize: false
   policy_freq: 2
   policy_noise: 0.2
   tau: 0.005
+  train_iterations: 1500
 env_cfg:
   id: Pendulum-v1
   new_step_api: true
-
+  render_mode: null

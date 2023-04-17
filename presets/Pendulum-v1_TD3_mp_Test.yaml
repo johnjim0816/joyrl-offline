@@ -1,20 +1,20 @@
 general_cfg:
   algo_name: TD3
-  device: cuda
+  device: cpu
   env_name: gym
   eval_eps: 5
   eval_per_episode: 10
   load_checkpoint: true
-  load_path: Train_gym_TD3_20230416-110359
+  load_path: Train_gym_TD3_20230416-214019
   max_steps: 200
   mode: test
-  new_step_api: true
+  n_workers: 1 # number of workers for parallel training
   render: false
   save_fig: true
   seed: 1
   show_fig: false
   test_eps: 10
-  train_eps: 100
+  train_eps: 200
   wrapper: null
 algo_cfg:
   actor_hidden_dim: 256
@@ -30,7 +30,7 @@ algo_cfg:
   policy_freq: 2
   policy_noise: 0.2
   tau: 0.005
+  global_best_reward: -1800
 env_cfg:
   id: Pendulum-v1
   new_step_api: true
-
