@@ -15,14 +15,12 @@ from gym.wrappers import RecordVideo
 import ray
 from ray.util.queue import Queue
 import torch.multiprocessing as mp
-from config.config import GeneralConfig
+from config.config import GeneralConfig, MergedConfig
 from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, check_n_workers, save_traj,save_frames_as_gif
 from common.ray_utils import GlobalVarRecorder
 from envs.register import register_env
+from torch.utils.tensorboard import SummaryWriter  
 
-class MergedConfig:
-    def __init__(self) -> None:
-        pass
 class Main(object):
     def __init__(self) -> None:
         pass
@@ -102,7 +100,13 @@ class Main(object):
         setattr(cfg, 'traj_dir', traj_dir)
         video_dir = f"{task_dir}/videos"
         setattr(cfg, 'video_dir', video_dir)
-
+        tb_dir = f"{task_dir}/tb_logs"
+        setattr(cfg, 'tb_dir', tb_dir)
+    def create_loggers(self, cfg):
+        ''' create logger
+        '''
+        self.logger = get_logger(cfg.log_dir)
+        self.tb_writter = SummaryWriter(log_dir=cfg.tb_dir)
     def envs_config(self, cfg):
         ''' configure environment
         '''
