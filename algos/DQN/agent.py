@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-04-17 23:39:42
+LastEditTime: 2023-04-17 23:46:01
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -63,7 +63,9 @@ class Agent(BaseAgent):
             # self.target_optimizer.share_memory()
         self.memory = BufferCreator(cfg)
     def create_graph(self):
-        pass
+        self.states_shape = [None, self.obs_space.shape[0]]
+        self.policy_net = ValueNetwork(self.states_shape, self.n_actions)
+        self.target_net = ValueNetwork(self.states_shape, self.n_actions)
     def create_optm(self):
         self.optm = optim.Adam(self.policy_net.parameters(), lr=self.lr)
         
