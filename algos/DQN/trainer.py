@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2022-11-22 23:19:20
 LastEditor: Guoshicheng
-LastEditTime: 2023-04-17 22:54:24
+LastEditTime: 2023-04-19 02:05:28
 Discription: 
 '''
 import torch.multiprocessing as mp
@@ -19,12 +19,12 @@ class Trainer:
     def train_one_episode(self, env, agent, cfg): 
         ep_reward = 0  # 每回合的reward之和
         ep_step = 0 # 每回合的step之和
-        state = env.reset(seed = cfg.seed)  # 重置环境并返回初始状态
-        for _ in range(cfg.max_steps):
+        state = env.reset(seed = cfg.general_cfg.seed)  # 重置环境并返回初始状态
+        for _ in range(cfg.general_cfg.max_steps):
             ep_step += 1
             action = agent.sample_action(state)  # 采样动作
             next_state, reward, terminated, truncated , info = env.step(action)  # 更新环境并返回转移
-            exp = Exp(state = state, action = action, reward = reward, next_state = next_state, done = terminated, info = info)
+            exp = [Exp(state = state, action = action, reward = reward, next_state = next_state, done = terminated, info = info)]
             agent.memory.push(exp)  # 存储样本(转移)
             agent.update()  # 更新智能体
             state = next_state  # 更新下一个状态
@@ -37,10 +37,10 @@ class Trainer:
         ep_reward = 0  
         ep_step = 0
         ep_frames = []
-        state = env.reset(seed = cfg.seed)  
-        for _ in range(cfg.max_steps):
+        state = env.reset(seed = cfg.general_cfg.seed)
+        for _ in range(cfg.general_cfg.max_steps):
             ep_step += 1
-            if cfg.render and cfg.render_mode == 'rgb_array': # 用于可视化
+            if cfg.env_cfg.render_mode == 'rgb_array': # 用于可视化
                 frame = env.render()[0]
                 ep_frames.append(frame)
             action = agent.predict_action(state) # 预测动作

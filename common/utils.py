@@ -206,17 +206,6 @@ def all_seed(seed = 1):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.enabled = False
     
-def check_n_workers(cfg):
-
-    if cfg.__dict__.get('n_workers',None) is None: # set n_workers to 1 if not set
-        setattr(cfg, 'n_workers', 1)
-    if not isinstance(cfg.n_workers,int) or cfg.n_workers<=0: # n_workers must >0
-        raise ValueError("n_workers must >0!")
-    if cfg.n_workers > mp.cpu_count():
-        raise ValueError("n_workers must less than total numbers of cpus on your machine!")
-    if cfg.n_workers > 1 and cfg.device != 'cpu':
-        raise ValueError("multi process can only support cpu!")
-    
 def save_traj(traj, fpath):
     import pickle
     # create path

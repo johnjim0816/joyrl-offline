@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:34:27
 LastEditor: JiangJi
-LastEditTime: 2023-04-17 22:27:36
+LastEditTime: 2023-04-19 02:02:52
 Discription: 
 '''
 import random
@@ -1110,9 +1110,9 @@ class SharedReplayBuffer(object):
 # MAPPO ending
 
 class BufferCreator:
-    def __init__(self, cfg):
-        self.buffer_type = cfg.buffer_type
-        self.cfg = cfg
+    def __init__(self, algo_cfg):
+        self.cfg = algo_cfg
+        self.buffer_type = BufferType[algo_cfg.buffer_type]
     def __call__(self):
         if self.buffer_type == BufferType.REPLAY:
             return ReplayBuffer(self.cfg)

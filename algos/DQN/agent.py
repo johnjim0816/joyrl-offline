@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-04-18 13:00:58
+LastEditTime: 2023-04-19 02:09:29
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -32,39 +32,36 @@ class Agent(BaseAgent):
             cfg (class): 超参数类
             is_share_agent (bool, optional): 是否为共享的 Agent ，多进程下使用，默认为 False
         '''
+        self.cfg = cfg
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
-        self.n_actions = cfg.n_actions  
-        self.device = torch.device(cfg.device) 
-        self.gamma = cfg.gamma  
+        self.device = torch.device(cfg.general_cfg.device) 
+        self.gamma = cfg.algo_cfg.gamma  
         ## e-greedy 策略相关参数
         self.sample_count = 0  # 采样动作计数
-        self.epsilon_start = cfg.epsilon_start
-        self.epsilon_end = cfg.epsilon_end
-        self.epsilon_decay = cfg.epsilon_decay
-        self.batch_size = cfg.batch_size
-        self.target_update = cfg.target_update
-        self.policy_net = ValueNetwork(cfg).to(self.device)
-        # summary(self.policy_net, (1,4))
-        self.target_net = ValueNetwork(cfg).to(self.device)
-        ## copy parameters from policy net to target net
-        # for target_param, param in zip(self.target_net.parameters(),self.policy_net.parameters()): 
-        #     target_param.data.copy_(param.data)
+        self.epsilon_start = cfg.algo_cfg.epsilon_start
+        self.epsilon_end = cfg.algo_cfg.epsilon_end
+        self.epsilon_decay = cfg.algo_cfg.epsilon_decay
+        self.batch_size = cfg.algo_cfg.batch_size
+        self.target_update = cfg.algo_cfg.target_update
+        self.is_share_agent = is_share_agent
+        self.memory = BufferCreator(cfg.algo_cfg)()
+        self.create_graph()
+    def create_graph(self):
+        self.input_size = [None, self.obs_space.shape[0]]
+        action_dim = self.action_space.n
+        self.policy_net = ValueNetwork(self.cfg.algo_cfg, self.input_size, action_dim)
+        self.target_net = ValueNetwork(self.cfg.algo_cfg, self.input_size, action_dim)
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=cfg.lr) 
-        if is_share_agent:
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.cfg.algo_cfg.lr) 
+        if self.is_share_agent:
             self.policy_net.share_memory()
-            self.optimizer = SharedAdam(self.policy_net.parameters(), lr=cfg.lr)
+            self.optimizer = SharedAdam(self.policy_net.parameters(), lr=self.algo_cfg.lr)
             self.optimizer.share_memory()
             ## The multiprocess DQN algorithm does not use the target_net in share_agent
             # self.target_net.share_memory()
             # self.target_optimizer = SharedAdam(self.target_net.parameters(), lr=cfg.lr)
             # self.target_optimizer.share_memory()
-        self.memory = BufferCreator(cfg)
-    def create_graph(self):
-        self.states_shape = [None, self.obs_space.shape[0]]
-        self.policy_net = ValueNetwork(self.states_shape, self.n_actions)
-        self.target_net = ValueNetwork(self.states_shape, self.n_actions)
     def create_optm(self):
         self.optm = optim.Adam(self.policy_net.parameters(), lr=self.lr)
         
@@ -82,7 +79,7 @@ class Agent(BaseAgent):
         if random.random() > self.epsilon:
             action = self.predict_action(state)
         else:
-            action = random.sample(self.action_space,1)[0]
+            action = self.action_space.sample()
         return action
     
     def predict_action(self,state):
@@ -106,6 +103,7 @@ class Agent(BaseAgent):
         rewards = torch.tensor(np.array([exp.reward for exp in exps]), device=self.device, dtype=torch.float32).unsqueeze(dim=1)
         next_states = torch.tensor(np.array([exp.next_state for exp in exps]), device=self.device, dtype=torch.float32)
         dones = torch.tensor(np.array([exp.done for exp in exps]), device=self.device, dtype=torch.float32).unsqueeze(dim=1)
+
         # 计算当前状态的 Q 值
         q_values = self.policy_net(states).gather(1, actions)
         # 计算下一个状态的最大 Q 值
