@@ -1,0 +1,30 @@
+general_cfg:
+  algo_name: QLearning
+  device: cuda
+  env_name: gym
+  eval_eps: 10
+  eval_per_episode: 5
+  load_checkpoint: true
+  load_path: Train_Taxi-v3_QLearning_20230418-223040
+  max_steps: 200
+  mode: test
+  mp_backend: mp
+  new_step_api: true
+  render: false
+  render_mode: human
+  save_fig: true
+  seed: 0
+  show_fig: false
+  test_eps: 200
+  train_eps: 1000
+  wrapper: null
+algo_cfg:
+  epsilon_decay: 300
+  epsilon_end: 0.01
+  epsilon_start: 0.95
+  gamma: 0.9
+  lr: 0.1
+env_cfg:
+  id: Taxi-v3
+  new_step_api: true
+  render_mode: null
