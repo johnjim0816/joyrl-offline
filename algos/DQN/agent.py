@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-04-17 23:46:01
+LastEditTime: 2023-04-18 13:00:58
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -19,11 +19,10 @@ import random
 import math
 import ray
 import numpy as np
-from common.layers import ValueNetwork
-from common.memories import ReplayBuffer
 from common.optms import SharedAdam
 from algos.base.buffers import BufferCreator
 from algos.base.agents import BaseAgent
+from algos.base.networks import ValueNetwork
 
 class Agent(BaseAgent):
     def __init__(self, cfg, is_share_agent = False):

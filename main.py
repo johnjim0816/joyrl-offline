@@ -14,6 +14,7 @@ import gym
 from gym.wrappers import RecordVideo
 import ray
 from ray.util.queue import Queue
+import importlib
 import torch.multiprocessing as mp
 from config.config import GeneralConfig, MergedConfig
 from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, check_n_workers, save_traj,save_frames_as_gif
@@ -28,13 +29,12 @@ class Main(object):
     def get_default_cfg(self):
         self.general_cfg = GeneralConfig()
         self.algo_name = self.general_cfg.algo_name
-        algo_mod = __import__(f"algos.{self.algo_name}.config", fromlist=['AlgoConfig'])
+        algo_mod = importlib.import_module(f"algos.{self.algo_name}.config")
         self.algo_cfg = algo_mod.AlgoConfig()
         self.env_name = self.general_cfg.env_name
-        env_mod = __import__(f"envs.{self.env_name}.config", fromlist=['EnvConfig'])
+        env_mod = importlib.import_module(f"envs.{self.env_name}.config")
         self.env_cfg = env_mod.EnvConfig()
-        self.cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
-
+    
     def print_cfgs(self, cfg):
         ''' print parameters
         '''
@@ -67,41 +67,46 @@ class Main(object):
         if args.yaml is not None:
             with open(args.yaml) as f:
                 load_cfg = yaml.load(f, Loader=yaml.FullLoader)
+                ## 加载通用参数
+                self.load_yaml_cfg(self.general_cfg,load_cfg,'general_cfg')
                 ## 加载算法参数
-                self.algo_name = load_cfg['general_cfg']['algo_name']
-                algo_mod = __import__(f"algos.{self.algo_name}.config",
-                                      fromlist=['AlgoConfig'])  # dynamic loading of modules
+                self.algo_name = self.general_cfg.algo_name
+                algo_mod = importlib.import_module(f"algos.{self.algo_name}.config")
                 self.algo_cfg = algo_mod.AlgoConfig()
+                self.load_yaml_cfg(self.algo_cfg,load_cfg,'algo_cfg')
                 ## 加载环境参数
-                self.env_name = load_cfg['general_cfg']['env_name']
-                env_mod = __import__(f"envs.{self.env_name}.config",
-                                     fromlist=['EnvConfig']) # 动态加载模块
+                self.env_name = self.general_cfg.env_name
+                env_mod = importlib.import_module(f"envs.{self.env_name}.config")
                 self.env_cfg = env_mod.EnvConfig()
-                ## 合并参数
-                self.cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
-                for cfg_type in self.cfgs:
-                    if cfg_type in load_cfg:
-                        if load_cfg[cfg_type] is not None:
-                            for k, v in load_cfg[cfg_type].items():
-                                setattr(self.cfgs[cfg_type], k, v)
-
+    def merge_cfgs(self):
+        ''' 合并参数
+        '''
+        self.cfg = MergedConfig()
+        self.cfg.general_cfg = self.general_cfg
+        self.cfg.algo_cfg = self.algo_cfg
+        self.cfg.env_cfg = self.env_cfg
+        return self.cfg
+    def load_yaml_cfg(self,target_cfg,load_cfg,item):
+        if load_cfg[item] is not None:
+            for k, v in load_cfg[item].items():
+                setattr(target_cfg, k, v)
     def create_dirs(self, cfg):
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
-        task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.env_name}_{cfg.algo_name}_{curr_time}"
-        setattr(cfg, 'task_dir', task_dir)
-        Path(cfg.task_dir).mkdir(parents=True, exist_ok=True)
+        task_dir = f"{curr_path}/tasks/{self.cfg.general_cfg.mode.capitalize()}_{self.cfg.general_cfg.env_name}_{self.cfg.general_cfg.algo_name}_{curr_time}"
+        setattr(self.cfg, 'task_dir', task_dir)
+        Path(self.cfg.task_dir).mkdir(parents=True, exist_ok=True)
         model_dir = f"{task_dir}/models"
-        setattr(cfg, 'model_dir', model_dir)
+        setattr(self.cfg, 'model_dir', model_dir)
         res_dir = f"{task_dir}/results"
-        setattr(cfg, 'res_dir', res_dir)
+        setattr(self.cfg, 'res_dir', res_dir)
         log_dir = f"{task_dir}/logs"
-        setattr(cfg, 'log_dir', log_dir)
+        setattr(self.cfg, 'log_dir', log_dir)
         traj_dir = f"{task_dir}/traj"
-        setattr(cfg, 'traj_dir', traj_dir)
+        setattr(self.cfg, 'traj_dir', traj_dir)
         video_dir = f"{task_dir}/videos"
-        setattr(cfg, 'video_dir', video_dir)
+        setattr(self.cfg, 'video_dir', video_dir)
         tb_dir = f"{task_dir}/tb_logs"
-        setattr(cfg, 'tb_dir', tb_dir)
+        setattr(self.cfg, 'tb_dir', tb_dir)
     def create_loggers(self, cfg):
         ''' create logger
         '''
@@ -295,16 +300,11 @@ class Main(object):
         plot_rewards(rewards,
                      title=f"{cfg.mode.lower()}ing curve of {cfg.algo_name} for {cfg.id} with {cfg.n_workers} {cfg.device}",
                      fpath=cfg.res_dir)
-    def merge_cfgs(self):
-        cfg = MergedConfig()  # merge config
-        cfg = merge_class_attrs(cfg, self.cfgs['general_cfg'])
-        cfg = merge_class_attrs(cfg, self.cfgs['algo_cfg'])
-        cfg = merge_class_attrs(cfg, self.cfgs['env_cfg'])
-        return cfg
+    
     def run(self) -> None:
-        self.get_default_cfg()  # get default config
-        self.process_yaml_cfg()  # process yaml config
-        cfg = self.merge_cfgs()
+        self.get_default_cfg()  # 获取默认参数
+        self.process_yaml_cfg()  # 处理yaml配置文件参数，并覆盖默认参数
+        self.merge_cfgs() # 合并参数为 self.cfg
         self.create_dirs(cfg)  # create dirs
         self.logger = get_logger(cfg.log_dir)  # create the logger
         self.print_cfgs(cfg)  # print the configuration
