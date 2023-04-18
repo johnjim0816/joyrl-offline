@@ -13,6 +13,6 @@ from config.config import DefaultConfig
 class EnvConfig(DefaultConfig):
     def __init__(self) -> None:
         super().__init__()
-        self.id = "CartPole-v1" # 环境名称
+        self.id = "HalfCheetah-v3" # 环境名称
         self.new_step_api = True # 是否使用新的step api
         self.render_mode = None # 渲染模式, None, rgb_array, human

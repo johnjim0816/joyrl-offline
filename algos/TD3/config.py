@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-20 17:22:28
 LastEditor: JiangJi
-LastEditTime: 2023-02-21 13:20:37
+LastEditTime: 2023-04-16 21:25:10
 Discription: 
 '''
 class AlgoConfig:
@@ -23,3 +23,5 @@ class AlgoConfig:
         self.noise_clip = 0.5 # range to clip target policy noise
         self.batch_size = 100 # batch size for both actor and critic
         self.buffer_size = 1000000 # replay buffer size
+
+        self.global_best_reward = -1800

@@ -1,0 +1,148 @@
+2023-04-16 11:03:59 - r - INFO: - Hyperparameters:
+2023-04-16 11:03:59 - r - INFO: - ================================================================================
+2023-04-16 11:03:59 - r - INFO: -         Name        	       Value        	        Type        
+2023-04-16 11:03:59 - r - INFO: -       env_name      	        gym         	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -     new_step_api    	         1          	   <class 'bool'>   
+2023-04-16 11:03:59 - r - INFO: -       wrapper       	        None        	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -        render       	         0          	   <class 'bool'>   
+2023-04-16 11:03:59 - r - INFO: -     render_mode     	        None        	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -      algo_name      	        TD3         	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -         mode        	       train        	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -      mp_backend     	         mp         	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -         seed        	         1          	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -        device       	        cuda        	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -      train_eps      	        100         	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -       test_eps      	         10         	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -       eval_eps      	         5          	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -   eval_per_episode  	         10         	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -      max_steps      	        200         	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -   load_checkpoint   	         0          	   <class 'bool'>   
+2023-04-16 11:03:59 - r - INFO: -      load_path      	Train_CartPole-v1_DQN_20221026-054757	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -       show_fig      	         0          	   <class 'bool'>   
+2023-04-16 11:03:59 - r - INFO: -       save_fig      	         1          	   <class 'bool'>   
+2023-04-16 11:03:59 - r - INFO: -    explore_steps    	        1000        	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -     policy_freq     	         2          	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -       actor_lr      	       0.001        	  <class 'float'>   
+2023-04-16 11:03:59 - r - INFO: -      critic_lr      	       0.001        	  <class 'float'>   
+2023-04-16 11:03:59 - r - INFO: -   actor_hidden_dim  	        256         	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -  critic_hidden_dim  	        256         	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -        gamma        	        0.99        	  <class 'float'>   
+2023-04-16 11:03:59 - r - INFO: -         tau         	       0.005        	  <class 'float'>   
+2023-04-16 11:03:59 - r - INFO: -     policy_noise    	        0.2         	  <class 'float'>   
+2023-04-16 11:03:59 - r - INFO: -      expl_noise     	        0.1         	  <class 'float'>   
+2023-04-16 11:03:59 - r - INFO: -      noise_clip     	        0.5         	  <class 'float'>   
+2023-04-16 11:03:59 - r - INFO: -      batch_size     	        100         	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -     buffer_size     	      1000000       	   <class 'int'>    
+2023-04-16 11:03:59 - r - INFO: -          id         	    Pendulum-v1     	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -       task_dir      	/home/dingli/joyrl_offline/tasks/Train_gym_TD3_20230416-110359	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -       res_dir       	/home/dingli/joyrl_offline/tasks/Train_gym_TD3_20230416-110359/results	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -       log_dir       	/home/dingli/joyrl_offline/tasks/Train_gym_TD3_20230416-110359/logs	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -       traj_dir      	/home/dingli/joyrl_offline/tasks/Train_gym_TD3_20230416-110359/traj	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: -      video_dir      	/home/dingli/joyrl_offline/tasks/Train_gym_TD3_20230416-110359/videos	   <class 'str'>    
+2023-04-16 11:03:59 - r - INFO: - ================================================================================
+2023-04-16 11:03:59 - r - INFO: - action_bound: 2.0
+2023-04-16 11:03:59 - r - INFO: - n_states: 3, n_actions: 1
+2023-04-16 11:04:05 - r - INFO: - Start training!
+2023-04-16 11:04:05 - r - INFO: - Env: gym, Algorithm: TD3, Device: cuda
+2023-04-16 11:04:05 - r - INFO: - Episode: 1/100, Reward: -832.441, Step: 200
+2023-04-16 11:04:05 - r - INFO: - Episode: 2/100, Reward: -968.404, Step: 200
+2023-04-16 11:04:05 - r - INFO: - Episode: 3/100, Reward: -874.586, Step: 200
+2023-04-16 11:04:05 - r - INFO: - Episode: 4/100, Reward: -875.727, Step: 200
+2023-04-16 11:04:05 - r - INFO: - Episode: 5/100, Reward: -897.681, Step: 200
+2023-04-16 11:04:09 - r - INFO: - Episode: 6/100, Reward: -1568.319, Step: 200
+2023-04-16 11:04:13 - r - INFO: - Episode: 7/100, Reward: -1459.121, Step: 200
+2023-04-16 11:04:16 - r - INFO: - Episode: 8/100, Reward: -1240.331, Step: 200
+2023-04-16 11:04:20 - r - INFO: - Episode: 9/100, Reward: -1134.842, Step: 200
+2023-04-16 11:04:24 - r - INFO: - Episode: 10/100, Reward: -5.367, Step: 200
+2023-04-16 11:04:27 - r - INFO: - Current episode 10 has the best eval reward: -0.514
+2023-04-16 11:04:30 - r - INFO: - Episode: 11/100, Reward: -650.500, Step: 200
+2023-04-16 11:04:34 - r - INFO: - Episode: 12/100, Reward: -8.378, Step: 200
+2023-04-16 11:04:38 - r - INFO: - Episode: 13/100, Reward: -4.576, Step: 200
+2023-04-16 11:04:42 - r - INFO: - Episode: 14/100, Reward: -3.628, Step: 200
+2023-04-16 11:04:45 - r - INFO: - Episode: 15/100, Reward: -3.894, Step: 200
+2023-04-16 11:04:49 - r - INFO: - Episode: 16/100, Reward: -3.819, Step: 200
+2023-04-16 11:04:53 - r - INFO: - Episode: 17/100, Reward: -3.415, Step: 200
+2023-04-16 11:04:57 - r - INFO: - Episode: 18/100, Reward: -2.764, Step: 200
+2023-04-16 11:05:00 - r - INFO: - Episode: 19/100, Reward: -2.402, Step: 200
+2023-04-16 11:05:04 - r - INFO: - Episode: 20/100, Reward: -3.090, Step: 200
+2023-04-16 11:05:11 - r - INFO: - Episode: 21/100, Reward: -1.481, Step: 200
+2023-04-16 11:05:15 - r - INFO: - Episode: 22/100, Reward: -1.263, Step: 200
+2023-04-16 11:05:19 - r - INFO: - Episode: 23/100, Reward: -1.318, Step: 200
+2023-04-16 11:05:22 - r - INFO: - Episode: 24/100, Reward: -1.565, Step: 200
+2023-04-16 11:05:26 - r - INFO: - Episode: 25/100, Reward: -1.522, Step: 200
+2023-04-16 11:05:30 - r - INFO: - Episode: 26/100, Reward: -1.708, Step: 200
+2023-04-16 11:05:34 - r - INFO: - Episode: 27/100, Reward: -1.423, Step: 200
+2023-04-16 11:05:37 - r - INFO: - Episode: 28/100, Reward: -1.537, Step: 200
+2023-04-16 11:05:41 - r - INFO: - Episode: 29/100, Reward: -1.524, Step: 200
+2023-04-16 11:05:45 - r - INFO: - Episode: 30/100, Reward: -1.459, Step: 200
+2023-04-16 11:05:52 - r - INFO: - Episode: 31/100, Reward: -1.736, Step: 200
+2023-04-16 11:05:56 - r - INFO: - Episode: 32/100, Reward: -2.068, Step: 200
+2023-04-16 11:05:59 - r - INFO: - Episode: 33/100, Reward: -1.741, Step: 200
+2023-04-16 11:06:03 - r - INFO: - Episode: 34/100, Reward: -1.849, Step: 200
+2023-04-16 11:06:07 - r - INFO: - Episode: 35/100, Reward: -1.399, Step: 200
+2023-04-16 11:06:11 - r - INFO: - Episode: 36/100, Reward: -1.471, Step: 200
+2023-04-16 11:06:15 - r - INFO: - Episode: 37/100, Reward: -1.480, Step: 200
+2023-04-16 11:06:18 - r - INFO: - Episode: 38/100, Reward: -1.453, Step: 200
+2023-04-16 11:06:22 - r - INFO: - Episode: 39/100, Reward: -1.410, Step: 200
+2023-04-16 11:06:26 - r - INFO: - Episode: 40/100, Reward: -1.362, Step: 200
+2023-04-16 11:06:33 - r - INFO: - Episode: 41/100, Reward: -1.323, Step: 200
+2023-04-16 11:06:36 - r - INFO: - Episode: 42/100, Reward: -1.332, Step: 200
+2023-04-16 11:06:40 - r - INFO: - Episode: 43/100, Reward: -1.447, Step: 200
+2023-04-16 11:06:44 - r - INFO: - Episode: 44/100, Reward: -1.354, Step: 200
+2023-04-16 11:06:47 - r - INFO: - Episode: 45/100, Reward: -1.310, Step: 200
+2023-04-16 11:06:51 - r - INFO: - Episode: 46/100, Reward: -1.432, Step: 200
+2023-04-16 11:06:55 - r - INFO: - Episode: 47/100, Reward: -1.422, Step: 200
+2023-04-16 11:06:59 - r - INFO: - Episode: 48/100, Reward: -1.380, Step: 200
+2023-04-16 11:07:02 - r - INFO: - Episode: 49/100, Reward: -1.384, Step: 200
+2023-04-16 11:07:06 - r - INFO: - Episode: 50/100, Reward: -1.286, Step: 200
+2023-04-16 11:07:13 - r - INFO: - Episode: 51/100, Reward: -1.287, Step: 200
+2023-04-16 11:07:17 - r - INFO: - Episode: 52/100, Reward: -1.343, Step: 200
+2023-04-16 11:07:20 - r - INFO: - Episode: 53/100, Reward: -1.389, Step: 200
+2023-04-16 11:07:24 - r - INFO: - Episode: 54/100, Reward: -1.476, Step: 200
+2023-04-16 11:07:28 - r - INFO: - Episode: 55/100, Reward: -1.626, Step: 200
+2023-04-16 11:07:31 - r - INFO: - Episode: 56/100, Reward: -1.645, Step: 200
+2023-04-16 11:07:35 - r - INFO: - Episode: 57/100, Reward: -1.664, Step: 200
+2023-04-16 11:07:39 - r - INFO: - Episode: 58/100, Reward: -1.740, Step: 200
+2023-04-16 11:07:43 - r - INFO: - Episode: 59/100, Reward: -1.680, Step: 200
+2023-04-16 11:07:46 - r - INFO: - Episode: 60/100, Reward: -1.795, Step: 200
+2023-04-16 11:07:53 - r - INFO: - Episode: 61/100, Reward: -1.789, Step: 200
+2023-04-16 11:07:57 - r - INFO: - Episode: 62/100, Reward: -1.763, Step: 200
+2023-04-16 11:08:01 - r - INFO: - Episode: 63/100, Reward: -1.821, Step: 200
+2023-04-16 11:08:05 - r - INFO: - Episode: 64/100, Reward: -1.844, Step: 200
+2023-04-16 11:08:09 - r - INFO: - Episode: 65/100, Reward: -1.918, Step: 200
+2023-04-16 11:08:13 - r - INFO: - Episode: 66/100, Reward: -1.805, Step: 200
+2023-04-16 11:08:16 - r - INFO: - Episode: 67/100, Reward: -1.785, Step: 200
+2023-04-16 11:08:20 - r - INFO: - Episode: 68/100, Reward: -1.861, Step: 200
+2023-04-16 11:08:24 - r - INFO: - Episode: 69/100, Reward: -1.835, Step: 200
+2023-04-16 11:08:27 - r - INFO: - Episode: 70/100, Reward: -1.856, Step: 200
+2023-04-16 11:08:35 - r - INFO: - Episode: 71/100, Reward: -1.933, Step: 200
+2023-04-16 11:08:38 - r - INFO: - Episode: 72/100, Reward: -1.982, Step: 200
+2023-04-16 11:08:42 - r - INFO: - Episode: 73/100, Reward: -1.895, Step: 200
+2023-04-16 11:08:45 - r - INFO: - Episode: 74/100, Reward: -1.956, Step: 200
+2023-04-16 11:08:48 - r - INFO: - Episode: 75/100, Reward: -1.884, Step: 200
+2023-04-16 11:08:51 - r - INFO: - Episode: 76/100, Reward: -1.884, Step: 200
+2023-04-16 11:08:55 - r - INFO: - Episode: 77/100, Reward: -1.821, Step: 200
+2023-04-16 11:08:59 - r - INFO: - Episode: 78/100, Reward: -1.874, Step: 200
+2023-04-16 11:09:02 - r - INFO: - Episode: 79/100, Reward: -1.897, Step: 200
+2023-04-16 11:09:06 - r - INFO: - Episode: 80/100, Reward: -1.519, Step: 200
+2023-04-16 11:09:13 - r - INFO: - Episode: 81/100, Reward: -0.946, Step: 200
+2023-04-16 11:09:17 - r - INFO: - Episode: 82/100, Reward: -0.804, Step: 200
+2023-04-16 11:09:21 - r - INFO: - Episode: 83/100, Reward: -1.212, Step: 200
+2023-04-16 11:09:24 - r - INFO: - Episode: 84/100, Reward: -1.332, Step: 200
+2023-04-16 11:09:28 - r - INFO: - Episode: 85/100, Reward: -1.605, Step: 200
+2023-04-16 11:09:32 - r - INFO: - Episode: 86/100, Reward: -1.488, Step: 200
+2023-04-16 11:09:36 - r - INFO: - Episode: 87/100, Reward: -1.515, Step: 200
+2023-04-16 11:09:40 - r - INFO: - Episode: 88/100, Reward: -1.570, Step: 200
+2023-04-16 11:09:43 - r - INFO: - Episode: 89/100, Reward: -1.669, Step: 200
+2023-04-16 11:09:47 - r - INFO: - Episode: 90/100, Reward: -1.649, Step: 200
+2023-04-16 11:09:54 - r - INFO: - Episode: 91/100, Reward: -1.573, Step: 200
+2023-04-16 11:09:58 - r - INFO: - Episode: 92/100, Reward: -1.586, Step: 200
+2023-04-16 11:10:02 - r - INFO: - Episode: 93/100, Reward: -1.620, Step: 200
+2023-04-16 11:10:06 - r - INFO: - Episode: 94/100, Reward: -1.777, Step: 200
+2023-04-16 11:10:10 - r - INFO: - Episode: 95/100, Reward: -1.823, Step: 200
+2023-04-16 11:10:13 - r - INFO: - Episode: 96/100, Reward: -1.755, Step: 200
+2023-04-16 11:10:17 - r - INFO: - Episode: 97/100, Reward: -1.776, Step: 200
+2023-04-16 11:10:21 - r - INFO: - Episode: 98/100, Reward: -1.732, Step: 200
+2023-04-16 11:10:25 - r - INFO: - Episode: 99/100, Reward: -1.771, Step: 200
+2023-04-16 11:10:28 - r - INFO: - Episode: 100/100, Reward: -1.783, Step: 200
+2023-04-16 11:10:32 - r - INFO: - Finish training!

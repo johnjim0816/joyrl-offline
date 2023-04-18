@@ -1,14 +1,13 @@
 general_cfg:
   algo_name: TD3
   device: cuda
-  env_name: Pendulum-v1
+  env_name: gym
   eval_eps: 5
   eval_per_episode: 10
   load_checkpoint: false
   load_path: Train_CartPole-v1_DQN_20221026-054757
   max_steps: 200
   mode: train
-  new_step_api: true
   render: false
   save_fig: true
   seed: 1
@@ -30,4 +29,6 @@ algo_cfg:
   policy_freq: 2
   policy_noise: 0.2
   tau: 0.005
-
+env_cfg:
+  id: Pendulum-v1
+  new_step_api: true
