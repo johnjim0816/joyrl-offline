@@ -1,0 +1,57 @@
+general_cfg:
+  algo_name: C51
+  device: cuda
+  env_name: gym
+  eval_eps: 10
+  eval_per_episode: 5
+  load_checkpoint: false
+  load_path: tasks
+  max_steps: 1000
+  mode: train
+  mp_backend: mp
+  n_atoms: 51
+  new_step_api: true
+  render: false
+  render_mode: human
+  save_fig: true
+  seed: 1
+  show_fig: false
+  test_eps: 10
+  train_eps: 600
+  wrapper: null
+algo_cfg:
+  Vmax: 100.0
+  Vmin: -100.0
+  batch_size: 64
+  buffer_size: 100000
+  delta_z: 4.0
+  epsilon_decay: 500
+  epsilon_end: 0.01
+  epsilon_start: 0.95
+  gamma: 0.99
+  lr: 0.0005
+  memory_capacity: 10000
+  num_atoms: 51
+  target_update: 4
+  tau: 1
+  value_layers:
+  - activation: relu
+    layer_dim:
+    - n_states
+    - 256
+    layer_type: linear
+  - activation: relu
+    layer_dim:
+    - 256
+    - 256
+    layer_type: linear
+  - activation: none
+    layer_dim:
+    - 256
+    - n_actions
+    layer_type: linear
+env_cfg:
+  continuous: false
+  id: LunarLander-v2
+  new_step_api: true
+  render_mode: null
