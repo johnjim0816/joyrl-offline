@@ -86,6 +86,7 @@ class Main(object):
         self.cfg.general_cfg = self.general_cfg
         self.cfg.algo_cfg = self.algo_cfg
         self.cfg.env_cfg = self.env_cfg
+        self.cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
         return self.cfg
     def load_yaml_cfg(self,target_cfg,load_cfg,item):
         if load_cfg[item] is not None:
@@ -118,6 +119,7 @@ class Main(object):
         '''
         self.logger = get_logger(self.cfg.log_dir)
         self.tb_writter = SummaryWriter(log_dir=self.cfg.tb_dir)
+    
     def envs_config(self):
         ''' configure environment
         '''
@@ -215,7 +217,7 @@ class Main(object):
         save_results(res_dic, self.cfg.res_dir)  # save results
         save_cfgs(self.cfgs, self.cfg.task_dir)  # save config
         plot_rewards(rewards,
-                     title=f"{self.cfg.mode.lower()}ing curve on {self.cfg.device} of {self.cfg.algo_name} for {self.env_cfg.id}",
+                     title=f"{self.general_cfg.mode.lower()}ing curve on {self.general_cfg.device} of {self.general_cfg.algo_name} for {self.env_cfg.id}",
                      fpath=self.cfg.res_dir)
     
     def multi_run(self,cfg):
@@ -251,7 +253,7 @@ class Main(object):
         save_results(res_dic, cfg.res_dir)  # save results
         save_cfgs(self.cfgs, cfg.task_dir)  # save config
         plot_rewards(rewards,
-                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {cfg.id}",
+                     title=f"{cfg.general_cfg.mode.lower()}ing curve on {cfg.general_cfg.device} of {cfg.general_cfg.algo_name} for {cfg.id}",
                      fpath=cfg.res_dir)
         
     def ray_run(self,cfg):

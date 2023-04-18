@@ -1,6 +1,6 @@
 general_cfg:
   algo_name: DQN
-  device: cpu
+  device: cuda
   env_name: gym
   mode: train
   n_workers: 1 # number of workers for parallel training
@@ -15,10 +15,10 @@ general_cfg:
 algo_cfg:
   value_layers:
     - layer_type: linear
-      layer_dim: [64]
+      layer_dim: [256]
       activation: relu
     - layer_type: linear
-      layer_dim: [64]
+      layer_dim: [256]
       activation: relu
   buffer_type: REPLAY_QUE
   buffer_size: 100000

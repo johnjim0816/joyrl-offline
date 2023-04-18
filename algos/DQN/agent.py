@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-04-19 02:09:29
+LastEditTime: 2023-04-19 02:23:53
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -50,8 +50,8 @@ class Agent(BaseAgent):
     def create_graph(self):
         self.input_size = [None, self.obs_space.shape[0]]
         action_dim = self.action_space.n
-        self.policy_net = ValueNetwork(self.cfg.algo_cfg, self.input_size, action_dim)
-        self.target_net = ValueNetwork(self.cfg.algo_cfg, self.input_size, action_dim)
+        self.policy_net = ValueNetwork(self.cfg.algo_cfg, self.input_size, action_dim).to(self.device)
+        self.target_net = ValueNetwork(self.cfg.algo_cfg, self.input_size, action_dim).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.cfg.algo_cfg.lr) 
         if self.is_share_agent:
@@ -173,7 +173,8 @@ class Agent(BaseAgent):
         torch.save(self.policy_net.state_dict(), f"{fpath}/checkpoint.pt")
 
     def load_model(self, fpath):
-        self.policy_net.load_state_dict(torch.load(f"{fpath}/checkpoint.pt"))
+        ckpt = torch.load(f"{fpath}/checkpoint.pt", map_location=self.device)
+        self.policy_net.load_state_dict(ckpt)
 
 
 
