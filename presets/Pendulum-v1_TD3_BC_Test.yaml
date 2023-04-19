@@ -1,11 +1,11 @@
 general_cfg:
   algo_name: TD3_BC
   device: cuda
-  env_name: Pendulum-v1
+  env_name: gym
   eval_eps: 5
   eval_per_episode: 10
   load_checkpoint: true
-  load_path: Train_Pendulum-v1_TD3_BC_20230408-223659
+  load_path: Train_gym_TD3_BC_20230416-111154
   max_steps: 200
   mode: test
   new_step_api: true
@@ -34,4 +34,7 @@ algo_cfg:
   lmbda: 1
   normalize: false
   train_iterations: 2000 # 训练的迭代次数
-  expert_path: tasks/Collect_Pendulum-v1_TD3_20230408-123916/traj/traj.pkl # 专家数据路径
+  expert_path: tasks/Collect_gym_TD3_20230416-111040/traj/traj.pkl # 专家数据路径
+env_cfg:
+  id: Pendulum-v1
+  new_step_api: true

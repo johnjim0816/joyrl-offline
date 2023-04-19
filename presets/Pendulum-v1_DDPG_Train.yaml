@@ -1,7 +1,7 @@
 general_cfg:
   algo_name: DDPG
   device: cuda
-  env_name: Pendulum-v1
+  env_name: gym
   eval_eps: 10
   eval_per_episode: 5
   load_checkpoint: false
@@ -25,3 +25,6 @@ algo_cfg:
   critic_lr: 0.001
   gamma: 0.99
   tau: 0.001
+env_cfg:
+  id: Pendulum-v1
+  new_step_api: true
