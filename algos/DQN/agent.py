@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-04-19 02:23:53
+LastEditTime: 2023-04-19 10:49:08
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -35,28 +35,28 @@ class Agent(BaseAgent):
         self.cfg = cfg
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
-        self.device = torch.device(cfg.general_cfg.device) 
-        self.gamma = cfg.algo_cfg.gamma  
-        ## e-greedy 策略相关参数
+        self.device = torch.device(cfg.device) 
+        self.gamma = cfg.gamma  
+        # e-greedy 策略相关参数
         self.sample_count = 0  # 采样动作计数
-        self.epsilon_start = cfg.algo_cfg.epsilon_start
-        self.epsilon_end = cfg.algo_cfg.epsilon_end
-        self.epsilon_decay = cfg.algo_cfg.epsilon_decay
-        self.batch_size = cfg.algo_cfg.batch_size
-        self.target_update = cfg.algo_cfg.target_update
+        self.epsilon_start = cfg.epsilon_start
+        self.epsilon_end = cfg.epsilon_end
+        self.epsilon_decay = cfg.epsilon_decay
+        self.batch_size = cfg.batch_size
+        self.target_update = cfg.target_update
         self.is_share_agent = is_share_agent
-        self.memory = BufferCreator(cfg.algo_cfg)()
+        self.memory = BufferCreator(cfg)()
         self.create_graph()
     def create_graph(self):
         self.input_size = [None, self.obs_space.shape[0]]
         action_dim = self.action_space.n
-        self.policy_net = ValueNetwork(self.cfg.algo_cfg, self.input_size, action_dim).to(self.device)
-        self.target_net = ValueNetwork(self.cfg.algo_cfg, self.input_size, action_dim).to(self.device)
+        self.policy_net = ValueNetwork(self.cfg, self.input_size, action_dim).to(self.device)
+        self.target_net = ValueNetwork(self.cfg, self.input_size, action_dim).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.cfg.algo_cfg.lr) 
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.cfg.lr) 
         if self.is_share_agent:
             self.policy_net.share_memory()
-            self.optimizer = SharedAdam(self.policy_net.parameters(), lr=self.algo_cfg.lr)
+            self.optimizer = SharedAdam(self.policy_net.parameters(), lr=self.lr)
             self.optimizer.share_memory()
             ## The multiprocess DQN algorithm does not use the target_net in share_agent
             # self.target_net.share_memory()

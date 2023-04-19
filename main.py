@@ -83,22 +83,22 @@ class Main(object):
         ''' 合并参数
         '''
         self.cfg = MergedConfig()
-        self.cfg.general_cfg = self.general_cfg
-        self.cfg.algo_cfg = self.algo_cfg
-        self.cfg.env_cfg = self.env_cfg
-        self.cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
-        return self.cfg
+        self.cfg = merge_class_attrs(self.cfg, self.general_cfg)
+        self.cfg = merge_class_attrs(self.cfg, self.algo_cfg)
+        self.cfg = merge_class_attrs(self.cfg, self.env_cfg)
+        self.save_cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
+
     def load_yaml_cfg(self,target_cfg,load_cfg,item):
         if load_cfg[item] is not None:
             for k, v in load_cfg[item].items():
                 setattr(target_cfg, k, v)
     def create_dirs(self):
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
-        if self.cfg.env_cfg.id is not None:
-            env_name = self.cfg.env_cfg.id
+        if self.env_cfg.id is not None:
+            env_name = self.env_cfg.id
         else:
-            env_name = self.cfg.env_cfg.env_name
-        task_dir = f"{curr_path}/tasks/{self.cfg.general_cfg.mode.capitalize()}_{env_name}_{self.cfg.general_cfg.algo_name}_{curr_time}"
+            env_name = self.env_cfg.env_name
+        task_dir = f"{curr_path}/tasks/{self.general_cfg.mode.capitalize()}_{env_name}_{self.general_cfg.algo_name}_{curr_time}"
         setattr(self.cfg, 'task_dir', task_dir)
         Path(task_dir).mkdir(parents=True, exist_ok=True)
 
@@ -123,19 +123,17 @@ class Main(object):
     def envs_config(self):
         ''' configure environment
         '''
-        general_cfg = self.general_cfg
-        env_cfg = self.cfg.env_cfg
-        register_env(self.cfg.env_cfg.id)
+        register_env(self.env_cfg.id)
         envs = [] # numbers of envs, equal to cfg.n_workers
-        for i in range(general_cfg.n_workers):
+        for i in range(self.general_cfg.n_workers):
             env_cfg_dic = self.env_cfg.__dict__
             kwargs = {k: v for k, v in env_cfg_dic.items() if k not in env_cfg_dic['ignore_params']}
             env = gym.make(**kwargs)
-            if env_cfg.wrapper is not None:
-                wrapper_class_path = env_cfg.wrapper.split('.')[:-1]
-                wrapper_class_name = env_cfg.wrapper.split('.')[-1]
+            if self.env_cfg.wrapper is not None:
+                wrapper_class_path = self.env_cfg.wrapper.split('.')[:-1]
+                wrapper_class_name = self.env_cfg.wrapper.split('.')[-1]
                 env_wapper = __import__('.'.join(wrapper_class_path), fromlist=[wrapper_class_name])
-                env = getattr(env_wapper, wrapper_class_name)(env, new_step_api=env_cfg.new_step_api)
+                env = getattr(env_wapper, wrapper_class_name)(env, new_step_api=self.env_cfg.new_step_api)
             envs.append(env)
         setattr(self.cfg, 'obs_space', envs[0].observation_space)
         setattr(self.cfg, 'action_space', envs[0].action_space)
@@ -144,63 +142,63 @@ class Main(object):
     
     def evaluate(self, cfg, trainer, env, agent):
         sum_eval_reward = 0
-        for _ in range(cfg.general_cfg.eval_eps):
+        for _ in range(cfg.eval_eps):
             _, res = trainer.test_one_episode(env, agent, cfg)
             sum_eval_reward += res['ep_reward']
-        mean_eval_reward = sum_eval_reward / cfg.general_cfg.eval_eps
+        mean_eval_reward = sum_eval_reward / cfg.eval_eps
         return mean_eval_reward
 
-    def single_run(self):
+    def single_run(self,cfg):
         ''' single process run
         '''
         envs = self.envs_config()  # configure environment
         env = envs[0]
-        algo_name = self.cfg.general_cfg.algo_name
+        algo_name = cfg.algo_name
         agent_mod = importlib.import_module(f"algos.{algo_name}.agent")
         agent = agent_mod.Agent(self.cfg)  # create agent
         trainer_mod = importlib.import_module(f"algos.{algo_name}.trainer")
         trainer = trainer_mod.Trainer()  # create trainer
-        general_cfg = self.cfg.general_cfg
-        if general_cfg.load_checkpoint:
-            agent.load_model(f"tasks/{general_cfg.load_path}/models")
-        self.logger.info(f"Start {general_cfg.mode}ing!")
+        if cfg.load_checkpoint:
+            agent.load_model(f"tasks/{cfg.load_path}/models")
+        self.logger.info(f"Start {cfg.mode}ing!")
         rewards = []  # record rewards for all episodes
         steps = []  # record steps for all episodes
-        if general_cfg.mode.lower() == 'train':
+        if cfg.mode.lower() == 'train':
             best_ep_reward = -float('inf')
-            for i_ep in range(general_cfg.train_eps):
+            for i_ep in range(cfg.train_eps):
                 agent, res = trainer.train_one_episode(env, agent, self.cfg)
                 ep_reward = res['ep_reward']
                 ep_step = res['ep_step']
-                self.logger.info(f"Episode: {i_ep + 1}/{general_cfg.train_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
+                self.logger.info(f"Episode: {i_ep + 1}/{cfg.train_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
+                self.tb_writter.add_scalars(cfg.mode.lower(),{'ep_reward': ep_reward}, i_ep + 1)
                 rewards.append(ep_reward)
                 steps.append(ep_step)
                 # for _ in range
-                if (i_ep + 1) % general_cfg.eval_per_episode == 0:
+                if (i_ep + 1) % cfg.eval_per_episode == 0:
                     mean_eval_reward = self.evaluate(self.cfg, trainer, env, agent)
                     if mean_eval_reward >= best_ep_reward:  # update best reward
                         self.logger.info(f"Current episode {i_ep + 1} has the best eval reward: {mean_eval_reward:.3f}")
                         best_ep_reward = mean_eval_reward
-                        agent.save_model(self.cfg.model_dir)  # save models with best reward
+                        agent.save_model(cfg.model_dir)  # save models with best reward
             # env.close()
-        elif general_cfg.mode.lower() == 'test':
-            for i_ep in range(general_cfg.test_eps):
+        elif cfg.mode.lower() == 'test':
+            for i_ep in range(cfg.test_eps):
                 agent, res = trainer.test_one_episode(env, agent, self.cfg)
                 ep_reward = res['ep_reward']
                 ep_step = res['ep_step']
-                self.logger.info(f"Episode: {i_ep + 1}/{general_cfg.test_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
+                self.logger.info(f"Episode: {i_ep + 1}/{cfg.test_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
                 rewards.append(ep_reward)
                 steps.append(ep_step)
-                if i_ep == 0 and general_cfg.render and general_cfg.render_mode == 'rgb_array':
+                if i_ep == 0 and cfg.render and cfg.render_mode == 'rgb_array':
                     frames = res['ep_frames']
-                    save_frames_as_gif(frames, general_cfg.video_dir)
-            agent.save_model(self.cfg.model_dir)  # save models
+                    save_frames_as_gif(frames, cfg.video_dir)
+            agent.save_model(cfg.model_dir)  # save models
             env.close()
-        elif general_cfg.mode.lower() == 'collect':  # collect
+        elif cfg.mode.lower() == 'collect':  # collect
             trajectories = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'terminals': []}
-            for i_ep in range(general_cfg.collect_eps):
-                print ("i_ep = ", i_ep, "cfg.collect_eps = ", general_cfg.collect_eps)
-                total_reward, ep_state, ep_action, ep_next_state, ep_reward, ep_terminal = trainer.collect_one_episode(env, agent, cfg)
+            for i_ep in range(cfg.collect_eps):
+                print ("i_ep = ", i_ep, "cfg.collect_eps = ", cfg.collect_eps)
+                total_reward, ep_state, ep_action, ep_next_state, ep_reward, ep_terminal = trainer.collect_one_episode(env, agent, self.cfg)
                 trajectories['states'] += ep_state
                 trajectories['actions'] += ep_action
                 trajectories['next_states'] += ep_next_state
@@ -208,17 +206,17 @@ class Main(object):
                 trajectories['terminals'] += ep_terminal
                 self.logger.info(f'trajectories {i_ep + 1} collected, reward {total_reward}')
                 rewards.append(total_reward)
-                steps.append(general_cfg.max_steps)
+                steps.append(cfg.max_steps)
             env.close()
-            save_traj(trajectories, self.cfg.traj_dir)
-            self.logger.info(f"trajectories saved to {elf.cfg.traj_dir}")
-        self.logger.info(f"Finish {general_cfg.mode}ing!")
+            save_traj(trajectories, cfg.traj_dir)
+            self.logger.info(f"trajectories saved to {cfg.traj_dir}")
+        self.logger.info(f"Finish {cfg.mode}ing!")
         res_dic = {'episodes': range(len(rewards)), 'rewards': rewards, 'steps': steps}
-        save_results(res_dic, self.cfg.res_dir)  # save results
-        save_cfgs(self.cfgs, self.cfg.task_dir)  # save config
+        save_results(res_dic, cfg.res_dir)  # save results
+        save_cfgs(self.cfgs, cfg.task_dir)  # save config
         plot_rewards(rewards,
-                     title=f"{self.general_cfg.mode.lower()}ing curve on {self.general_cfg.device} of {self.general_cfg.algo_name} for {self.env_cfg.id}",
-                     fpath=self.cfg.res_dir)
+                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {self.env_cfg.id}",
+                     fpath=cfg.res_dir)
     
     def multi_run(self,cfg):
         ''' multi process run
@@ -253,7 +251,7 @@ class Main(object):
         save_results(res_dic, cfg.res_dir)  # save results
         save_cfgs(self.cfgs, cfg.task_dir)  # save config
         plot_rewards(rewards,
-                     title=f"{cfg.general_cfg.mode.lower()}ing curve on {cfg.general_cfg.device} of {cfg.general_cfg.algo_name} for {cfg.id}",
+                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {cfg.id}",
                      fpath=cfg.res_dir)
         
     def ray_run(self,cfg):
@@ -314,15 +312,15 @@ class Main(object):
         self.create_dirs()  # 创建文件夹
         self.create_loggers()  # 创建日志记录器
         # 打印参数
-        self.print_cfgs(self.cfg.general_cfg,name = 'General Configs')  
-        self.print_cfgs(self.cfg.algo_cfg,name = 'Algo Configs')
-        self.print_cfgs(self.cfg.env_cfg,name = 'Env Configs') 
-        all_seed(seed=self.cfg.general_cfg.seed)  # set seed == 0 means no seed
-        self.check_n_workers(self.cfg.general_cfg)  # 检查n_workers参数
-        if self.cfg.general_cfg.n_workers == 1:
-            self.single_run()
+        self.print_cfgs(self.general_cfg,name = 'General Configs')  
+        self.print_cfgs(self.algo_cfg,name = 'Algo Configs')
+        self.print_cfgs(self.env_cfg,name = 'Env Configs') 
+        all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
+        self.check_n_workers(self.general_cfg)  # 检查n_workers参数
+        if self.general_cfg.n_workers == 1:
+            self.single_run(self.cfg)
         else:
-            if self.cfg.general_cfg.mp_backend == 'mp':
+            if self.general_cfg.mp_backend == 'mp':
                 self.multi_run(self.cfg)
             else:
                 self.ray_run(self.cfg)
