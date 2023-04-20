@@ -119,6 +119,7 @@ class Main(object):
         '''
         self.logger = get_logger(self.cfg.log_dir)
         self.tb_writter = SummaryWriter(log_dir=self.cfg.tb_dir)
+        setattr(self.cfg, 'tb_writter', self.tb_writter)
     
     def envs_config(self):
         ''' configure environment
@@ -170,7 +171,8 @@ class Main(object):
                 ep_reward = res['ep_reward']
                 ep_step = res['ep_step']
                 self.logger.info(f"Episode: {i_ep + 1}/{cfg.train_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
-                self.tb_writter.add_scalars(cfg.mode.lower(),{'ep_reward': ep_reward}, i_ep + 1)
+                for key, value in res.items():
+                    self.tb_writter.add_scalar(tag = f"{cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep + 1)
                 rewards.append(ep_reward)
                 steps.append(ep_step)
                 # for _ in range
@@ -213,7 +215,7 @@ class Main(object):
         self.logger.info(f"Finish {cfg.mode}ing!")
         res_dic = {'episodes': range(len(rewards)), 'rewards': rewards, 'steps': steps}
         save_results(res_dic, cfg.res_dir)  # save results
-        save_cfgs(self.cfgs, cfg.task_dir)  # save config
+        save_cfgs(self.save_cfgs, cfg.task_dir)  # save config
         plot_rewards(rewards,
                      title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {self.env_cfg.id}",
                      fpath=cfg.res_dir)

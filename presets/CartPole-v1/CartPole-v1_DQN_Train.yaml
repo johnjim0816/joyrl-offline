@@ -1,6 +1,6 @@
 general_cfg:
   algo_name: DQN
-  device: cuda
+  device: cpu
   env_name: gym
   mode: train
   n_workers: 1 # number of workers for parallel training
