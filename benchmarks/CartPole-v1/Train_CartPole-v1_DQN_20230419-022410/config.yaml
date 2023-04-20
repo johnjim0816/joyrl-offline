@@ -1,19 +1,20 @@
 general_cfg:
   algo_name: DQN
   device: cuda
-  env_name: CartPole-v1
+  env_name: gym
   eval_eps: 10
   eval_per_episode: 5
-  load_checkpoint: true
-  load_path: Train_CartPole-v1_DQN_20221119-171415
+  load_checkpoint: false
+  load_path: Train_CartPole-v1_DQN_20230419-021826
   max_steps: 200
-  mode: test
+  mode: train
   mp_backend: mp
+  n_workers: 1
   new_step_api: true
-  render: true
-  render_mode: rgb_array
+  render: false
+  render_mode: human
   save_fig: true
-  seed: 0
+  seed: 1
   show_fig: false
   test_eps: 10
   train_eps: 100
@@ -21,6 +22,7 @@ general_cfg:
 algo_cfg:
   batch_size: 64
   buffer_size: 100000
+  buffer_type: REPLAY_QUE
   epsilon_decay: 500
   epsilon_end: 0.01
   epsilon_start: 0.95
@@ -30,16 +32,17 @@ algo_cfg:
   value_layers:
   - activation: relu
     layer_dim:
-    - n_states
     - 256
     layer_type: linear
   - activation: relu
     layer_dim:
     - 256
-    - 256
     layer_type: linear
-  - activation: none
-    layer_dim:
-    - 256
-    - n_actions
-    layer_type: linear
+env_cfg:
+  id: CartPole-v1
+  ignore_params:
+  - wrapper
+  - ignore_params
+  new_step_api: true
+  render_mode: null
+  wrapper: null
