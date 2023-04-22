@@ -223,7 +223,7 @@ class Main(object):
     def multi_run(self,cfg):
         ''' multi process run
         '''
-        envs = self.envs_config(cfg)  # configure environment
+        envs = self.envs_config()  # configure environment
         agent_mod = __import__(f"algos.{cfg.algo_name}.agent", fromlist=['Agent'])
         share_agent = agent_mod.Agent(cfg,is_share_agent = True)  # create agent
         local_agents = [agent_mod.Agent(cfg) for _ in range(cfg.n_workers)]

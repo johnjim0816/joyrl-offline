@@ -14,6 +14,17 @@ from algos.DQN.exp import Exp
 from common.utils import all_seed
 
 class Trainer:
+    pass
+
+class worker(Trainer):
+    pass
+
+@ray.remote
+class WorkerRay(Trainer):
+    pass
+
+
+class Trainer:
     def __init__(self) -> None:
         pass
     def train_one_episode(self, env, agent, cfg): 
