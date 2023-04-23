@@ -5,12 +5,11 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-21 21:21:20
 LastEditor: JiangJi
-LastEditTime: 2023-04-22 22:02:39
+LastEditTime: 2023-04-23 11:30:53
 Discription: 
 '''
 class AlgoConfig:
     def __init__(self):
-        self.continuous = False # continuous action space
         self.gamma = 0.98 # discount factor
         self.lmbda = 0.95 # GAE参数
         self.alpha = 0.5
@@ -23,4 +22,5 @@ class AlgoConfig:
         self.train_batch_size = 64 # ppo train batch size
         self.actor_hidden_dim = 128 # hidden dimension for actor
         self.critic_hidden_dim = 128 # hidden dimension for critic
-        
+        self.search_steps = 15
+        self.grad_steps = 10        

@@ -19,7 +19,6 @@ class Agent(BaseAgent):
         self.gamma = cfg.gamma
         self.lmbda = cfg.lmbda  # GAE参数
         self.device = torch.device(cfg.device)
-        self.continuous = cfg.continuous # continuous action space
         self.action_space = cfg.action_space
         
         self.memory = BufferCreator(cfg)()

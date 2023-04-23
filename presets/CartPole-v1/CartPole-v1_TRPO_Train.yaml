@@ -19,7 +19,7 @@ general_cfg:
 algo_cfg:
   buffer_type: REPLAY_QUE
   buffer_size: 100000
-  lamda: 0.95
+  lmbda: 0.95
   gamma: 0.98
   alpha: 0.5
   search_steps: 15
