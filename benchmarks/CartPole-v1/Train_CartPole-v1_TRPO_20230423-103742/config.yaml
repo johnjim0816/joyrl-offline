@@ -1,0 +1,46 @@
+general_cfg:
+  algo_name: TRPO
+  device: cuda
+  env_name: gym
+  eval_eps: 10
+  eval_per_episode: 5
+  load_checkpoint: false
+  load_path: Train_CartPole-v1_DQN_20221026-054757
+  max_steps: 200
+  mode: train
+  mp_backend: mp
+  n_workers: 1
+  new_step_api: true
+  render: false
+  render_mode: human
+  save_fig: true
+  seed: 1
+  show_fig: false
+  test_eps: 10
+  train_eps: 100
+  wrapper: null
+algo_cfg:
+  actor_hidden_dim: 128
+  alpha: 0.5
+  buffer_size: 100000
+  buffer_type: REPLAY_QUE
+  continuous: false
+  critic_hidden_dim: 128
+  critic_lr: 0.02
+  eps_clip: 0.2
+  gamma: 0.98
+  grad_steps: 10
+  kl_constraint: 0.0005
+  lamda: 0.95
+  lmbda: 0.95
+  search_steps: 15
+  sgd_batch_size: 128
+  train_batch_size: 64
+env_cfg:
+  id: CartPole-v1
+  ignore_params:
+  - wrapper
+  - ignore_params
+  new_step_api: true
+  render_mode: null
+  wrapper: null

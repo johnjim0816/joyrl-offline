@@ -1,0 +1,171 @@
+2023-04-23 10:37:42 - r - INFO: - General Configs:
+2023-04-23 10:37:42 - r - INFO: - ================================================================================
+2023-04-23 10:37:42 - r - INFO: -         Name        	       Value        	        Type        
+2023-04-23 10:37:42 - r - INFO: -       env_name      	        gym         	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -     new_step_api    	         1          	   <class 'bool'>   
+2023-04-23 10:37:42 - r - INFO: -       wrapper       	        None        	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -        render       	         0          	   <class 'bool'>   
+2023-04-23 10:37:42 - r - INFO: -     render_mode     	       human        	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -      algo_name      	        TRPO        	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -         mode        	       train        	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -      mp_backend     	         mp         	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -         seed        	         1          	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -        device       	        cuda        	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -      train_eps      	        100         	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -       test_eps      	         10         	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -       eval_eps      	         10         	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -   eval_per_episode  	         5          	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -      max_steps      	        200         	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -   load_checkpoint   	         0          	   <class 'bool'>   
+2023-04-23 10:37:42 - r - INFO: -      load_path      	Train_CartPole-v1_DQN_20221026-054757	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -       show_fig      	         0          	   <class 'bool'>   
+2023-04-23 10:37:42 - r - INFO: -       save_fig      	         1          	   <class 'bool'>   
+2023-04-23 10:37:42 - r - INFO: - ================================================================================
+2023-04-23 10:37:42 - r - INFO: - Algo Configs:
+2023-04-23 10:37:42 - r - INFO: - ================================================================================
+2023-04-23 10:37:42 - r - INFO: -         Name        	       Value        	        Type        
+2023-04-23 10:37:42 - r - INFO: -      continuous     	         0          	   <class 'bool'>   
+2023-04-23 10:37:42 - r - INFO: -        gamma        	        0.98        	  <class 'float'>   
+2023-04-23 10:37:42 - r - INFO: -        lmbda        	        0.95        	  <class 'float'>   
+2023-04-23 10:37:42 - r - INFO: -        alpha        	        0.5         	  <class 'float'>   
+2023-04-23 10:37:42 - r - INFO: -    kl_constraint    	       0.0005       	  <class 'float'>   
+2023-04-23 10:37:42 - r - INFO: -      critic_lr      	        0.02        	  <class 'float'>   
+2023-04-23 10:37:42 - r - INFO: -       eps_clip      	        0.2         	  <class 'float'>   
+2023-04-23 10:37:42 - r - INFO: -     search_steps    	         15         	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -      grad_steps     	         10         	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -   train_batch_size  	         64         	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -   actor_hidden_dim  	        128         	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -  critic_hidden_dim  	        128         	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -     buffer_type     	     REPLAY_QUE     	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -     buffer_size     	       100000       	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: -        lamda        	        0.95        	  <class 'float'>   
+2023-04-23 10:37:42 - r - INFO: -    sgd_batch_size   	        128         	   <class 'int'>    
+2023-04-23 10:37:42 - r - INFO: - ================================================================================
+2023-04-23 10:37:42 - r - INFO: - Env Configs:
+2023-04-23 10:37:42 - r - INFO: - ================================================================================
+2023-04-23 10:37:42 - r - INFO: -         Name        	       Value        	        Type        
+2023-04-23 10:37:42 - r - INFO: -          id         	    CartPole-v1     	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -     new_step_api    	         1          	   <class 'bool'>   
+2023-04-23 10:37:42 - r - INFO: -     render_mode     	        None        	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -       wrapper       	        None        	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: -    ignore_params    	['wrapper', 'ignore_params']	   <class 'str'>    
+2023-04-23 10:37:42 - r - INFO: - ================================================================================
+2023-04-23 10:37:42 - r - INFO: - obs_space: Box([-4.8000002e+00 -3.4028235e+38 -4.1887903e-01 -3.4028235e+38], [4.8000002e+00 3.4028235e+38 4.1887903e-01 3.4028235e+38], (4,), float32), n_actions: Discrete(2)
+2023-04-23 10:37:44 - r - INFO: - Start training!
+2023-04-23 10:37:44 - r - INFO: - Episode: 1/100, Reward: 25.000, Step: 25
+2023-04-23 10:37:44 - r - INFO: - Episode: 2/100, Reward: 15.000, Step: 15
+2023-04-23 10:37:44 - r - INFO: - Episode: 3/100, Reward: 13.000, Step: 13
+2023-04-23 10:37:45 - r - INFO: - Episode: 4/100, Reward: 14.000, Step: 14
+2023-04-23 10:37:45 - r - INFO: - Episode: 5/100, Reward: 25.000, Step: 25
+2023-04-23 10:37:45 - r - INFO: - Current episode 5 has the best eval reward: 20.000
+2023-04-23 10:37:45 - r - INFO: - Episode: 6/100, Reward: 16.000, Step: 16
+2023-04-23 10:37:45 - r - INFO: - Episode: 7/100, Reward: 14.000, Step: 14
+2023-04-23 10:37:45 - r - INFO: - Episode: 8/100, Reward: 17.000, Step: 17
+2023-04-23 10:37:45 - r - INFO: - Episode: 9/100, Reward: 19.000, Step: 19
+2023-04-23 10:37:45 - r - INFO: - Episode: 10/100, Reward: 14.000, Step: 14
+2023-04-23 10:37:45 - r - INFO: - Current episode 10 has the best eval reward: 30.300
+2023-04-23 10:37:45 - r - INFO: - Episode: 11/100, Reward: 72.000, Step: 72
+2023-04-23 10:37:45 - r - INFO: - Episode: 12/100, Reward: 19.000, Step: 19
+2023-04-23 10:37:45 - r - INFO: - Episode: 13/100, Reward: 46.000, Step: 46
+2023-04-23 10:37:46 - r - INFO: - Episode: 14/100, Reward: 19.000, Step: 19
+2023-04-23 10:37:46 - r - INFO: - Episode: 15/100, Reward: 15.000, Step: 15
+2023-04-23 10:37:46 - r - INFO: - Episode: 16/100, Reward: 32.000, Step: 32
+2023-04-23 10:37:46 - r - INFO: - Episode: 17/100, Reward: 28.000, Step: 28
+2023-04-23 10:37:46 - r - INFO: - Episode: 18/100, Reward: 58.000, Step: 58
+2023-04-23 10:37:46 - r - INFO: - Episode: 19/100, Reward: 24.000, Step: 24
+2023-04-23 10:37:46 - r - INFO: - Episode: 20/100, Reward: 38.000, Step: 38
+2023-04-23 10:37:46 - r - INFO: - Current episode 20 has the best eval reward: 30.600
+2023-04-23 10:37:46 - r - INFO: - Episode: 21/100, Reward: 41.000, Step: 41
+2023-04-23 10:37:47 - r - INFO: - Episode: 22/100, Reward: 126.000, Step: 126
+2023-04-23 10:37:47 - r - INFO: - Episode: 23/100, Reward: 14.000, Step: 14
+2023-04-23 10:37:47 - r - INFO: - Episode: 24/100, Reward: 66.000, Step: 66
+2023-04-23 10:37:47 - r - INFO: - Episode: 25/100, Reward: 52.000, Step: 52
+2023-04-23 10:37:47 - r - INFO: - Current episode 25 has the best eval reward: 48.000
+2023-04-23 10:37:47 - r - INFO: - Episode: 26/100, Reward: 42.000, Step: 42
+2023-04-23 10:37:47 - r - INFO: - Episode: 27/100, Reward: 36.000, Step: 36
+2023-04-23 10:37:47 - r - INFO: - Episode: 28/100, Reward: 43.000, Step: 43
+2023-04-23 10:37:47 - r - INFO: - Episode: 29/100, Reward: 52.000, Step: 52
+2023-04-23 10:37:47 - r - INFO: - Episode: 30/100, Reward: 36.000, Step: 36
+2023-04-23 10:37:48 - r - INFO: - Current episode 30 has the best eval reward: 53.800
+2023-04-23 10:37:48 - r - INFO: - Episode: 31/100, Reward: 22.000, Step: 22
+2023-04-23 10:37:48 - r - INFO: - Episode: 32/100, Reward: 37.000, Step: 37
+2023-04-23 10:37:48 - r - INFO: - Episode: 33/100, Reward: 42.000, Step: 42
+2023-04-23 10:37:48 - r - INFO: - Episode: 34/100, Reward: 34.000, Step: 34
+2023-04-23 10:37:48 - r - INFO: - Episode: 35/100, Reward: 94.000, Step: 94
+2023-04-23 10:37:48 - r - INFO: - Current episode 35 has the best eval reward: 58.700
+2023-04-23 10:37:48 - r - INFO: - Episode: 36/100, Reward: 55.000, Step: 55
+2023-04-23 10:37:48 - r - INFO: - Episode: 37/100, Reward: 31.000, Step: 31
+2023-04-23 10:37:49 - r - INFO: - Episode: 38/100, Reward: 73.000, Step: 73
+2023-04-23 10:37:49 - r - INFO: - Episode: 39/100, Reward: 38.000, Step: 38
+2023-04-23 10:37:49 - r - INFO: - Episode: 40/100, Reward: 26.000, Step: 26
+2023-04-23 10:37:49 - r - INFO: - Current episode 40 has the best eval reward: 73.000
+2023-04-23 10:37:49 - r - INFO: - Episode: 41/100, Reward: 96.000, Step: 96
+2023-04-23 10:37:49 - r - INFO: - Episode: 42/100, Reward: 133.000, Step: 133
+2023-04-23 10:37:49 - r - INFO: - Episode: 43/100, Reward: 97.000, Step: 97
+2023-04-23 10:37:49 - r - INFO: - Episode: 44/100, Reward: 107.000, Step: 107
+2023-04-23 10:37:50 - r - INFO: - Episode: 45/100, Reward: 17.000, Step: 17
+2023-04-23 10:37:50 - r - INFO: - Current episode 45 has the best eval reward: 81.800
+2023-04-23 10:37:50 - r - INFO: - Episode: 46/100, Reward: 69.000, Step: 69
+2023-04-23 10:37:50 - r - INFO: - Episode: 47/100, Reward: 46.000, Step: 46
+2023-04-23 10:37:50 - r - INFO: - Episode: 48/100, Reward: 93.000, Step: 93
+2023-04-23 10:37:50 - r - INFO: - Episode: 49/100, Reward: 65.000, Step: 65
+2023-04-23 10:37:50 - r - INFO: - Episode: 50/100, Reward: 107.000, Step: 107
+2023-04-23 10:37:51 - r - INFO: - Current episode 50 has the best eval reward: 96.200
+2023-04-23 10:37:51 - r - INFO: - Episode: 51/100, Reward: 61.000, Step: 61
+2023-04-23 10:37:51 - r - INFO: - Episode: 52/100, Reward: 56.000, Step: 56
+2023-04-23 10:37:51 - r - INFO: - Episode: 53/100, Reward: 55.000, Step: 55
+2023-04-23 10:37:51 - r - INFO: - Episode: 54/100, Reward: 26.000, Step: 26
+2023-04-23 10:37:51 - r - INFO: - Episode: 55/100, Reward: 135.000, Step: 135
+2023-04-23 10:37:52 - r - INFO: - Episode: 56/100, Reward: 81.000, Step: 81
+2023-04-23 10:37:52 - r - INFO: - Episode: 57/100, Reward: 71.000, Step: 71
+2023-04-23 10:37:52 - r - INFO: - Episode: 58/100, Reward: 92.000, Step: 92
+2023-04-23 10:37:52 - r - INFO: - Episode: 59/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:52 - r - INFO: - Episode: 60/100, Reward: 73.000, Step: 73
+2023-04-23 10:37:52 - r - INFO: - Episode: 61/100, Reward: 50.000, Step: 50
+2023-04-23 10:37:53 - r - INFO: - Episode: 62/100, Reward: 47.000, Step: 47
+2023-04-23 10:37:53 - r - INFO: - Episode: 63/100, Reward: 199.000, Step: 199
+2023-04-23 10:37:53 - r - INFO: - Episode: 64/100, Reward: 34.000, Step: 34
+2023-04-23 10:37:53 - r - INFO: - Episode: 65/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:53 - r - INFO: - Current episode 65 has the best eval reward: 106.800
+2023-04-23 10:37:53 - r - INFO: - Episode: 66/100, Reward: 124.000, Step: 124
+2023-04-23 10:37:54 - r - INFO: - Episode: 67/100, Reward: 61.000, Step: 61
+2023-04-23 10:37:54 - r - INFO: - Episode: 68/100, Reward: 26.000, Step: 26
+2023-04-23 10:37:54 - r - INFO: - Episode: 69/100, Reward: 139.000, Step: 139
+2023-04-23 10:37:54 - r - INFO: - Episode: 70/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:54 - r - INFO: - Current episode 70 has the best eval reward: 123.300
+2023-04-23 10:37:55 - r - INFO: - Episode: 71/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:55 - r - INFO: - Episode: 72/100, Reward: 160.000, Step: 160
+2023-04-23 10:37:55 - r - INFO: - Episode: 73/100, Reward: 40.000, Step: 40
+2023-04-23 10:37:55 - r - INFO: - Episode: 74/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:55 - r - INFO: - Episode: 75/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:56 - r - INFO: - Current episode 75 has the best eval reward: 183.900
+2023-04-23 10:37:56 - r - INFO: - Episode: 76/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:56 - r - INFO: - Episode: 77/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:56 - r - INFO: - Episode: 78/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:56 - r - INFO: - Episode: 79/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:57 - r - INFO: - Episode: 80/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:57 - r - INFO: - Current episode 80 has the best eval reward: 188.100
+2023-04-23 10:37:57 - r - INFO: - Episode: 81/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:58 - r - INFO: - Episode: 82/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:58 - r - INFO: - Episode: 83/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:58 - r - INFO: - Episode: 84/100, Reward: 184.000, Step: 184
+2023-04-23 10:37:58 - r - INFO: - Episode: 85/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:59 - r - INFO: - Episode: 86/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:59 - r - INFO: - Episode: 87/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:59 - r - INFO: - Episode: 88/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:59 - r - INFO: - Episode: 89/100, Reward: 200.000, Step: 200
+2023-04-23 10:37:59 - r - INFO: - Episode: 90/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:00 - r - INFO: - Current episode 90 has the best eval reward: 192.700
+2023-04-23 10:38:00 - r - INFO: - Episode: 91/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:00 - r - INFO: - Episode: 92/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:01 - r - INFO: - Episode: 93/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:01 - r - INFO: - Episode: 94/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:01 - r - INFO: - Episode: 95/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:02 - r - INFO: - Current episode 95 has the best eval reward: 200.000
+2023-04-23 10:38:02 - r - INFO: - Episode: 96/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:02 - r - INFO: - Episode: 97/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:02 - r - INFO: - Episode: 98/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:02 - r - INFO: - Episode: 99/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:03 - r - INFO: - Episode: 100/100, Reward: 200.000, Step: 200
+2023-04-23 10:38:03 - r - INFO: - Current episode 100 has the best eval reward: 200.000
+2023-04-23 10:38:03 - r - INFO: - Finish training!
