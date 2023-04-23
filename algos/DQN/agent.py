@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-04-20 13:12:36
+LastEditTime: 2023-04-20 23:06:53
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -82,10 +82,7 @@ class Agent(BaseAgent):
         else:
             action = self.action_space.sample()
         return action
-    def update_summary(self):
-        ''' 更新 tensorboard 数据
-        '''
-        self.cfg.tb_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_loss", scalar_value=self.loss.item(), global_step = self.update_step)
+    
     def predict_action(self,state):
         ''' 预测动作
         Args:
@@ -118,7 +115,7 @@ class Agent(BaseAgent):
         self.loss = nn.MSELoss()(q_values, target_q_values)
         if share_agent is not None: # 多进程下使用
             share_agent.optimizer.zero_grad()
-            loss.backward()
+            self.loss.backward()
             # clip 防止梯度爆炸
             for param in self.policy_net.parameters():
                 param.grad.data.clamp_(-1, 1)
