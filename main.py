@@ -89,7 +89,7 @@ class Main(object):
 
     def create_dirs(self, cfg):
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
-        task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.env_name}_{cfg.algo_name}_{curr_time}"
+        task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.id}_{cfg.algo_name}_{curr_time}"
         setattr(cfg, 'task_dir', task_dir)
         Path(cfg.task_dir).mkdir(parents=True, exist_ok=True)
         model_dir = f"{task_dir}/models"
@@ -155,7 +155,7 @@ class Main(object):
         trainer_mod = __import__(f"algos.{cfg.algo_name}.trainer", fromlist=['Trainer'])
         trainer = trainer_mod.Trainer()  # create trainer
         if cfg.load_checkpoint:
-            agent.load_model(f"tasks/{cfg.load_path}/models")
+            agent.load_model(f"joyrl-offline/tasks/{cfg.load_path}/models")
         self.logger.info(f"Start {cfg.mode}ing!")
         self.logger.info(f"Env: {cfg.env_name}, Algorithm: {cfg.algo_name}, Device: {cfg.device}")
         rewards = []  # record rewards for all episodes

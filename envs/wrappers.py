@@ -14,12 +14,14 @@ import random, datetime, os, copy
 from gym.spaces import Box
 from gym.wrappers import FrameStack
 from gym.error import DependencyNotInstalled
+from gym.envs.toy_text.utils import categorical_sample
 from collections import deque
 from typing import Union
 import numpy as np
 from gym.error import DependencyNotInstalled
 from gym.spaces import Box
 from gym.utils.step_api_compatibility import step_api_compatibility
+from typing import Optional
 
 
 class CliffWalkingWapper(gym.Wrapper):
@@ -33,11 +35,11 @@ class CliffWalkingWapper(gym.Wrapper):
     def draw_x_line(self, y, x0, x1, color='gray'):
         assert x1 > x0
         self.t.color(color)
-        self.t.setheading(0)
-        self.t.up()
-        self.t.goto(x0, y)
-        self.t.down()
-        self.t.forward(x1 - x0)
+        self.t.setheading(0)    # 设置为一个方向
+        self.t.up()             # 抬笔
+        self.t.goto(x0, y)      # 将画笔移动到(x0,y)
+        self.t.down()           # 落笔
+        self.t.forward(x1 - x0) # 向前画图的距离
 
     def draw_y_line(self, x, y0, y1, color='gray'):
         assert y1 > y0
@@ -52,14 +54,14 @@ class CliffWalkingWapper(gym.Wrapper):
         self.t.up()
         self.t.goto(x * self.unit, y * self.unit)
         self.t.color(line_color)
-        self.t.fillcolor(fillcolor)
+        self.t.fillcolor(fillcolor)     # 设置填充颜色
         self.t.setheading(90)
         self.t.down()
-        self.t.begin_fill()
+        self.t.begin_fill()             # 开始填充
         for i in range(4):
             self.t.forward(self.unit)
             self.t.right(90)
-        self.t.end_fill()
+        self.t.end_fill()               # 结束填充
 
     def move_player(self, x, y):
         self.t.up()
@@ -72,25 +74,28 @@ class CliffWalkingWapper(gym.Wrapper):
             self.t = turtle.Turtle()
             self.wn = turtle.Screen()
             self.wn.setup(self.unit * self.max_x + 100,
-                          self.unit * self.max_y + 100)
-            self.wn.setworldcoordinates(0, 0, self.unit * self.max_x,
+                          self.unit * self.max_y + 100)     # 设置主窗体的大小和位置，四个参数值，最后两个none的话就是屏幕水平中央
+            self.wn.setworldcoordinates(0, 0, self.unit * self.max_x,       # 用户自定义坐标系
                                         self.unit * self.max_y)
-            self.t.shape('circle')
-            self.t.width(2)
-            self.t.speed(0)
+            self.t.shape('circle')      # 将Turtle形状设置为具有给定名称的形状
+            self.t.width(2)             # 线的粗细
+            self.t.speed(0)             # 画线的速度
             self.t.color('gray')
+            # 画边线
             for _ in range(2):
                 self.t.forward(self.max_x * self.unit)
                 self.t.left(90)
                 self.t.forward(self.max_y * self.unit)
                 self.t.left(90)
+            # 划竖线
             for i in range(1, self.max_y):
                 self.draw_x_line(
                     y=i * self.unit, x0=0, x1=self.max_x * self.unit)
+            # 画横线
             for i in range(1, self.max_x):
                 self.draw_y_line(
                     x=i * self.unit, y0=0, y1=self.max_y * self.unit)
-
+            # 画黑色的块
             for i in range(1, self.max_x - 1):
                 self.draw_box(i, 0, 'black')
             self.draw_box(self.max_x - 1, 0, 'yellow')
@@ -548,3 +553,120 @@ class MarioWrappers(gym.Wrapper):
         env = FrameStack(env=env, num_stack=4, new_step_api=True)
         super().__init__(env=env, new_step_api=True)
         # gym.Wrapper.__init__(self, env=env, new_step_api=True)
+class CliffWalkingWapper2(gym.Wrapper):
+    def __init__(self, env, new_step_api=True):
+        gym.Wrapper.__init__(self, env, new_step_api=True)
+        self.observation_space = Box(0, 1, (self.nS,), dtype=np.float32)
+        self.t = None
+        self.unit = 50
+        self.max_x = 12
+        self.max_y = 4
+
+    def step(self, a):
+        transitions = self.P[self.s][a]
+        i = categorical_sample([t[0] for t in transitions], self.np_random)
+        p, s, r, t = transitions[i]
+        new_step = np.zeros(self.nS,dtype=np.float32)
+        new_step[s] = 1.0
+        self.s = s
+        self.lastaction = a
+        if self.render_mode == "human":
+            self.render()
+
+        return (new_step, r, t, False, {"prob": p})
+
+    def _calculate_transition_prob(self, current, delta):
+        new_position = np.array(current) + np.array(delta)
+        new_position = self._limit_coordinates(new_position).astype(int)
+        new_state = np.ravel_multi_index(tuple(new_position), self.shape)
+        # new_state_idx = np.ravel_multi_index(tuple(new_position), self.shape)
+        # new_obs = np.zeros(self.nS)
+        # new_obs[new_state_idx] = 1.0
+        if self._cliff[tuple(new_position)]:
+            return [(1.0, self.start_state_index, -100, False)]
+        terminal_state = (self.shape[0] - 1, self.shape[1] - 1)
+        is_terminated = tuple(new_position) == terminal_state
+        return [(1.0, new_state, -1, is_terminated)]
+
+    def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
+        super().reset(seed=seed)
+        self.s = categorical_sample(self.initial_state_distrib, self.np_random)
+        new_obs = np.zeros(self.nS,dtype=np.float32)
+        new_obs[self.s] = 1.0
+        self.lastaction = None
+        if self.render_mode == "human":
+            self.render()
+        # {"prob": 1}
+        return new_obs
+    def draw_x_line(self, y, x0, x1, color='gray'):
+        assert x1 > x0
+        self.t.color(color)
+        self.t.setheading(0)    # 设置为一个方向
+        self.t.up()             # 抬笔
+        self.t.goto(x0, y)      # 将画笔移动到(x0,y)
+        self.t.down()           # 落笔
+        self.t.forward(x1 - x0) # 向前画图的距离
+
+    def draw_y_line(self, x, y0, y1, color='gray'):
+        assert y1 > y0
+        self.t.color(color)
+        self.t.setheading(90)
+        self.t.up()
+        self.t.goto(x, y0)
+        self.t.down()
+        self.t.forward(y1 - y0)
+
+    def draw_box(self, x, y, fillcolor='', line_color='gray'):
+        self.t.up()
+        self.t.goto(x * self.unit, y * self.unit)
+        self.t.color(line_color)
+        self.t.fillcolor(fillcolor)     # 设置填充颜色
+        self.t.setheading(90)
+        self.t.down()
+        self.t.begin_fill()             # 开始填充
+        for i in range(4):
+            self.t.forward(self.unit)
+            self.t.right(90)
+        self.t.end_fill()               # 结束填充
+
+    def move_player(self, x, y):
+        self.t.up()
+        self.t.setheading(90)
+        self.t.fillcolor('red')
+        self.t.goto((x + 0.5) * self.unit, (y + 0.5) * self.unit)
+
+    def render(self):
+        if self.t == None:
+            self.t = turtle.Turtle()
+            self.wn = turtle.Screen()
+            self.wn.setup(self.unit * self.max_x + 100,
+                          self.unit * self.max_y + 100)     # 设置主窗体的大小和位置，四个参数值，最后两个none的话就是屏幕水平中央
+            self.wn.setworldcoordinates(0, 0, self.unit * self.max_x,       # 用户自定义坐标系
+                                        self.unit * self.max_y)
+            self.t.shape('circle')      # 将Turtle形状设置为具有给定名称的形状
+            self.t.width(2)             # 线的粗细
+            self.t.speed(0)             # 画线的速度
+            self.t.color('gray')
+            # 画边线
+            for _ in range(2):
+                self.t.forward(self.max_x * self.unit)
+                self.t.left(90)
+                self.t.forward(self.max_y * self.unit)
+                self.t.left(90)
+            # 划竖线
+            for i in range(1, self.max_y):
+                self.draw_x_line(
+                    y=i * self.unit, x0=0, x1=self.max_x * self.unit)
+            # 画横线
+            for i in range(1, self.max_x):
+                self.draw_y_line(
+                    x=i * self.unit, y0=0, y1=self.max_y * self.unit)
+            # 画黑色的块
+            for i in range(1, self.max_x - 1):
+                self.draw_box(i, 0, 'black')
+            self.draw_box(self.max_x - 1, 0, 'yellow')
+            self.t.shape('turtle')
+
+        x_pos = self.s % self.max_x
+        y_pos = self.max_y - 1 - int(self.s / self.max_x)
+        self.move_player(x_pos, y_pos)
