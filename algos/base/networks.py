@@ -5,26 +5,29 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-04-19 01:54:18
+LastEditTime: 2023-04-24 00:23:50
 Discription: 
 '''
 import sys, os
 sys.path.append(os.getcwd())
 import torch.nn as nn
-from algos.base.layers import create_layer
+from algos.base.layers import create_layer, LayerConfig
 
 class ValueNetwork(nn.Module):
     def __init__(self, cfg, input_size, action_dim) -> None:
         super(ValueNetwork, self).__init__()
-        self.layers_cfg = cfg.value_layers # load layers config
+        self.layers_cfg_dic = cfg.value_layers # load layers config
         self.layers = nn.ModuleList()
         output_size = input_size
-        for layer_cfg in self.layers_cfg:
-            layer_type, layer_dim, act_name = layer_cfg['layer_type'].lower(), layer_cfg['layer_dim'], layer_cfg['activation'].lower()
-            layer, layer_out_dim = create_layer(layer_type, output_size, layer_dim, act_name)
-            output_size = [None, layer_out_dim]
+        for layer_cfg_dic in self.layers_cfg_dic:
+            if "layer_type" not in layer_cfg_dic:
+                raise ValueError("layer_type must be specified in layer_cfg")
+            layer_cfg = LayerConfig(**layer_cfg_dic)
+            layer, layer_out_size = create_layer(output_size, layer_cfg)
+            output_size = layer_out_size
             self.layers.append(layer)  
-        action_layer, action_out_dim = create_layer('linear', output_size, [action_dim], 'none')
+        action_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[1], activation='none')
+        action_layer, action_out_dim = create_layer(output_size, action_layer_cfg)
         self.layers.append(action_layer)
 
     def forward(self, x):
@@ -43,7 +46,7 @@ if __name__ == "__main__":
         {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
         {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
     ]
-    value_net = ValueNetwork(cfg, state_dim)
+    value_net = ValueNetwork(cfg, state_dim, cfg.n_actions)
     print(value_net)
     x = torch.randn(1,4)
     print(value_net(x))
