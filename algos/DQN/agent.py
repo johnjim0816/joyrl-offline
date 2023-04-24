@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-04-20 23:06:53
+LastEditTime: 2023-04-24 15:13:15
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -26,7 +26,7 @@ from algos.base.networks import ValueNetwork
 
 class Agent(BaseAgent):
     def __init__(self, cfg, is_share_agent = False):
-        super(Agent, self).__init__()
+        super(Agent, self ).__init__(cfg)
         '''智能体类
         Args:
             cfg (class): 超参数类
@@ -49,10 +49,10 @@ class Agent(BaseAgent):
         self.update_step = 0
         self.create_graph()
     def create_graph(self):
-        self.input_size = [None, self.obs_space.shape[0]]
+        self.state_size = [None, self.obs_space.shape[0]]
         action_dim = self.action_space.n
-        self.policy_net = ValueNetwork(self.cfg, self.input_size, action_dim).to(self.device)
-        self.target_net = ValueNetwork(self.cfg, self.input_size, action_dim).to(self.device)
+        self.policy_net = ValueNetwork(self.cfg, self.state_size, action_dim).to(self.device)
+        self.target_net = ValueNetwork(self.cfg, self.state_size, action_dim).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.cfg.lr) 
         if self.is_share_agent:
