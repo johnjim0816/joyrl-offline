@@ -10,11 +10,16 @@ JoyRL是一套主要基于Torch的强化学习开源框架，旨在让读者仅�
 
 目前支持Python 3.8和Gym 0.25.2版本。
 
+下载代码：
+```bash
+git clone https://github.com/johnjim0816/joyrl-offline
+```
+
 创建Conda环境（需先安装Anaconda）
 
 ```bash
-conda create -n joyrl python=3.8
-conda activate joyrl
+conda create -n joyrl-offline python=3.8
+conda activate joyrl-offline
 ```
 
 安装Gym：
@@ -145,8 +150,7 @@ python main.py --yaml config/custom_config_Train.yaml
 | [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) | PPO |
 | [LunarLanderContinuous-v2](./envs/gym_info.md) | [MekeyPan](https://github.com/pmy0721) | SAC |
 | [MountainCar-v0](./envs/gym_info.md) | [GeYuhong](https://github.com/GeYuhong) | DQN |
-|                  |                                       |                                       |
-
+| [BipedalWalker-v3](./envs/gym_info.md) | [scchy](https://github.com/scchy)   | DDPG   |
 
 
 ## 如何贡献

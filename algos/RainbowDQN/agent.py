@@ -3,7 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math, random
 import numpy as np
+import ray
 from common.memories import ReplayBufferQue, ReplayBuffer, ReplayTree
+from common.optms import SharedAdam
 
 '''
 This NoisyLinear is modified from the original code from 

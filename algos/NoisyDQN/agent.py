@@ -5,11 +5,13 @@ import torch.nn.functional as F
 import numpy as np
 import math
 import random
+import ray
 from common.memories import ReplayBuffer
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from common.optms import SharedAdam
+
 
 class NoisyLinear(nn.Module):
     '''在Noisy DQN中用NoisyLinear层替换普通的nn.Linear层
@@ -78,7 +80,12 @@ class NoisyQNetwork(nn.Module):
         self.noisy_fc3.reset_noise()
 
 class Agent:
-    def __init__(self, cfg) -> None:
+    def __init__(self, cfg, is_share_agent = False) -> None:
+        '''智能体类
+        Args:
+            cfg (class): 超参数类
+            is_share_agent (bool, optional): 是否为共享的 Agent ，多进程下使用，默认为 False
+        '''
         self.n_actions = cfg.n_actions  
         self.device = torch.device(cfg.device) 
         self.gamma = cfg.gamma  
@@ -108,6 +115,14 @@ class Agent:
             target_param.data.copy_(param.data)
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=cfg.lr)
         self.memory = ReplayBuffer(cfg.buffer_size)
+        if is_share_agent:
+            self.policy_net.share_memory()
+            self.optimizer = SharedAdam(self.policy_net.parameters(), lr=cfg.lr)
+            self.optimizer.share_memory()
+        # ray中share_agent
+        self.share_policy_ray = NoisyQNetwork(cfg.n_states,cfg.n_actions,hidden_dim=cfg.hidden_dim).to(self.device)
+        self.share_target_ray = NoisyQNetwork(cfg.n_states,cfg.n_actions,hidden_dim=cfg.hidden_dim).to(self.device)
+        self.optimizer_ray = SharedAdam(self.share_policy_ray.parameters(), lr=cfg.lr)
 
     def sample_action(self, state):
         ''' sample action with e-greedy policy 
@@ -131,7 +146,8 @@ class Agent:
         q_value = self.policy_net(state)
         action  = q_value.max(1)[1].item()
         return action
-    def update(self):
+    
+    def update(self, share_agent=None):
         if len(self.memory) < self.batch_size: # when transitions in memory donot meet a batch, not update
             return
         # beta = min(1.0, self.beta_start + self.sample_count * (1.0 - self.beta_start) / self.beta_frames)
@@ -150,26 +166,127 @@ class Agent:
         
         loss = nn.MSELoss()(q_value_batch, expected_q_value_batch)  # shape same to  
         # backpropagation
-        self.optimizer.zero_grad()  
+        if share_agent is not None:
+            # Clear the gradient of the previous step of share_agent
+            share_agent.optimizer.zero_grad()
+            loss.backward()
+            # clip to avoid gradient explosion
+            for param in self.policy_net.parameters():  
+                param.grad.data.clamp_(-1, 1)
+            # Copy the gradient from policy_net of local_agnet to policy_net of share_agent
+            for param, share_param in zip(self.policy_net.parameters(), share_agent.policy_net.parameters()):
+                share_param._grad = param.grad
+            share_agent.optimizer.step()
+            self.policy_net.load_state_dict(share_agent.policy_net.state_dict())
+            if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
+                self.target_net.load_state_dict(self.policy_net.state_dict())
+        else:
+            self.optimizer.zero_grad()  
+            loss.backward()
+            # clip to avoid gradient explosion
+            for param in self.policy_net.parameters():  
+                param.grad.data.clamp_(-1, 1)
+            self.optimizer.step() 
+
+            if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
+                self.target_net.load_state_dict(self.policy_net.state_dict())   
+
+        self.policy_net.reset_noise()
+        self.target_net.reset_noise()
+
+    def update_ray(self, share_policy_state_dict):
+        """Update the share_agent parameters with ray"""
+        if len(self.memory) < self.batch_size: # when transitions in memory donot meet a batch, not update
+            return share_policy_state_dict
+        state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample(
+            self.batch_size)
+        state_batch = torch.tensor(np.array(state_batch), device=self.device, dtype=torch.float) # shape(batchsize,n_states)
+        action_batch = torch.tensor(action_batch, device=self.device).unsqueeze(1) # shape(batchsize,1)
+        reward_batch = torch.tensor(reward_batch, device=self.device, dtype=torch.float).unsqueeze(1) # shape(batchsize,1)
+        next_state_batch = torch.tensor(np.array(next_state_batch), device=self.device, dtype=torch.float) # shape(batchsize,n_states)
+        done_batch = torch.tensor(np.float32(done_batch), device=self.device).unsqueeze(1) # shape(batchsize,1)
+        # print(state_batch.shape,action_batch.shape,reward_batch.shape,next_state_batch.shape,done_batch.shape)
+        # compute current Q(s_t,a), it is 'y_j' in pseucodes
+        q_value_batch = self.policy_net(state_batch).gather(dim=1, index=action_batch) # shape(batchsize,1),requires_grad=True
+        # print(q_values.requires_grad)
+        # compute max(Q(s_t+1,A_t+1)) respects to actions A, next_max_q_value comes from another net and is just regarded as constant for q update formula below, thus should detach to requires_grad=False
+        next_max_q_value_batch = self.target_net(next_state_batch).max(1)[0].detach().unsqueeze(1) 
+        # print(q_values.shape,next_q_values.shape)
+        # compute expected q value, for terminal state, done_batch[0]=1, and expected_q_value=rewardcorrespondingly
+        expected_q_value_batch = reward_batch + self.gamma * next_max_q_value_batch* (1-done_batch)
+        # print(expected_q_value_batch.shape,expected_q_value_batch.requires_grad)
+        loss = nn.MSELoss()(q_value_batch, expected_q_value_batch)
+        # 加载最新的共享智能体的网络参数
+        self.share_policy_ray.load_state_dict(share_policy_state_dict)
+        self.optimizer_ray.zero_grad()
         loss.backward()
         # clip to avoid gradient explosion
         for param in self.policy_net.parameters():  
             param.grad.data.clamp_(-1, 1)
-        self.optimizer.step() 
-
+        # 将local_agent计算出的梯度参数传给share_policy_ray
+        for param, share_param in zip(self.policy_net.parameters(), self.share_policy_ray.parameters()):
+            share_param._grad = param.grad
+        # 更新share_policy_ray网络的参数
+        self.optimizer_ray.step()
+        # 将更新后的share_policy_ray网络的参数传给local_agent
+        self.policy_net.load_state_dict(self.share_policy_ray.state_dict())
         if self.sample_count % self.target_update == 0: # target net update, target_update means "C" in pseucodes
-            self.target_net.load_state_dict(self.policy_net.state_dict())   
+            self.target_net.load_state_dict(self.policy_net.state_dict())
 
         self.policy_net.reset_noise()
         self.target_net.reset_noise()
+        
+        # 将更新后的share_policy_ray网络的参数传回ShareAgent类
+        return self.share_policy_ray.state_dict()
+    
+    def save_model(self, fpath):
+        from pathlib import Path
+        # create path
+        Path(fpath).mkdir(parents=True, exist_ok=True)
+        torch.save(self.policy_net.state_dict(), f"{fpath}/checkpoint.pt")
+
+    def load_model(self, fpath):
+        checkpoint = torch.load(f"{fpath}/checkpoint.pt", map_location=self.device)
+        self.target_net.load_state_dict(checkpoint)
+        for target_param, param in zip(self.target_net.parameters(), self.policy_net.parameters()):
+            param.data.copy_(target_param.data)
+
+
+@ray.remote
+class ShareAgent:
+    def __init__(self, cfg):
+        '''共享智能体类
+        Args:
+            cfg (class): 超参数类
+        '''
+        self.policy_net = NoisyQNetwork(cfg.n_states,cfg.n_actions,hidden_dim=cfg.hidden_dim).to(cfg.device)
+        self.target_net = NoisyQNetwork(cfg.n_states,cfg.n_actions,hidden_dim=cfg.hidden_dim).to(cfg.device)
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=cfg.lr) 
+        self.lr = cfg.lr
+        # self.memory = ReplayBuffer(cfg.buffer_size)
+
+    def get_parameters(self):
+        return self.policy_net.state_dict()
+    
+    def receive_parameters(self, policy_net):
+        self.policy_net.load_state_dict(policy_net)
 
     def save_model(self, fpath):
         from pathlib import Path
         # create path
         Path(fpath).mkdir(parents=True, exist_ok=True)
-        torch.save(self.target_net.state_dict(), f"{fpath}/checkpoint.pt")
+        torch.save(self.policy_net.state_dict(), f"{fpath}/checkpoint.pt")
 
     def load_model(self, fpath):
-        self.target_net.load_state_dict(torch.load(f"{fpath}/checkpoint.pt"))
+        checkpoint = torch.load(f"{fpath}/checkpoint.pt")
+        self.target_net.load_state_dict(checkpoint)
         for target_param, param in zip(self.target_net.parameters(), self.policy_net.parameters()):
             param.data.copy_(target_param.data)
+
+    def update_parameters(self, local_net):
+        """training algorithm in ShareAgent"""
+        self.optimizer.zero_grad()
+        for param, share_param in zip(local_net.parameters(), self.policy_net.parameters()):
+            share_param._grad = param.grad
+        self.optimizer.step()
+        return self.policy_net

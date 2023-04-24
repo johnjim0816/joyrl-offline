@@ -1,5 +1,8 @@
 # 开发日志
 
+## 日志
+
+* 增加Q-learning注释。By [limafang](https://github.com/limafang)
 ## 日志20230409
 
 ### 文档编辑
