@@ -26,7 +26,7 @@ from algos.base.networks import ValueNetwork
 
 class Agent(BaseAgent):
     def __init__(self, cfg, is_share_agent = False):
-        super(Agent, self ).__init__(cfg)
+        super(Agent, self ).__init__()
         '''智能体类
         Args:
             cfg (class): 超参数类
