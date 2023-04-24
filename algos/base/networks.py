@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-04-24 00:23:50
+LastEditTime: 2023-04-24 15:12:45
 Discription: 
 '''
 import sys, os
@@ -26,8 +26,8 @@ class ValueNetwork(nn.Module):
             layer, layer_out_size = create_layer(output_size, layer_cfg)
             output_size = layer_out_size
             self.layers.append(layer)  
-        action_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[1], activation='none')
-        action_layer, action_out_dim = create_layer(output_size, action_layer_cfg)
+        action_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[action_dim], activation='none')
+        action_layer, layer_out_size = create_layer(output_size, action_layer_cfg)
         self.layers.append(action_layer)
 
     def forward(self, x):
