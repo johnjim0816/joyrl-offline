@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:15
 LastEditor: JiangJi
-LastEditTime: 2023-04-24 00:27:19
+LastEditTime: 2023-04-24 15:12:17
 Discription: 
 '''
 import torch
@@ -75,7 +75,6 @@ def create_layer(input_size: list, layer_cfg: LayerConfig):
         activation: 激活函数
     """
     layer_type = layer_cfg.layer_type.lower()
-    print(layer_type)
     if layer_type == "linear":
         return linear_layer(input_size, layer_cfg)
     elif layer_type == "conv2d":
