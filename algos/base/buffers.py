@@ -5,14 +5,14 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:34:27
 LastEditor: JiangJi
-LastEditTime: 2023-04-16 23:55:24
+LastEditTime: 2023-04-19 02:02:52
 Discription: 
 '''
 import random
 import torch
 import numpy as np
 from collections import deque
-import operator
+
 from common.core_types import BufferType
 from common.config import MergedConfig
 
@@ -40,70 +40,51 @@ class ReplayBuffer:
         '''
         return len(self.buffer)
 
-# class ReplayBufferQue:
-#     def __init__(self, cfg: MergedConfig):
-#         self.capacity = cfg.buffer_size # 经验回放的容量
-#         self.buffer = deque(maxlen=self.capacity)
-#     def push(self, exps):
-#         '''_summary_
-#         Args:
-#             trainsitions (tuple): _description_
-#         '''
-#         for exp in exps:
-#             self.buffer.append(exp)
-#     def sample(self, batch_size: int, sequential: bool = False):
-#         if batch_size > len(self.buffer): # 如果小批量大于经验池的容量，则取经验池的容量
-#             batch_size = len(self.buffer)
-        
-#         if sequential: # sequential sampling
-#             rand = random.randint(0, len(self.buffer) - batch_size)
-#             batch = [self.buffer[i] for i in range(rand, rand + batch_size)]
-#             return batch
-#         else:
-#             batch = random.sample(self.buffer, batch_size)
-#             return batch
-#     def clear(self):
-#         self.buffer.clear()
-#     def __len__(self):
-#         return len(self.buffer)
-    
 class ReplayBufferQue:
-    def __init__(self, capacity: int):
-        self.capacity = capacity
+    def __init__(self, cfg: MergedConfig):
+        self.capacity = cfg.buffer_size # 经验回放的容量
         self.buffer = deque(maxlen=self.capacity)
-    def push(self,transitions):
-        '''_summary_
+    def push(self, exps: list):
+        ''' 添加样本到经验池
         Args:
             trainsitions (tuple): _description_
         '''
-        self.buffer.append(transitions)
+        for exp in exps:
+            self.buffer.append(exp)
     def sample(self, batch_size: int, sequential: bool = False):
-        if batch_size > len(self.buffer):
+        ''' 从经验池中随机采样小批量样本
+        Args:
+            batch_size (int): _description_
+            sequential (bool, optional): _description_. Defaults to False.
+        Returns:
+            _type_: _description_
+        '''
+        if batch_size > len(self.buffer): # 如果小批量大于经验池的容量，则取经验池的容量
             batch_size = len(self.buffer)
         if sequential: # sequential sampling
             rand = random.randint(0, len(self.buffer) - batch_size)
             batch = [self.buffer[i] for i in range(rand, rand + batch_size)]
-            return zip(*batch)
+            return batch
         else:
             batch = random.sample(self.buffer, batch_size)
-            return zip(*batch)
+            return batch
     def clear(self):
         self.buffer.clear()
     def __len__(self):
         return len(self.buffer)
 
-# class PGReplay(ReplayBufferQue):
-#     '''replay buffer for policy gradient based methods, each time these methods will sample all transitions
-#     Args:
-#         ReplayBufferQue (_type_): _description_
-#     '''
-#     def __init__(self):
-#         self.buffer = deque()
-#     def sample(self):
-#         ''' sample all the transitions
-#         '''
-#         batch = list(self.buffer)
-#         return zip(*batch)
+class PGReplay(ReplayBufferQue):
+    '''replay buffer for policy gradient based methods, each time these methods will sample all transitions
+    Args:
+        ReplayBufferQue (_type_): _description_
+    '''
+    def __init__(self):
+        self.buffer = deque()
+    def sample(self):
+        ''' sample all the transitions
+        '''
+        batch = list(self.buffer)
+        return zip(*batch)
     
 class SumTree:
     def __init__(self, capacity):
@@ -1129,17 +1110,23 @@ class SharedReplayBuffer(object):
 # MAPPO ending
 
 class BufferCreator:
-    def __init__(self, cfg):
-        self.buffer_type = cfg.buffer_type
-        self.cfg = cfg
+    def __init__(self, algo_cfg):
+        self.cfg = algo_cfg
+        self.buffer_type = BufferType[algo_cfg.buffer_type]
     def __call__(self):
         if self.buffer_type == BufferType.REPLAY:
-            return ReplayBuffer(self.capacity)
-        elif self.buffer_type == 'replay_que':
-            return ReplayBufferQue(self.capacity)
+            return ReplayBuffer(self.cfg)
+        elif self.buffer_type == BufferType.REPLAY_QUE:
+            return ReplayBufferQue(self.cfg)
         elif self.buffer_type == 'pg':
             return PGReplay()
         else:
             raise NotImplementedError
 if __name__ == "__main__":
-    bu
+    from config.config import MergedConfig
+    cfg = MergedConfig()
+    cfg.buffer_type = 'REPLAY'
+    cfg.buffer_size = 100
+    buffer = BufferCreator(cfg)()
+    for i in range(100):
+        buffer.add(i)

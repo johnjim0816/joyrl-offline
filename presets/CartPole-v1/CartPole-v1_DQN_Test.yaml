@@ -1,11 +1,11 @@
 general_cfg:
   algo_name: DQN
-  device: cpu
+  device: cuda
   env_name: gym
-  mode: train
+  mode: test
   n_workers: 1 # number of workers for parallel training
-  load_checkpoint: false
-  load_path: Train_CartPole-v1_DQN_20221026-054757
+  load_checkpoint: true
+  load_path: Train_CartPole-v1_DQN_20230419-022410
   max_steps: 200
   save_fig: true
   seed: 1
@@ -15,16 +15,14 @@ general_cfg:
 algo_cfg:
   value_layers:
     - layer_type: linear
-      layer_dim: ['n_states',256]
+      layer_dim: [256]
       activation: relu
     - layer_type: linear
-      layer_dim: [256,256]
+      layer_dim: [256]
       activation: relu
-    - layer_type: linear
-      layer_dim: [256,'n_actions']
-      activation: none
-  batch_size: 64
+  buffer_type: REPLAY_QUE
   buffer_size: 100000
+  batch_size: 64
   epsilon_decay: 500
   epsilon_end: 0.01
   epsilon_start: 0.95

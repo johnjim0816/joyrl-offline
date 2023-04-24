@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-21 20:32:12
 LastEditor: JiangJi
-LastEditTime: 2023-04-16 23:44:39
+LastEditTime: 2023-04-18 13:23:26
 Discription: 
 '''
 class DefaultConfig:
@@ -16,7 +16,9 @@ class DefaultConfig:
         
 class MergedConfig:
     def __init__(self) -> None:
-        pass
+        self.general_cfg = None
+        self.algo_cfg = None
+        self.env_cfg = None
 class GeneralConfig():
     def __init__(self) -> None:
         self.env_name = "gym" # name of environment

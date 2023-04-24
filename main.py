@@ -14,15 +14,14 @@ import gym
 from gym.wrappers import RecordVideo
 import ray
 from ray.util.queue import Queue
+import importlib
 import torch.multiprocessing as mp
-from config.config import GeneralConfig
-from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, check_n_workers, save_traj,save_frames_as_gif
+from config.config import GeneralConfig, MergedConfig
+from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, save_traj,save_frames_as_gif
 from common.ray_utils import GlobalVarRecorder
 from envs.register import register_env
+from torch.utils.tensorboard import SummaryWriter  
 
-class MergedConfig:
-    def __init__(self) -> None:
-        pass
 class Main(object):
     def __init__(self) -> None:
         pass
@@ -30,18 +29,17 @@ class Main(object):
     def get_default_cfg(self):
         self.general_cfg = GeneralConfig()
         self.algo_name = self.general_cfg.algo_name
-        algo_mod = __import__(f"algos.{self.algo_name}.config", fromlist=['AlgoConfig'])
+        algo_mod = importlib.import_module(f"algos.{self.algo_name}.config")
         self.algo_cfg = algo_mod.AlgoConfig()
         self.env_name = self.general_cfg.env_name
-        env_mod = __import__(f"envs.{self.env_name}.config", fromlist=['EnvConfig'])
+        env_mod = importlib.import_module(f"envs.{self.env_name}.config")
         self.env_cfg = env_mod.EnvConfig()
-        self.cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
-
-    def print_cfgs(self, cfg):
+    
+    def print_cfgs(self, cfg, name = ''):
         ''' print parameters
         '''
         cfg_dict = vars(cfg)
-        self.logger.info("Hyperparameters:")
+        self.logger.info(f"{name}:")
         self.logger.info(''.join(['='] * 80))
         tplt = "{:^20}\t{:^20}\t{:^20}"
         self.logger.info(tplt.format("Name", "Value", "Type"))
@@ -69,72 +67,84 @@ class Main(object):
         if args.yaml is not None:
             with open(args.yaml) as f:
                 load_cfg = yaml.load(f, Loader=yaml.FullLoader)
+                ## 加载通用参数
+                self.load_yaml_cfg(self.general_cfg,load_cfg,'general_cfg')
                 ## 加载算法参数
-                self.algo_name = load_cfg['general_cfg']['algo_name']
-                algo_mod = __import__(f"algos.{self.algo_name}.config",
-                                      fromlist=['AlgoConfig'])  # dynamic loading of modules
+                self.algo_name = self.general_cfg.algo_name
+                algo_mod = importlib.import_module(f"algos.{self.algo_name}.config")
                 self.algo_cfg = algo_mod.AlgoConfig()
+                self.load_yaml_cfg(self.algo_cfg,load_cfg,'algo_cfg')
                 ## 加载环境参数
-                self.env_name = load_cfg['general_cfg']['env_name']
-                env_mod = __import__(f"envs.{self.env_name}.config",
-                                     fromlist=['EnvConfig']) # 动态加载模块
+                self.env_name = self.general_cfg.env_name
+                env_mod = importlib.import_module(f"envs.{self.env_name}.config")
                 self.env_cfg = env_mod.EnvConfig()
-                ## 合并参数
-                self.cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
-                for cfg_type in self.cfgs:
-                    if cfg_type in load_cfg:
-                        if load_cfg[cfg_type] is not None:
-                            for k, v in load_cfg[cfg_type].items():
-                                setattr(self.cfgs[cfg_type], k, v)
+                self.load_yaml_cfg(self.env_cfg,load_cfg,'env_cfg')
+    def merge_cfgs(self):
+        ''' 合并参数
+        '''
+        self.cfg = MergedConfig()
+        self.cfg = merge_class_attrs(self.cfg, self.general_cfg)
+        self.cfg = merge_class_attrs(self.cfg, self.algo_cfg)
+        self.cfg = merge_class_attrs(self.cfg, self.env_cfg)
+        self.save_cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
 
-    def create_dirs(self, cfg):
+    def load_yaml_cfg(self,target_cfg,load_cfg,item):
+        if load_cfg[item] is not None:
+            for k, v in load_cfg[item].items():
+                setattr(target_cfg, k, v)
+    def create_dirs(self):
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
+<<<<<<< HEAD
         task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.id}_{cfg.algo_name}_{curr_time}"
         setattr(cfg, 'task_dir', task_dir)
         Path(cfg.task_dir).mkdir(parents=True, exist_ok=True)
-        model_dir = f"{task_dir}/models"
-        setattr(cfg, 'model_dir', model_dir)
-        res_dir = f"{task_dir}/results"
-        setattr(cfg, 'res_dir', res_dir)
-        log_dir = f"{task_dir}/logs"
-        setattr(cfg, 'log_dir', log_dir)
-        traj_dir = f"{task_dir}/traj"
-        setattr(cfg, 'traj_dir', traj_dir)
-        video_dir = f"{task_dir}/videos"
-        setattr(cfg, 'video_dir', video_dir)
+=======
+        if self.env_cfg.id is not None:
+            env_name = self.env_cfg.id
+        else:
+            env_name = self.env_cfg.env_name
+        task_dir = f"{curr_path}/tasks/{self.general_cfg.mode.capitalize()}_{env_name}_{self.general_cfg.algo_name}_{curr_time}"
+        setattr(self.cfg, 'task_dir', task_dir)
+        Path(task_dir).mkdir(parents=True, exist_ok=True)
 
-    def envs_config(self, cfg):
+>>>>>>> e5666c746edf354a34596702356772cf6338eac6
+        model_dir = f"{task_dir}/models"
+        setattr(self.cfg, 'model_dir', model_dir)
+        res_dir = f"{task_dir}/results"
+        setattr(self.cfg, 'res_dir', res_dir)
+        log_dir = f"{task_dir}/logs"
+        setattr(self.cfg, 'log_dir', log_dir)
+        traj_dir = f"{task_dir}/traj"
+        setattr(self.cfg, 'traj_dir', traj_dir)
+        video_dir = f"{task_dir}/videos"
+        setattr(self.cfg, 'video_dir', video_dir)
+        tb_dir = f"{task_dir}/tb_logs"
+        setattr(self.cfg, 'tb_dir', tb_dir)
+    def create_loggers(self):
+        ''' create logger
+        '''
+        self.logger = get_logger(self.cfg.log_dir)
+        self.tb_writter = SummaryWriter(log_dir=self.cfg.tb_dir)
+        setattr(self.cfg, 'tb_writter', self.tb_writter)
+    
+    def envs_config(self):
         ''' configure environment
         '''
-        register_env(cfg.id)
+        register_env(self.env_cfg.id)
         envs = [] # numbers of envs, equal to cfg.n_workers
-        for i in range(cfg.n_workers):
-            kwargs = self.env_cfg.__dict__
-            if cfg.render and i == 0: # only render the first env
-                env = gym.make(**kwargs)  # create env
-            else:
-                env = gym.make(**kwargs)
-            if cfg.wrapper is not None:
-                wrapper_class_path = cfg.wrapper.split('.')[:-1]
-                wrapper_class_name = cfg.wrapper.split('.')[-1]
+        for i in range(self.general_cfg.n_workers):
+            env_cfg_dic = self.env_cfg.__dict__
+            kwargs = {k: v for k, v in env_cfg_dic.items() if k not in env_cfg_dic['ignore_params']}
+            env = gym.make(**kwargs)
+            if self.env_cfg.wrapper is not None:
+                wrapper_class_path = self.env_cfg.wrapper.split('.')[:-1]
+                wrapper_class_name = self.env_cfg.wrapper.split('.')[-1]
                 env_wapper = __import__('.'.join(wrapper_class_path), fromlist=[wrapper_class_name])
-                env = getattr(env_wapper, wrapper_class_name)(env, new_step_api=cfg.new_step_api)
+                env = getattr(env_wapper, wrapper_class_name)(env, new_step_api=self.env_cfg.new_step_api)
             envs.append(env)
-        try:  # state dimension
-            n_states = envs[0].observation_space.n  # print(hasattr(env.observation_space, 'n'))
-        except AttributeError:
-            n_states = envs[0].observation_space.shape[0]  # print(hasattr(env.observation_space, 'shape'))
-        try:
-            n_actions = envs[0].action_space.n  # action dimension
-        except AttributeError:
-            n_actions = envs[0].action_space.shape[0]
-            self.logger.info(f"action_bound: {abs(envs[0].action_space.low[0])}")
-            setattr(cfg, 'action_bound', abs(envs[0].action_space.low[0]))
-        setattr(cfg, 'action_space', envs[0].action_space)
-        self.logger.info(f"n_states: {n_states}, n_actions: {n_actions}")  # print info
-        # update to cfg paramters
-        setattr(cfg, 'n_states', n_states)
-        setattr(cfg, 'n_actions', n_actions)
+        setattr(self.cfg, 'obs_space', envs[0].observation_space)
+        setattr(self.cfg, 'action_space', envs[0].action_space)
+        self.logger.info(f"obs_space: {envs[0].observation_space}, n_actions: {envs[0].action_space}")  # print info
         return envs
     
     def evaluate(self, cfg, trainer, env, agent):
@@ -148,30 +158,32 @@ class Main(object):
     def single_run(self,cfg):
         ''' single process run
         '''
-        envs = self.envs_config(cfg)  # configure environment
+        envs = self.envs_config()  # configure environment
         env = envs[0]
-        agent_mod = __import__(f"algos.{cfg.algo_name}.agent", fromlist=['Agent'])
-        agent = agent_mod.Agent(cfg)  # create agent
-        trainer_mod = __import__(f"algos.{cfg.algo_name}.trainer", fromlist=['Trainer'])
+        algo_name = cfg.algo_name
+        agent_mod = importlib.import_module(f"algos.{algo_name}.agent")
+        agent = agent_mod.Agent(self.cfg)  # create agent
+        trainer_mod = importlib.import_module(f"algos.{algo_name}.trainer")
         trainer = trainer_mod.Trainer()  # create trainer
         if cfg.load_checkpoint:
             agent.load_model(f"joyrl-offline/tasks/{cfg.load_path}/models")
         self.logger.info(f"Start {cfg.mode}ing!")
-        self.logger.info(f"Env: {cfg.env_name}, Algorithm: {cfg.algo_name}, Device: {cfg.device}")
         rewards = []  # record rewards for all episodes
         steps = []  # record steps for all episodes
         if cfg.mode.lower() == 'train':
             best_ep_reward = -float('inf')
             for i_ep in range(cfg.train_eps):
-                agent, res = trainer.train_one_episode(env, agent, cfg)
+                agent, res = trainer.train_one_episode(env, agent, self.cfg)
                 ep_reward = res['ep_reward']
                 ep_step = res['ep_step']
                 self.logger.info(f"Episode: {i_ep + 1}/{cfg.train_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
+                for key, value in res.items():
+                    self.tb_writter.add_scalar(tag = f"{cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep + 1)
                 rewards.append(ep_reward)
                 steps.append(ep_step)
                 # for _ in range
                 if (i_ep + 1) % cfg.eval_per_episode == 0:
-                    mean_eval_reward = self.evaluate(cfg, trainer, env, agent)
+                    mean_eval_reward = self.evaluate(self.cfg, trainer, env, agent)
                     if mean_eval_reward >= best_ep_reward:  # update best reward
                         self.logger.info(f"Current episode {i_ep + 1} has the best eval reward: {mean_eval_reward:.3f}")
                         best_ep_reward = mean_eval_reward
@@ -179,7 +191,7 @@ class Main(object):
             # env.close()
         elif cfg.mode.lower() == 'test':
             for i_ep in range(cfg.test_eps):
-                agent, res = trainer.test_one_episode(env, agent, cfg)
+                agent, res = trainer.test_one_episode(env, agent, self.cfg)
                 ep_reward = res['ep_reward']
                 ep_step = res['ep_step']
                 self.logger.info(f"Episode: {i_ep + 1}/{cfg.test_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
@@ -194,7 +206,7 @@ class Main(object):
             trajectories = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'terminals': []}
             for i_ep in range(cfg.collect_eps):
                 print ("i_ep = ", i_ep, "cfg.collect_eps = ", cfg.collect_eps)
-                total_reward, ep_state, ep_action, ep_next_state, ep_reward, ep_terminal = trainer.collect_one_episode(env, agent, cfg)
+                total_reward, ep_state, ep_action, ep_next_state, ep_reward, ep_terminal = trainer.collect_one_episode(env, agent, self.cfg)
                 trajectories['states'] += ep_state
                 trajectories['actions'] += ep_action
                 trajectories['next_states'] += ep_next_state
@@ -209,9 +221,9 @@ class Main(object):
         self.logger.info(f"Finish {cfg.mode}ing!")
         res_dic = {'episodes': range(len(rewards)), 'rewards': rewards, 'steps': steps}
         save_results(res_dic, cfg.res_dir)  # save results
-        save_cfgs(self.cfgs, cfg.task_dir)  # save config
+        save_cfgs(self.save_cfgs, cfg.task_dir)  # save config
         plot_rewards(rewards,
-                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {cfg.id}",
+                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {self.env_cfg.id}",
                      fpath=cfg.res_dir)
     
     def multi_run(self,cfg):
@@ -291,28 +303,35 @@ class Main(object):
         plot_rewards(rewards,
                      title=f"{cfg.mode.lower()}ing curve of {cfg.algo_name} for {cfg.id} with {cfg.n_workers} {cfg.device}",
                      fpath=cfg.res_dir)
-    def merge_cfgs(self):
-        cfg = MergedConfig()  # merge config
-        cfg = merge_class_attrs(cfg, self.cfgs['general_cfg'])
-        cfg = merge_class_attrs(cfg, self.cfgs['algo_cfg'])
-        cfg = merge_class_attrs(cfg, self.cfgs['env_cfg'])
-        return cfg
+    def check_n_workers(self,cfg):
+
+        if cfg.__dict__.get('n_workers',None) is None: # set n_workers to 1 if not set
+            setattr(cfg, 'n_workers', 1)
+        if not isinstance(cfg.n_workers,int) or cfg.n_workers<=0: # n_workers must >0
+            raise ValueError("n_workers must >0!")
+        if cfg.n_workers > mp.cpu_count():
+            raise ValueError("n_workers must less than total numbers of cpus on your machine!")
+        if cfg.n_workers > 1 and cfg.device != 'cpu':
+            raise ValueError("multi process can only support cpu!")
     def run(self) -> None:
-        self.get_default_cfg()  # get default config
-        self.process_yaml_cfg()  # process yaml config
-        cfg = self.merge_cfgs()
-        self.create_dirs(cfg)  # create dirs
-        self.logger = get_logger(cfg.log_dir)  # create the logger
-        self.print_cfgs(cfg)  # print the configuration
-        all_seed(seed=cfg.seed)  # set seed == 0 means no seed
-        check_n_workers(cfg)  # check n_workers
-        if cfg.n_workers == 1:
-            self.single_run(cfg)
+        self.get_default_cfg()  # 获取默认参数
+        self.process_yaml_cfg()  # 处理yaml配置文件参数，并覆盖默认参数
+        self.merge_cfgs() # 合并参数为 self.cfg
+        self.create_dirs()  # 创建文件夹
+        self.create_loggers()  # 创建日志记录器
+        # 打印参数
+        self.print_cfgs(self.general_cfg,name = 'General Configs')  
+        self.print_cfgs(self.algo_cfg,name = 'Algo Configs')
+        self.print_cfgs(self.env_cfg,name = 'Env Configs') 
+        all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
+        self.check_n_workers(self.general_cfg)  # 检查n_workers参数
+        if self.general_cfg.n_workers == 1:
+            self.single_run(self.cfg)
         else:
-            if cfg.mp_backend == 'mp':
-                self.multi_run(cfg)
+            if self.general_cfg.mp_backend == 'mp':
+                self.multi_run(self.cfg)
             else:
-                self.ray_run(cfg)
+                self.ray_run(self.cfg)
 
 
 if __name__ == "__main__":
