@@ -94,11 +94,6 @@ class Main(object):
                 setattr(target_cfg, k, v)
     def create_dirs(self):
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
-<<<<<<< HEAD
-        task_dir = f"{curr_path}/tasks/{cfg.mode.capitalize()}_{cfg.id}_{cfg.algo_name}_{curr_time}"
-        setattr(cfg, 'task_dir', task_dir)
-        Path(cfg.task_dir).mkdir(parents=True, exist_ok=True)
-=======
         if self.env_cfg.id is not None:
             env_name = self.env_cfg.id
         else:
@@ -107,7 +102,6 @@ class Main(object):
         setattr(self.cfg, 'task_dir', task_dir)
         Path(task_dir).mkdir(parents=True, exist_ok=True)
 
->>>>>>> e5666c746edf354a34596702356772cf6338eac6
         model_dir = f"{task_dir}/models"
         setattr(self.cfg, 'model_dir', model_dir)
         res_dir = f"{task_dir}/results"
