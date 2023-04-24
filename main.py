@@ -15,6 +15,7 @@ from gym.wrappers import RecordVideo
 import ray
 from ray.util.queue import Queue
 import importlib
+from utils.stats
 import torch.multiprocessing as mp
 from config.config import GeneralConfig, MergedConfig
 from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, save_traj,save_frames_as_gif
@@ -120,21 +121,25 @@ class Main(object):
         self.logger = get_logger(self.cfg.log_dir)
         self.tb_writter = SummaryWriter(log_dir=self.cfg.tb_dir)
         setattr(self.cfg, 'tb_writter', self.tb_writter)
-    
+    def create_single_env(self):
+        ''' create single env
+        '''
+        env_cfg_dic = self.env_cfg.__dict__
+        kwargs = {k: v for k, v in env_cfg_dic.items() if k not in env_cfg_dic['ignore_params']}
+        env = gym.make(**kwargs)
+        if self.env_cfg.wrapper is not None:
+            wrapper_class_path = self.env_cfg.wrapper.split('.')[:-1]
+            wrapper_class_name = self.env_cfg.wrapper.split('.')[-1]
+            env_wapper = __import__('.'.join(wrapper_class_path), fromlist=[wrapper_class_name])
+            env = getattr(env_wapper, wrapper_class_name)(env, new_step_api=self.env_cfg.new_step_api)
+        return env
     def envs_config(self):
         ''' configure environment
         '''
         register_env(self.env_cfg.id)
         envs = [] # numbers of envs, equal to cfg.n_workers
-        for i in range(self.general_cfg.n_workers):
-            env_cfg_dic = self.env_cfg.__dict__
-            kwargs = {k: v for k, v in env_cfg_dic.items() if k not in env_cfg_dic['ignore_params']}
-            env = gym.make(**kwargs)
-            if self.env_cfg.wrapper is not None:
-                wrapper_class_path = self.env_cfg.wrapper.split('.')[:-1]
-                wrapper_class_name = self.env_cfg.wrapper.split('.')[-1]
-                env_wapper = __import__('.'.join(wrapper_class_path), fromlist=[wrapper_class_name])
-                env = getattr(env_wapper, wrapper_class_name)(env, new_step_api=self.env_cfg.new_step_api)
+        for i in range(self.cfg.n_workers):
+            env = self.create_single_env()
             envs.append(env)
         setattr(self.cfg, 'obs_space', envs[0].observation_space)
         setattr(self.cfg, 'action_space', envs[0].action_space)
@@ -261,8 +266,19 @@ class Main(object):
         '''
         ray.init()
         envs = self.envs_config(cfg)  # configure environment
-        agent_mod = __import__(f"algos.{cfg.algo_name}.agent", fromlist=['Agent'])
-        agent_mod = __import__(f"algos.{cfg.algo_name}.agent", fromlist=['ShareAgent'])
+        algo_name = cfg.algo_name
+        agent_mod = importlib.import_module(f"algos.{algo_name}.agent")
+        agent = agent_mod.Agent.remote(cfg)
+        interactor_mod = importlib.import_module(f"algos.{algo_name}.interactor")
+        data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
+        stat_recorder = 
+        buffer = BufferCreator(cfg)()
+        interactors = []
+        for i in range(cfg.n_workers):
+            interactor = interactor_mod.Interactor.remote(cfg,envs[i],buffer,agent)
+            interactors.append(interactor)
+        data_handler = data_handler_mod.DataHandler.remote(cfg, buffer, agent)
+        
         share_agent = agent_mod.ShareAgent.remote(cfg)  # create agent
         local_agents = [agent_mod.Agent(cfg) for _ in range(cfg.n_workers)]
         worker_mod = __import__(f"algos.{cfg.algo_name}.trainer", fromlist=['WorkerRay'])
