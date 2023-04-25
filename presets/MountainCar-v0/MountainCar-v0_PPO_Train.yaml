@@ -1,0 +1,42 @@
+general_cfg:
+  algo_name: PPO
+  device: cpu
+  env_name: gym
+  eval_eps: 5
+  eval_per_episode: 50
+  load_checkpoint: false
+  load_path: task
+  max_steps: 300
+  mode: train
+  mp_backend: mp
+  n_workers: 1
+  new_step_api: true
+  render: false
+  render_mode: human
+  save_fig: true
+  seed: 3
+  show_fig: false
+  test_eps: 20
+  train_eps: 2000
+  wrapper: null
+algo_cfg:
+  actor_hidden_dim: 64
+  actor_lr: 0.002
+  continuous: false
+  critic_hidden_dim: 64
+  critic_lr: 0.002
+  entropy_coef: 0.01
+  eps_clip: 0.2
+  gamma: 0.99
+  k_epochs: 4
+  ppo_type: clip
+  sgd_batch_size: 128
+  train_batch_size: 512
+env_cfg:
+  id: MountainCar-v0
+  ignore_params:
+  - wrapper
+  - ignore_params
+  new_step_api: true
+  render_mode: null
+  wrapper: null

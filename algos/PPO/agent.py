@@ -21,14 +21,16 @@ class Agent:
         self.gamma = cfg.gamma
         self.device = torch.device(cfg.device)
         self.continuous = cfg.continuous # continuous action space
+        self.n_states = cfg.obs_space.shape[0]
+        self.n_actions = cfg.action_space.n
         self.action_space = cfg.action_space
         if self.continuous:
             self.action_scale = torch.tensor((self.action_space.high - self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
             self.action_bias = torch.tensor((self.action_space.high + self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
-            self.actor = ActorNormal(cfg.n_states,cfg.n_actions, hidden_dim = cfg.actor_hidden_dim).to(self.device)
+            self.actor = ActorNormal(self.n_states, self.n_actions, hidden_dim = cfg.actor_hidden_dim).to(self.device)
         else:
-            self.actor = ActorSoftmax(cfg.n_states,cfg.n_actions, hidden_dim = cfg.actor_hidden_dim).to(self.device)
-        self.critic = Critic(cfg.n_states,1,hidden_dim=cfg.critic_hidden_dim).to(self.device)
+            self.actor = ActorSoftmax(self.n_states,self.n_actions, hidden_dim = cfg.actor_hidden_dim).to(self.device)
+        self.critic = Critic(self.n_states,1,hidden_dim=cfg.critic_hidden_dim).to(self.device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=cfg.actor_lr)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=cfg.critic_lr)
         self.memory = PGReplay()
@@ -172,6 +174,8 @@ class Agent:
                     actor_loss.backward()
                     critic_loss.backward()
                     # tot_loss.backward()
+                    torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 0.5)
+                    torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)
                     self.actor_optimizer.step()
                     self.critic_optimizer.step()
                     
