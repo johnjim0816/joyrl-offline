@@ -16,5 +16,5 @@ class EnvConfig(DefaultConfig):
         self.id = "CliffWalking-v0" # 环境名称
         self.new_step_api = True # 是否使用新的step api
         self.render_mode = None # 渲染模式, None, rgb_array, human
-        self.wrapper = None # 
+        self.wrapper = 'envs.wrappers.CliffWalkingWapper2' # 
         self.ignore_params = ["wrapper", "ignore_params"]

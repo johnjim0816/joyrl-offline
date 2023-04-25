@@ -20,6 +20,7 @@ class AlgoConfig(DefaultConfig):
         self.epsilon_decay = 500  # epsilon 衰减率
         self.gamma = 0.95  # 奖励折扣因子
         self.lr = 0.0001  # 学习率
+        self.buffer_type = "REPLAY_QUE"
         self.buffer_size = 100000  # buffer 大小
         self.batch_size = 64  # batch size
         self.target_update = 4  # target_net 更新频率

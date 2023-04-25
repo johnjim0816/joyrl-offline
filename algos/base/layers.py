@@ -35,7 +35,7 @@ def embedding_layer(input_size, layer_cfg: LayerConfig):
     class EmbeddingLayer(nn.Module):
         def __init__(self, n_embeddings, embedding_dim):
             super(EmbeddingLayer, self).__init__()
-            self.layer = nn.Embedding(n_embeddings=n_embeddings, embedding_dim=embedding_dim)
+            self.layer = nn.Embedding(num_embeddings=n_embeddings[0], embedding_dim=embedding_dim[0])
 
         def forward(self, x: torch.Tensor):
             # if x.dtype != torch.int:
