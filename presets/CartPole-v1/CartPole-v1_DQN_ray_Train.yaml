@@ -1,10 +1,10 @@
 general_cfg:
-  algo_name: DQN
+  algo_name: DQN_new
   device: cpu
-  env_name: CartPole-v1
+  env_name: gym
   mode: train
-  mp_backend: ray # 多线程框架，ray或者mp(multiprocessing)，默认mp
-  n_workers: 2 # number of workers for parallel training
+  mp_backend: ray 
+  n_workers: 2 
   load_checkpoint: false
   load_path: Train_CartPole-v1_DQN_20221026-054757
   max_steps: 200
@@ -16,15 +16,13 @@ general_cfg:
 algo_cfg:
   value_layers:
     - layer_type: linear
-      layer_dim: ['n_states',256]
+      layer_dim: [256]
       activation: relu
     - layer_type: linear
-      layer_dim: [256,256]
+      layer_dim: [256]
       activation: relu
-    - layer_type: linear
-      layer_dim: [256,'n_actions']
-      activation: none
   batch_size: 64
+  buffer_type: REPLAY_QUE
   buffer_size: 100000
   epsilon_decay: 500
   epsilon_end: 0.01
@@ -32,3 +30,7 @@ algo_cfg:
   gamma: 0.95
   lr: 0.0001
   target_update: 4
+env_cfg:
+  id: CartPole-v1
+  new_step_api: true
+  render_mode: null

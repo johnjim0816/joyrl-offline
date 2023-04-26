@@ -5,10 +5,13 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-04-24 22:28:30
+LastEditTime: 2023-04-26 23:21:42
 Discription: 
 '''
+import random
+import math
 import ray
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -16,10 +19,11 @@ from algos.base.agents import BaseAgent
 from algos.base.buffers import BufferCreator
 from algos.base.agents import BaseAgent
 from algos.base.networks import ValueNetwork
+
 @ray.remote
 class Agent(BaseAgent):
     def __init__(self,cfg) -> None:
-        super(Agent, self ).__init__(cfg)
+        super(Agent, self).__init__(cfg)
         self.cfg = cfg
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
@@ -77,7 +81,6 @@ class Agent(BaseAgent):
         return action
     def update(self, **kwargs):
         # 从 replay buffer 中采样
-        
         states = kwargs.get('states')
         actions = kwargs.get('actions')
         next_states = kwargs.get('next_states')
@@ -91,7 +94,6 @@ class Agent(BaseAgent):
         target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
         # 计算损失
         self.loss = nn.MSELoss()(q_values, target_q_values)
-
         self.optimizer.zero_grad()
         self.loss.backward()
         # clip 防止梯度爆炸
