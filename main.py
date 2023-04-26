@@ -15,7 +15,7 @@ from gym.wrappers import RecordVideo
 import ray
 from ray.util.queue import Queue
 import importlib
-from utils.stats
+# from utils.stats
 import torch.multiprocessing as mp
 from config.config import GeneralConfig, MergedConfig
 from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, save_traj,save_frames_as_gif
@@ -271,7 +271,7 @@ class Main(object):
         agent = agent_mod.Agent.remote(cfg)
         interactor_mod = importlib.import_module(f"algos.{algo_name}.interactor")
         data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
-        stat_recorder = 
+        # stat_recorder = 
         buffer = BufferCreator(cfg)()
         interactors = []
         for i in range(cfg.n_workers):

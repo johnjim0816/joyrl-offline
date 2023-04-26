@@ -26,7 +26,7 @@ class AlgoConfig(DefaultConfig):
         self.target_update = 4  # target_net 更新频率
         # 神经网络层配置
         self.value_layers = [
-            {'layer_type': 'embed', 'n_embeddings': [64], 'embedding_dim': [16]},
-            {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
-            {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
+            # {'layer_type': 'embed', 'n_embeddings':600, 'embedding_dim': 8,'activation': 'none'},
+            {'layer_type': 'Linear', 'layer_dim': [256], 'activation': 'ReLU'},
+            {'layer_type': 'Linear', 'layer_dim': [256], 'activation': 'ReLU'},
         ]

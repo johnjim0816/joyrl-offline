@@ -598,75 +598,233 @@ class CliffWalkingWapper2(gym.Wrapper):
             self.render()
         # {"prob": 1}
         return new_obs
-    def draw_x_line(self, y, x0, x1, color='gray'):
-        assert x1 > x0
-        self.t.color(color)
-        self.t.setheading(0)    # 设置为一个方向
-        self.t.up()             # 抬笔
-        self.t.goto(x0, y)      # 将画笔移动到(x0,y)
-        self.t.down()           # 落笔
-        self.t.forward(x1 - x0) # 向前画图的距离
 
-    def draw_y_line(self, x, y0, y1, color='gray'):
-        assert y1 > y0
-        self.t.color(color)
-        self.t.setheading(90)
-        self.t.up()
-        self.t.goto(x, y0)
-        self.t.down()
-        self.t.forward(y1 - y0)
+class blackjackwrapper(gym.Wrapper):
+    def __init__(self, env: Env, new_step_api=True):
+        gym.Wrapper.__init__(self, env, new_step_api=True)
+        low = np.array([1,1,0])
+        high = np.array([33,11,2])
+        self.observation_space = Box(low=low,high=high,dtype=np.float32)
+        self.deck = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
+    # def step(self,action):
+    #     assert self.action_space.contains(action)
+    #     if action:  # hit:add a card to players hand and return
+    #         self.player.append(draw_card)
 
-    def draw_box(self, x, y, fillcolor='', line_color='gray'):
-        self.t.up()
-        self.t.goto(x * self.unit, y * self.unit)
-        self.t.color(line_color)
-        self.t.fillcolor(fillcolor)     # 设置填充颜色
-        self.t.setheading(90)
-        self.t.down()
-        self.t.begin_fill()             # 开始填充
-        for i in range(4):
-            self.t.forward(self.unit)
-            self.t.right(90)
-        self.t.end_fill()               # 结束填充
+    def get_obs(self):
+        return np.array([self.sum_hand(self.player), self.dealer[0], self.usable_ace(self.player)])
+    def reset(self,
+        seed: Optional[int] = None,
+        options: Optional[dict] = None,
+        ):
+        super().reset(seed=seed)
+        self.low = np.array([1,1,1,1,0])
+        self.high = np.array([11,11,11,11,2])
+        self.state = np.random.randint(self.low, self.high, size=(5,)).astype(np.float32)
+        self.dealer = list(self.state[0:2])
+        self.player = list(self.state[2:4])
 
-    def move_player(self, x, y):
-        self.t.up()
-        self.t.setheading(90)
-        self.t.fillcolor('red')
-        self.t.goto((x + 0.5) * self.unit, (y + 0.5) * self.unit)
+        _, dealer_card_value, _ = self.get_obs()
 
+        suits = ["C", "D", "H", "S"]
+        self.dealer_top_card_suit = self.np_random.choice(suits)
+
+        if dealer_card_value == 1:
+            self.dealer_top_card_value_str = "A"
+        elif dealer_card_value == 10:
+            self.dealer_top_card_value_str = self.np_random.choice(["J", "Q", "K"])
+        else:
+            self.dealer_top_card_value_str = str(dealer_card_value)
+
+        if self.render_mode == "human":
+            self.render()
+        return self.get_obs()
+    def cmp(self,a, b):
+        return float(a > b) - float(a < b)
+    
+    def draw_card(self,np_random):
+        return int(np_random.choice(self.deck))
+
+
+    def draw_hand(self,np_random):
+        return [self.draw_card(np_random), self.draw_card(np_random)]
+
+
+    def usable_ace(self,hand):  # Does this hand have a usable ace?
+        return 1 in hand and sum(hand) + 10 <= 21
+
+
+    def sum_hand(self,hand):  # Return current hand total
+        if self.usable_ace(hand):
+            return sum(hand) + 10
+        return sum(hand)
+
+    def is_bust(self,hand):  # Is this hand a bust?
+        return self.sum_hand(hand) > 21
+
+    def score(self,hand):  # What is the score of this hand (0 if bust)
+        return 0 if self.is_bust(hand) else self.sum_hand(hand)
+
+    def is_natural(self,hand):  # Is this hand a natural blackjack?
+        return sorted(hand) == [1, 10]
+    def step(self, action):
+        assert self.action_space.contains(action)
+        if action:  # hit: add a card to players hand and return
+            self.player.append(self.draw_card(self.np_random))
+            if self.is_bust(self.player):
+                terminated = True
+                reward = -1.0
+            else:
+                terminated = False
+                reward = 0.0
+        else:  # stick: play out the dealers hand, and score
+            terminated = True
+            while self.sum_hand(self.dealer) < 17:
+                self.dealer.append(self.draw_card(self.np_random))
+            reward = self.cmp(self.score(self.player), self.score(self.dealer))
+            if self.sab and self.is_natural(self.player) and not self.is_natural(self.dealer):
+                # Player automatically wins. Rules consistent with S&B
+                reward = 1.0
+            elif (
+                not self.sab
+                and self.natural
+                and self.is_natural(self.player)
+                and reward == 1.0
+            ):
+                # Natural gives extra points, but doesn't autowin. Legacy implementation
+                reward = 1.5
+
+        if self.render_mode == "human":
+            self.render()
+        return (self.get_obs(), reward, terminated, False, {})
     def render(self):
-        if self.t == None:
-            self.t = turtle.Turtle()
-            self.wn = turtle.Screen()
-            self.wn.setup(self.unit * self.max_x + 100,
-                          self.unit * self.max_y + 100)     # 设置主窗体的大小和位置，四个参数值，最后两个none的话就是屏幕水平中央
-            self.wn.setworldcoordinates(0, 0, self.unit * self.max_x,       # 用户自定义坐标系
-                                        self.unit * self.max_y)
-            self.t.shape('circle')      # 将Turtle形状设置为具有给定名称的形状
-            self.t.width(2)             # 线的粗细
-            self.t.speed(0)             # 画线的速度
-            self.t.color('gray')
-            # 画边线
-            for _ in range(2):
-                self.t.forward(self.max_x * self.unit)
-                self.t.left(90)
-                self.t.forward(self.max_y * self.unit)
-                self.t.left(90)
-            # 划竖线
-            for i in range(1, self.max_y):
-                self.draw_x_line(
-                    y=i * self.unit, x0=0, x1=self.max_x * self.unit)
-            # 画横线
-            for i in range(1, self.max_x):
-                self.draw_y_line(
-                    x=i * self.unit, y0=0, y1=self.max_y * self.unit)
-            # 画黑色的块
-            for i in range(1, self.max_x - 1):
-                self.draw_box(i, 0, 'black')
-            self.draw_box(self.max_x - 1, 0, 'yellow')
-            self.t.shape('turtle')
+        if self.render_mode is None:
+            gym.logger.warn(
+                "You are calling render method without specifying any render mode. "
+                "You can specify the render_mode at initialization, "
+                f'e.g. gym("{self.spec.id}", render_mode="rgb_array")'
+            )
+            return
 
-        x_pos = self.s % self.max_x
-        y_pos = self.max_y - 1 - int(self.s / self.max_x)
-        self.move_player(x_pos, y_pos)
+        try:
+            import pygame
+        except ImportError:
+            raise DependencyNotInstalled(
+                "pygame is not installed, run `pip install gym[toy_text]`"
+            )
+
+        player_sum, dealer_card_value, usable_ace = self.get_obs()
+        player_sum = int(player_sum)
+        dealer_card_value = int(dealer_card_value)
+        usable_ace = int(usable_ace)
+        screen_width, screen_height = 600, 500
+        card_img_height = screen_height // 3
+        card_img_width = int(card_img_height * 142 / 197)
+        spacing = screen_height // 20
+        try:
+            self.dealer_top_card_value_str = int(float(self.dealer_top_card_value_str))
+        except ValueError:
+            self.dealer_top_card_value_str = self.dealer_top_card_value_str
+        bg_color = (7, 99, 36)
+        white = (255, 255, 255)
+
+        if not hasattr(self, "screen"):
+            pygame.init()
+            if self.render_mode == "human":
+                pygame.display.init()
+                self.screen = pygame.display.set_mode((screen_width, screen_height))
+            else:
+                pygame.font.init()
+                self.screen = pygame.Surface((screen_width, screen_height))
+
+        if not hasattr(self, "clock"):
+            self.clock = pygame.time.Clock()
+
+        self.screen.fill(bg_color)
+
+        def get_image(path):
+            cwd = os.path.dirname(__file__)
+            image = pygame.image.load(os.path.join(cwd, path))
+            return image
+
+        def get_font(path, size):
+            cwd = os.path.dirname(__file__)
+            font = pygame.font.Font(os.path.join(cwd, path), size)
+            return font
+
+        small_font = get_font(
+            os.path.join("font", "Minecraft.ttf"), screen_height // 15
+        )
+        dealer_text = small_font.render(
+            "Dealer: " + str(dealer_card_value), True, white
+        )
+        dealer_text_rect = self.screen.blit(dealer_text, (spacing, spacing))
+
+        def scale_card_img(card_img):
+            return pygame.transform.scale(card_img, (card_img_width, card_img_height))
+
+        dealer_card_img = scale_card_img(
+            get_image(
+                os.path.join(
+                    "img",
+                    f"{self.dealer_top_card_suit}{self.dealer_top_card_value_str}.png",
+                )
+            )
+        )
+        dealer_card_rect = self.screen.blit(
+            dealer_card_img,
+            (
+                screen_width // 2 - card_img_width - spacing // 2,
+                dealer_text_rect.bottom + spacing,
+            ),
+        )
+
+        hidden_card_img = scale_card_img(get_image(os.path.join("img", "Card.png")))
+        self.screen.blit(
+            hidden_card_img,
+            (
+                screen_width // 2 + spacing // 2,
+                dealer_text_rect.bottom + spacing,
+            ),
+        )
+
+        player_text = small_font.render("Player", True, white)
+        player_text_rect = self.screen.blit(
+            player_text, (spacing, dealer_card_rect.bottom + 1.5 * spacing)
+        )
+
+        large_font = get_font(os.path.join("font", "Minecraft.ttf"), screen_height // 6)
+        player_sum_text = large_font.render(str(player_sum), True, white)
+        player_sum_text_rect = self.screen.blit(
+            player_sum_text,
+            (
+                screen_width // 2 - player_sum_text.get_width() // 2,
+                player_text_rect.bottom + spacing,
+            ),
+        )
+
+        if usable_ace:
+            usable_ace_text = small_font.render("usable ace", True, white)
+            self.screen.blit(
+                usable_ace_text,
+                (
+                    screen_width // 2 - usable_ace_text.get_width() // 2,
+                    player_sum_text_rect.bottom + spacing // 2,
+                ),
+            )
+        if self.render_mode == "human":
+            pygame.event.pump()
+            pygame.display.update()
+            self.clock.tick(self.metadata["render_fps"])
+        else:
+            return np.transpose(
+                np.array(pygame.surfarray.pixels3d(self.screen)), axes=(1, 0, 2)
+            )
+
+    def close(self):
+        if hasattr(self, "screen"):
+            import pygame
+
+            pygame.display.quit()
+            pygame.quit()
+

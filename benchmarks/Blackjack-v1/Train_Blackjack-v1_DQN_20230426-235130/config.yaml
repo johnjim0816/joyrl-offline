@@ -1,0 +1,48 @@
+general_cfg:
+  algo_name: DQN
+  device: cuda
+  env_name: gym
+  eval_eps: 10
+  eval_per_episode: 5
+  load_checkpoint: false
+  load_path: Train_CartPole-v1_DQN_20230419-224210
+  max_steps: 50
+  mode: train
+  mp_backend: mp
+  n_workers: 1
+  new_step_api: true
+  render: true
+  render_mode: human
+  save_fig: true
+  seed: 0
+  show_fig: false
+  test_eps: 200
+  train_eps: 10000
+  wrapper: envs.wrappers.blackjackwrapper
+algo_cfg:
+  batch_size: 64
+  buffer_size: 100000
+  buffer_type: REPLAY_QUE
+  epsilon_decay: 500
+  epsilon_end: 0.01
+  epsilon_start: 0.95
+  gamma: 0.95
+  lr: 0.0001
+  target_update: 4
+  value_layers:
+  - activation: ReLU
+    layer_dim:
+    - 256
+    layer_type: Linear
+  - activation: ReLU
+    layer_dim:
+    - 256
+    layer_type: Linear
+env_cfg:
+  id: Blackjack-v1
+  ignore_params:
+  - wrapper
+  - ignore_params
+  new_step_api: true
+  render_mode: null
+  wrapper: envs.wrappers.blackjackwrapper
