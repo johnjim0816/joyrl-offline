@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-09 20:25:52
 @LastEditor: John
-LastEditTime: 2022-12-06 22:50:45
+LastEditTime: 2023-04-23 13:20:08
 @Discription:
 @Environment: python 3.7.7
 '''
@@ -140,6 +140,8 @@ class Agent:
         '''
         self.n_states = cfg.n_states
         self.n_actions = cfg.n_actions
+        self.states_dim = cfg.n_states * 2
+        self.actions_dim = cfg.n_actions
         self.action_space = cfg.action_space  # env 中的 action_space
         self.ou_noise = OUNoise(self.action_space)  # 实例化 构造 Ornstein–Uhlenbeck 噪声的类
         self.batch_size = cfg.batch_size
@@ -148,10 +150,10 @@ class Agent:
         self.sample_count = 0  # 记录采样动作的次数
         self.update_flag = False  # 标记是否更新网络
         self.device = torch.device(cfg.device)
-        self.critic = Critic(self.n_states, self.n_actions, hidden_dim=cfg.critic_hidden_dim).to(self.device)
-        self.target_critic = Critic(self.n_states, self.n_actions, hidden_dim=cfg.critic_hidden_dim).to(self.device)
-        self.actor = Actor(self.n_states, self.n_actions, hidden_dim=cfg.actor_hidden_dim).to(self.device)
-        self.target_actor = Actor(self.n_states, self.n_actions, hidden_dim=cfg.actor_hidden_dim).to(self.device).to(
+        self.critic = Critic(self.states_dim, self.actions_dim, hidden_dim=cfg.critic_hidden_dim).to(self.device)
+        self.target_critic = Critic(self.states_dim, self.actions_dim, hidden_dim=cfg.critic_hidden_dim).to(self.device)
+        self.actor = Actor(self.states_dim, self.actions_dim, hidden_dim=cfg.actor_hidden_dim).to(self.device)
+        self.target_actor = Actor(self.states_dim, self    .actions_dim, hidden_dim=cfg.actor_hidden_dim).to(self.device).to(
             self.device)
         ## 将 critc 网络的参数赋值给target critic 网络
         for target_param, param in zip(self.target_critic.parameters(), self.critic.parameters()):
