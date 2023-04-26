@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-09 20:25:52
 @LastEditor: John
-LastEditTime: 2023-04-23 13:20:08
+LastEditTime: 2023-04-17 16:59:45
 @Discription:
 @Environment: python 3.7.7
 '''
@@ -153,7 +153,7 @@ class Agent:
         self.critic = Critic(self.states_dim, self.actions_dim, hidden_dim=cfg.critic_hidden_dim).to(self.device)
         self.target_critic = Critic(self.states_dim, self.actions_dim, hidden_dim=cfg.critic_hidden_dim).to(self.device)
         self.actor = Actor(self.states_dim, self.actions_dim, hidden_dim=cfg.actor_hidden_dim).to(self.device)
-        self.target_actor = Actor(self.states_dim, self    .actions_dim, hidden_dim=cfg.actor_hidden_dim).to(self.device).to(
+        self.target_actor = Actor(self.states_dim, self.actions_dim, hidden_dim=cfg.actor_hidden_dim).to(self.device).to(
             self.device)
         ## 将 critc 网络的参数赋值给target critic 网络
         for target_param, param in zip(self.target_critic.parameters(), self.critic.parameters()):
