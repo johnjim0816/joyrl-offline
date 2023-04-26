@@ -1,0 +1,52 @@
+general_cfg:
+  algo_name: DQN
+  device: cuda
+  env_name: gym
+  eval_eps: 10
+  eval_per_episode: 5
+  load_checkpoint: false
+  load_path: Train_CliffWalking-v0_DQN_20230426-191426
+  max_steps: 1000
+  mode: train
+  mp_backend: mp
+  n_workers: 1
+  new_step_api: false
+  render: true
+  render_mode: human
+  save_fig: true
+  seed: 0
+  show_fig: false
+  test_eps: 200
+  train_eps: 1000
+  wrapper: null
+algo_cfg:
+  batch_size: 32
+  buffer_size: 100000
+  buffer_type: REPLAY_QUE
+  epsilon_decay: 500
+  epsilon_end: 0.01
+  epsilon_start: 0.95
+  gamma: 0.95
+  lr: 0.001
+  target_update: 4
+  value_layers:
+  - activation: none
+    embedding_dim: 8
+    layer_type: embed
+    n_embeddings: 600
+  - activation: ReLU
+    layer_dim:
+    - 256
+    layer_type: Linear
+  - activation: ReLU
+    layer_dim:
+    - 256
+    layer_type: Linear
+env_cfg:
+  id: Taxi-v3
+  ignore_params:
+  - wrapper
+  - ignore_params
+  new_step_api: false
+  render_mode: null
+  wrapper: envs.wrappers.CliffWalkingWapper
