@@ -270,7 +270,7 @@ class Main(object):
         envs = self.envs_config()  # configure environment
         algo_name = cfg.algo_name
         agent_mod = importlib.import_module(f"algos.{algo_name}.agent")
-        agent = agent_mod.Agent(cfg).remote()  # create agent
+        agent = agent_mod.Agent(cfg)  # create agent
         interactor_mod = importlib.import_module(f"algos.{algo_name}.interactor")
         data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
         stats_recorder = StatsRecorder.remote(cfg)
@@ -288,6 +288,7 @@ class Main(object):
                 break
             ready_tasks, pending_tasks = ray.wait(pending_tasks, num_returns=cfg.n_workers)
             interaction_data = ray.get(ready_tasks)
+            print(interaction_data)
             data_handler.update_agent.remote()
             interactors = []
             for i in range(cfg.n_workers):

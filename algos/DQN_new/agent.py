@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-04-26 23:21:42
+LastEditTime: 2023-04-27 12:44:01
 Discription: 
 '''
 import random
@@ -20,7 +20,7 @@ from algos.base.buffers import BufferCreator
 from algos.base.agents import BaseAgent
 from algos.base.networks import ValueNetwork
 
-@ray.remote
+
 class Agent(BaseAgent):
     def __init__(self,cfg) -> None:
         super(Agent, self).__init__(cfg)
