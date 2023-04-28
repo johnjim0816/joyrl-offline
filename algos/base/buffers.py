@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:34:27
 LastEditor: JiangJi
-LastEditTime: 2023-04-19 02:02:52
+LastEditTime: 2023-04-28 23:40:56
 Discription: 
 '''
 import random
@@ -60,7 +60,7 @@ class ReplayBufferQue:
             _type_: _description_
         '''
         if batch_size > len(self.buffer): # 如果小批量大于经验池的容量，则取经验池的容量
-            batch_size = len(self.buffer)
+            return None
         if sequential: # sequential sampling
             rand = random.randint(0, len(self.buffer) - batch_size)
             batch = [self.buffer[i] for i in range(rand, rand + batch_size)]

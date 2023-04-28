@@ -17,7 +17,6 @@ import ray
 import asyncio
 from ray.util.queue import Queue
 import importlib
-from utils.stats import StatsRecorder
 from algos.base.buffers import BufferCreator
 import torch.multiprocessing as mp
 from config.config import GeneralConfig, MergedConfig
@@ -267,67 +266,36 @@ class Main(object):
     async def ray_run(self,cfg):
         ''' 使用Ray并行化强化学习算法
         '''
+        from framework.interactors import Interactor
+        from framework.collectors import Collector
+        from framework.learners import Learner
+        from framework.stats import StatsRecorder
+        from framework.dataserver import DataServer
         ray.shutdown()
         ray.init()
         envs = self.envs_config()  # configure environment
         algo_name = cfg.algo_name
-        agent_mod = importlib.import_module(f"algos.{algo_name}.agent")
-        agent = agent_mod.Agent(cfg)  # create agent
-        interactor_mod = importlib.import_module(f"algos.{algo_name}.interactor")
+        policy_mod = importlib.import_module(f"algos.{algo_name}.policy")
+         # create agent
         data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
+        policy = policy_mod.Policy(cfg) 
+        data_handler = data_handler_mod.DataHandler(cfg)
+        interactors = []
+        for i in range(cfg.n_workers):
+            interactor = Interactor.remote(cfg,id = i,env = envs[i],policy = policy)
+            interactors.append(interactor)
+        collector = Collector.remote(cfg,data_handler = data_handler)
+        learner = Learner.remote(cfg,policy=policy)
         stats_recorder = StatsRecorder.remote(cfg)
-        global_var_recorder = GlobalVarRecorder.remote() # 全局变量记录器
-        data_handler = data_handler_mod.DataHandler.remote(cfg, agent)
-        interactors = [Interactor.remote() for _ in range(n_workers)]
-        collector = Collector.remote()
-        learner = Learner.remote()
-        stats_recorder = StatsRecorder.remote()
-
-        data_server = DataServer.remote(max_episodes=100)
-
+        data_server = DataServer.remote(cfg)
+        data_server.init_default_policy_params.remote(policy.get_params())
         interactor_tasks = [interactor.run.remote(data_server) for interactor in interactors]
-        collector_task = collector.run.remote(data_server, learner)
-        learner_task = learner.run.remote(data_server, interactors)
+        collector_task = collector.run.remote(data_server)
+        learner_task = learner.run.remote(data_server)
         stats_recorder_task = stats_recorder.run.remote(data_server)
 
         await asyncio.gather(*interactor_tasks, collector_task, learner_task, stats_recorder_task)
 
-        
-            
-        # share_agent = agent_mod.ShareAgent.remote(cfg)  # create agent
-        # local_agents = [agent_mod.Agent(cfg) for _ in range(cfg.n_workers)]
-        # worker_mod = __import__(f"algos.{cfg.algo_name}.trainer", fromlist=['WorkerRay'])
-        # if cfg.load_checkpoint:
-        #     ray.get(share_agent.load_model.remote(f"tasks/{cfg.load_path}/models"))
-        #     for local_agent in local_agents:
-        #         local_agent.load_model(f"tasks/{cfg.load_path}/models")
-        # self.logger.info(f"Start {cfg.mode}ing!")
-        # self.logger.info(f"Env: {cfg.env_name}, Algorithm: {cfg.algo_name}, Device: {cfg.device}")
-        # global_r_que = Queue()
-        # # print(f'cfg.n_workers:{cfg.n_workers}')
-        # global_var_recorder = GlobalVarRecorder.remote() # 全局变量记录器
-        # ray_workers = [worker_mod.WorkerRay.remote(cfg, i, share_agent, envs[i], local_agents[i], global_r_que,global_data = global_var_recorder) for i in range(cfg.n_workers)]
-        # task_ids = [w.run.remote() for w in ray_workers]
-        # # 等待所有任务完成, 注意：ready_ids, task_ids变量不能随意改。
-        # while len(task_ids) > 0:
-        #     ready_ids, task_ids = ray.wait(task_ids)
-        # rewards = []
-        # global_r_que_length = len(global_r_que)
-        # for _ in range(global_r_que_length):
-        #     rewards.append(global_r_que.get())
-        # # sorted_dict_list形如[{episode：reward}, {episode：reward} ...]。将{episode：reward}按照episode顺序排序
-        # sorted_dict_list = sorted(rewards, key=lambda x: list(x.keys())[0])
-        # # 取出value，形成数组
-        # rewards = [list(d.values())[0] for d in sorted_dict_list]
-
-        # ray.shutdown()
-        # self.logger.info(f"Finish {cfg.mode}ing!")
-        # res_dic = {'episodes': range(len(rewards)), 'rewards': rewards}
-        # save_results(res_dic, cfg.res_dir)  # save results
-        # save_cfgs(self.cfgs, cfg.task_dir)  # save config
-        # plot_rewards(rewards,
-        #              title=f"{cfg.mode.lower()}ing curve of {cfg.algo_name} for {cfg.id} with {cfg.n_workers} {cfg.device}",
-        #              fpath=cfg.res_dir)
     def check_n_workers(self,cfg):
 
         if cfg.__dict__.get('n_workers',None) is None: # set n_workers to 1 if not set
@@ -356,7 +324,7 @@ class Main(object):
             if self.general_cfg.mp_backend == 'mp':
                 self.multi_run(self.cfg)
             else:
-                self.ray_run(self.cfg)
+                asyncio.run(self.ray_run(self.cfg))
 
 
 if __name__ == "__main__":

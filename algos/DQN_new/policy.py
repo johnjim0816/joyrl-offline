@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-04-27 12:44:01
+LastEditTime: 2023-04-29 00:28:51
 Discription: 
 '''
 import random
@@ -15,15 +15,14 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from algos.base.agents import BaseAgent
+from algos.base.agents import BasePolicy
 from algos.base.buffers import BufferCreator
-from algos.base.agents import BaseAgent
 from algos.base.networks import ValueNetwork
 
 
-class Agent(BaseAgent):
+class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
-        super(Agent, self).__init__(cfg)
+        super(Policy, self).__init__(cfg)
         self.cfg = cfg
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
@@ -36,7 +35,6 @@ class Agent(BaseAgent):
         self.epsilon_decay = cfg.epsilon_decay
         self.batch_size = cfg.batch_size
         self.target_update = cfg.target_update
-        self.memory = BufferCreator(cfg)()
         self.update_step = 0
         self.create_graph()
     def create_graph(self):
@@ -50,7 +48,7 @@ class Agent(BaseAgent):
     def create_optm(self):
         self.optm = optim.Adam(self.policy_net.parameters(), lr=self.lr)
         
-    def sample_action(self, state):
+    def get_action(self, state):
         ''' 采样动作
         Args:
             state (array): 状态
@@ -81,11 +79,18 @@ class Agent(BaseAgent):
         return action
     def update(self, **kwargs):
         # 从 replay buffer 中采样
+        # print("update")
         states = kwargs.get('states')
         actions = kwargs.get('actions')
         next_states = kwargs.get('next_states')
         rewards = kwargs.get('rewards')
         dones = kwargs.get('dones')
+        states = torch.tensor(states, device=self.device, dtype=torch.float32)
+        actions = torch.tensor(actions, device=self.device, dtype=torch.int64).unsqueeze(dim=1)
+        next_states = torch.tensor(next_states, device=self.device, dtype=torch.float32)
+        rewards = torch.tensor(rewards, device=self.device, dtype=torch.float32).unsqueeze(dim=1)
+        dones = torch.tensor(dones, device=self.device, dtype=torch.float32).unsqueeze(dim=1)
+        
         # 计算当前状态的 Q 值
         q_values = self.policy_net(states).gather(1, actions)
         # 计算下一个状态的最大 Q 值
@@ -94,9 +99,11 @@ class Agent(BaseAgent):
         target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
         # 计算损失
         self.loss = nn.MSELoss()(q_values, target_q_values)
+        
         self.optimizer.zero_grad()
         self.loss.backward()
         # clip 防止梯度爆炸
+
         for param in self.policy_net.parameters():
             param.grad.data.clamp_(-1, 1)
         self.optimizer.step()

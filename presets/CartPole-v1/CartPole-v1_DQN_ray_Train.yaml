@@ -7,12 +7,12 @@ general_cfg:
   n_workers: 2 
   load_checkpoint: false
   load_path: Train_CartPole-v1_DQN_20221026-054757
-  max_steps: 200
+  max_step: 200
   save_fig: true
   seed: 1
   show_fig: false
   test_eps: 10
-  train_eps: 400
+  max_epsiode: 400
 algo_cfg:
   value_layers:
     - layer_type: linear
