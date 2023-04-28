@@ -8,11 +8,13 @@ sys.path.append(parent_path)  # add path to system path
 
 import argparse
 import yaml
+
 from pathlib import Path
 import datetime
 import gym
 from gym.wrappers import RecordVideo
 import ray
+import asyncio
 from ray.util.queue import Queue
 import importlib
 from utils.stats import StatsRecorder
@@ -262,7 +264,7 @@ class Main(object):
                      title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {cfg.id}",
                      fpath=cfg.res_dir)
         
-    def ray_run(self,cfg):
+    async def ray_run(self,cfg):
         ''' 使用Ray并行化强化学习算法
         '''
         ray.shutdown()
@@ -276,25 +278,19 @@ class Main(object):
         stats_recorder = StatsRecorder.remote(cfg)
         global_var_recorder = GlobalVarRecorder.remote() # 全局变量记录器
         data_handler = data_handler_mod.DataHandler.remote(cfg, agent)
-        interactors = []
-        for i in range(cfg.n_workers):
-            interactor = interactor_mod.Interactor.remote(i, cfg,envs[i],agent,data_handler,global_var_recorder)
-            interactors.append(interactor)
-        
-        pending_tasks = [interactor.train_one_episode.remote() for interactor in interactors]
-        while True:
-            global_ep = ray.get(global_var_recorder.read_episode.remote())
-            if global_ep >= cfg.train_eps:
-                break
-            ready_tasks, pending_tasks = ray.wait(pending_tasks, num_returns=cfg.n_workers)
-            interaction_data = ray.get(ready_tasks)
-            print(interaction_data)
-            data_handler.update_agent.remote()
-            interactors = []
-            for i in range(cfg.n_workers):
-                interactor = interactor_mod.Interactor.remote(i, cfg,envs[i],agent,data_handler,global_var_recorder)
-                interactors.append(interactor)
-            pending_tasks.extend([interactor.train_one_episode.remote() for interactor in interactors])
+        interactors = [Interactor.remote() for _ in range(n_workers)]
+        collector = Collector.remote()
+        learner = Learner.remote()
+        stats_recorder = StatsRecorder.remote()
+
+        data_server = DataServer.remote(max_episodes=100)
+
+        interactor_tasks = [interactor.run.remote(data_server) for interactor in interactors]
+        collector_task = collector.run.remote(data_server, learner)
+        learner_task = learner.run.remote(data_server, interactors)
+        stats_recorder_task = stats_recorder.run.remote(data_server)
+
+        await asyncio.gather(*interactor_tasks, collector_task, learner_task, stats_recorder_task)
 
         
             
