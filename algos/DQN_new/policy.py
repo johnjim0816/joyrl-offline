@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-04-29 00:28:51
+LastEditTime: 2023-04-29 10:59:56
 Discription: 
 '''
 import random
@@ -97,9 +97,8 @@ class Policy(BasePolicy):
         next_q_values = self.target_net(next_states).max(1)[0].unsqueeze(dim=1)
         # 计算目标 Q 值
         target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
-        # 计算损失
+        # 计算损失函数
         self.loss = nn.MSELoss()(q_values, target_q_values)
-        
         self.optimizer.zero_grad()
         self.loss.backward()
         # clip 防止梯度爆炸

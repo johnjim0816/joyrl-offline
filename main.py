@@ -288,13 +288,13 @@ class Main(object):
         learner = Learner.remote(cfg,policy=policy)
         stats_recorder = StatsRecorder.remote(cfg)
         data_server = DataServer.remote(cfg)
-        data_server.init_default_policy_params.remote(policy.get_params())
+        data_server.set_default_policy_params.remote(policy.get_params())
         interactor_tasks = [interactor.run.remote(data_server) for interactor in interactors]
         collector_task = collector.run.remote(data_server)
         learner_task = learner.run.remote(data_server)
-        stats_recorder_task = stats_recorder.run.remote(data_server)
+        # stats_recorder_task = stats_recorder.run.remote(data_server)
 
-        await asyncio.gather(*interactor_tasks, collector_task, learner_task, stats_recorder_task)
+        await asyncio.gather(*interactor_tasks, collector_task, learner_task)
 
     def check_n_workers(self,cfg):
 
