@@ -5,7 +5,7 @@ os.environ[
 curr_path = os.path.dirname(os.path.abspath(__file__))  # current path
 parent_path = os.path.dirname(curr_path)  # parent path 
 sys.path.append(parent_path)  # add path to system path
-
+import d4rl
 import argparse
 import yaml
 from pathlib import Path
@@ -15,13 +15,15 @@ from gym.wrappers import RecordVideo
 import ray
 from ray.util.queue import Queue
 import importlib
-from utils.stats
+#from utils.stats
 import torch.multiprocessing as mp
 from config.config import GeneralConfig, MergedConfig
 from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, save_traj,save_frames_as_gif
 from common.ray_utils import GlobalVarRecorder
 from envs.register import register_env
-from torch.utils.tensorboard import SummaryWriter  
+from torch.utils.tensorboard import SummaryWriter
+
+from algos.base.buffers import BufferCreator
 
 class Main(object):
     def __init__(self) -> None:
@@ -61,7 +63,6 @@ class Main(object):
         '''
         parser = argparse.ArgumentParser(description="hyperparameters")
         parser.add_argument('--yaml', default=None, type=str,
-
                             help='the path of config file')
         args = parser.parse_args()
         ## 加载yaml参数
@@ -271,7 +272,7 @@ class Main(object):
         agent = agent_mod.Agent.remote(cfg)
         interactor_mod = importlib.import_module(f"algos.{algo_name}.interactor")
         data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
-        stat_recorder = 
+        #stat_recorder =
         buffer = BufferCreator(cfg)()
         interactors = []
         for i in range(cfg.n_workers):
@@ -342,7 +343,6 @@ class Main(object):
                 self.multi_run(self.cfg)
             else:
                 self.ray_run(self.cfg)
-
 
 if __name__ == "__main__":
     main = Main()

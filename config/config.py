@@ -22,10 +22,10 @@ class MergedConfig:
 class GeneralConfig():
     def __init__(self) -> None:
         self.env_name = "gym" # name of environment
-        self.new_step_api = True # whether to use new step api of gym
+        self.new_step_api = False # whether to use new step api of gym
         self.wrapper = None # wrapper of environment
-        self.render = False # whether to render environment
-        self.render_mode = "human" # 渲染模式, "human" 或者 "rgb_array"
+        self.render = True # whether to render environment
+        self.render_mode = "rgb_array" # 渲染模式, "human" 或者 "rgb_array"
         self.algo_name = "BCQ" # name of algorithm
         self.mode = "test" # train or test
         self.mp_backend = "mp" # 多线程框架，ray或者mp(multiprocessing)，默认mp
@@ -37,6 +37,8 @@ class GeneralConfig():
         self.eval_per_episode = 5 # evaluation per episode
         self.max_steps = 200 # max steps for each episode
         self.load_checkpoint = True
-        self.load_path = "Train_gym_BCQ_20230417-141811" # path to load model
+        self.load_path = "Train_halfcheetah-expert-v2_BCQ_20230429-193009" # path to load model
         self.show_fig = False # show figure or not
         self.save_fig = True # save figure or not
+
+        self.n_workers = 1

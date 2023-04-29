@@ -1,0 +1,66 @@
+general_cfg:
+  algo_name: BCQ
+  device: cpu
+  env_name: gym
+  eval_eps: 10
+  eval_per_episode: 5
+  load_checkpoint: true
+  load_path: Train_halfcheetah-expert-v2_BCQ_20230429-193009
+  max_steps: 200
+  mode: test
+  mp_backend: mp
+  n_workers: 1
+  new_step_api: false
+  render: true
+  render_mode: rgb_array
+  save_fig: true
+  seed: 0
+  show_fig: false
+  test_eps: 200
+  train_eps: 1000
+  wrapper: null
+algo_cfg:
+  actor_hidden_layers:
+  - activation: ReLU
+    layer_dim:
+    - 400
+    layer_type: Linear
+  - activation: ReLU
+    layer_dim:
+    - 300
+    layer_type: Linear
+  actor_lr: 0.001
+  batch_size: 128
+  critic_lr: 0.001
+  gamma: 0.99
+  iters_per_ep: 10
+  lmbda: 0.75
+  phi: 0.05
+  tau: 0.005
+  vae_hidden_layers:
+  - activation: ReLU
+    layer_dim:
+    - 750
+    layer_type: Linear
+  - activation: ReLU
+    layer_dim:
+    - 750
+    layer_type: Linear
+  vae_lr: 0.001
+  value_layers:
+  - activation: ReLU
+    layer_dim:
+    - 400
+    layer_type: Linear
+  - activation: ReLU
+    layer_dim:
+    - 300
+    layer_type: Linear
+env_cfg:
+  id: halfcheetah-expert-v2
+  ignore_params:
+  - wrapper
+  - ignore_params
+  new_step_api: false
+  render_mode: rgb_array
+  wrapper: null

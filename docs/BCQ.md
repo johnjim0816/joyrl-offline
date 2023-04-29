@@ -1,35 +1,39 @@
 # BCQ 算法参数说明
 
 ```python
-class AlgoConfig:
+class AlgoConfig(DefaultConfig):
     def __init__(self):
-        self.critic_hidden_dims = [400,300] # Critic隐藏单元
-        self.actor_hidden_dims = [400,300]  # Actor隐藏单元设置
-        
-        self.vae_hidden_dims = [750,750]  # VAE 隐藏单元设置
-        
-        self.critic_lr = 1e-3
-        self.actor_lr = 1e-3
-        self.vae_lr = 1e-3
-        self.batch_size = 128
-        
-        self.gamma = 0.99
-        self.tau = 0.005 # Target critic/actor 更新的快慢
-        self.lmbda = 0.75 # soft double Q learning: target_Q = lmbda * min(q1,q2) + (1-lmbda) * max(q1,q2)
-        self.phi = 0.05 # BCQ 特有的参数， 表示 action 相比经验池中的action， 最大的波动范围 (Actor中使用)
-        
-        # train parameters
-        self.iters_per_ep = 10 # 在train BCQ Agent时， 每一个 train_one_episode中 迭代的次数， 每一次迭代都是batch_size的经验。
-        self.buffer_size = int(1e5) # BCQ Agent中 memories的经验池大小
-        self.start_learn_buffer_size = 1e3 # memories的最少经验数量，少于此数量，会报错。
+        # 神经网络层配置
+        self.value_layers = [
+            {'layer_type': 'Linear', 'layer_dim': [400], 'activation': 'ReLU'},
+            {'layer_type': 'Linear', 'layer_dim': [300], 'activation': 'ReLU'},
+        ]
+        self.actor_hidden_layers = [
+            {'layer_type': 'Linear', 'layer_dim': [400], 'activation': 'ReLU'},
+            {'layer_type': 'Linear', 'layer_dim': [300], 'activation': 'ReLU'},
+        ]
+        self.vae_hidden_layers = [
+            {'layer_type': 'Linear', 'layer_dim': [750], 'activation': 'ReLU'},
+            {'layer_type': 'Linear', 'layer_dim': [750], 'activation': 'ReLU'},
+        ]
 
-	    # parameters for collecting data
-        self.collect_explore_data = True # 收集数据时 DDPG是否加噪音
-        self.behavior_agent_name = "DDPG" # 使用的行为智能体算法
-        self.behavior_agent_parameters_path = "/behave_param.yaml"  # 行为智能体的参数， 在BCQ目录下。 具体参数请看 行为智能体算法参数
-        self.behavior_policy_path = "/behaviour_models"  #  行为智能体的模型， 收集数据时需要用到
-        self.collect_eps = 500 # 收集的数据 episode 数量
+        self.critic_lr = 1e-3  # critic学习率
+        self.actor_lr = 1e-3  # actor学习率
+        self.vae_lr = 1e-3  # VAE学习率
+        self.batch_size = 128
+
+        self.gamma = 0.99  # 奖励折扣因子
+        self.tau = 0.005  # 目标网络参数的软更新参数， 在更新目标网络参数时，参数变化越小
+        self.lmbda = 0.75  # soft double Q learning: target_Q = lmbda * min(q1,q2) + (1-lmbda) * max(q1,q2)
+        self.phi = 0.05  # BCQ 特有的参数， 表示 action from actor 相比经验池中的action， 最大的波动范围 (Actor中使用)
+        # BCQ只能用于 near-optimal dataset的学习，类似于behavior cloning,
+        # 因此 phi很小， 取0.05。
+
+        # train parameters
+        self.iters_per_ep = 10
+
 ```
+
 * `z_dim`: 这是 VAE中latent space的维度参数，固定为action dim的两倍，因此无需设置。
 
 
