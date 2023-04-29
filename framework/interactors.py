@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 13:27:23
 LastEditor: JiangJi
-LastEditTime: 2023-04-29 11:05:06
+LastEditTime: 2023-04-29 11:28:51
 Discription: 
 '''
 import ray
@@ -26,7 +26,7 @@ class Interactor:
             ep_reward = 0
             ep_step = 0
             await self.load_policy(data_server)
-            state = self.env.reset()
+            state = self.env.reset(seed = 1)
             for _ in range(self.cfg.max_step):
 
                 action = self.policy.get_action(state)
@@ -37,7 +37,9 @@ class Interactor:
                 state = next_state
                 if terminated:
                     print(f"Interactor {self.id} finished episode {await data_server.get_episode.remote()} with reward {ep_reward} in {ep_step} steps")
+                    
                     best_reward = await data_server.get_best_reward.remote()
+                    # print("info",best_reward)
                     if ep_reward > best_reward:
                         await data_server.set_best_reward.remote(ep_reward)
                         policy_params = self.policy.get_params()

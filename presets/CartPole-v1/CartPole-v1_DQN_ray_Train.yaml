@@ -26,7 +26,7 @@ algo_cfg:
   buffer_size: 100000
   epsilon_decay: 500
   epsilon_end: 0.01
-  epsilon_start: 0.95
+  epsilon_start: 0.99
   gamma: 0.95
   lr: 0.01
   target_update: 4
