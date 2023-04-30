@@ -284,17 +284,17 @@ class Main(object):
         for i in range(cfg.n_workers):
             interactor = Interactor.remote(cfg,id = i,env = envs[i],policy = policy)
             interactors.append(interactor)
-        collector = Collector.remote(cfg,data_handler = data_handler)
+        # collector = Collector.remote(cfg,data_handler = data_handler)
         learner = Learner.remote(cfg,policy=policy)
         stats_recorder = StatsRecorder.remote(cfg)
         data_server = DataServer.remote(cfg)
-        data_server.set_default_policy_params.remote(policy.get_params())
-        interactor_tasks = [interactor.run.remote(data_server) for interactor in interactors]
-        collector_task = collector.run.remote(data_server)
-        learner_task = learner.run.remote(data_server)
+        data_server.set_policy_params.remote(policy.get_params())
+        interactor_tasks = [interactor.run.remote(data_server,data_handler) for interactor in interactors]
+        # collector_task = collector.run.remote(data_server)
+        learner_task = learner.run.remote(data_server,data_handler)
         # stats_recorder_task = stats_recorder.run.remote(data_server)
-
-        await asyncio.gather(*interactor_tasks, collector_task, learner_task)
+        await asyncio.gather(*interactor_tasks)
+        # await asyncio.gather(*interactor_tasks, learner_task)
 
     def check_n_workers(self,cfg):
 
@@ -319,7 +319,11 @@ class Main(object):
         all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
         self.check_n_workers(self.general_cfg)  # 检查n_workers参数
         if self.general_cfg.n_workers == 1:
-            self.single_run(self.cfg)
+            if self.general_cfg.mp_backend == 'ray':
+                asyncio.run(self.ray_run(self.cfg))
+            else:
+                self.single_run(self.cfg)
+            # self.single_run(self.cfg)
         else:
             if self.general_cfg.mp_backend == 'mp':
                 self.multi_run(self.cfg)

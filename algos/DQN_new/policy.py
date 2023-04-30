@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-04-29 10:59:56
+LastEditTime: 2023-04-30 11:58:43
 Discription: 
 '''
 import random
@@ -56,6 +56,7 @@ class Policy(BasePolicy):
             action (int): 动作
         '''
         self.sample_count += 1
+        # print("self.sample_count",self.sample_count)
         # epsilon must decay(linear,exponential and etc.) for balancing exploration and exploitation
         self.epsilon = self.epsilon_end + (self.epsilon_start - self.epsilon_end) * \
             math.exp(-1. * self.sample_count / self.epsilon_decay) 
@@ -79,7 +80,7 @@ class Policy(BasePolicy):
         return action
     def update(self, **kwargs):
         # 从 replay buffer 中采样
-        # print("update")
+        # print("learner update", self.update_step)
         states = kwargs.get('states')
         actions = kwargs.get('actions')
         next_states = kwargs.get('next_states')

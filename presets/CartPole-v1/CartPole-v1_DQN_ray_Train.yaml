@@ -4,7 +4,7 @@ general_cfg:
   env_name: gym
   mode: train
   mp_backend: ray 
-  n_workers: 2 
+  n_workers: 1
   load_checkpoint: false
   load_path: Train_CartPole-v1_DQN_20221026-054757
   max_step: 200
@@ -12,7 +12,7 @@ general_cfg:
   seed: 1
   show_fig: false
   test_eps: 10
-  max_epsiode: 400
+  max_epsiode: 200
 algo_cfg:
   value_layers:
     - layer_type: linear
@@ -26,9 +26,9 @@ algo_cfg:
   buffer_size: 100000
   epsilon_decay: 500
   epsilon_end: 0.01
-  epsilon_start: 0.99
+  epsilon_start: 0.95
   gamma: 0.95
-  lr: 0.01
+  lr: 0.0001
   target_update: 4
 env_cfg:
   id: CartPole-v1
