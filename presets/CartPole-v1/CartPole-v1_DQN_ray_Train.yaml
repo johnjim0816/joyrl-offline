@@ -28,7 +28,7 @@ algo_cfg:
   epsilon_end: 0.01
   epsilon_start: 0.95
   gamma: 0.95
-  lr: 0.0001
+  lr: 0.01
   target_update: 4
 env_cfg:
   id: CartPole-v1

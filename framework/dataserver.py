@@ -5,20 +5,20 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-28 16:16:04
 LastEditor: JiangJi
-LastEditTime: 2023-04-30 01:42:36
+LastEditTime: 2023-05-05 23:29:31
 Discription: 
 '''
 import ray
-import asyncio
+from ray.util.queue import Queue, Empty, Full
 
 @ray.remote
 class DataServer:
     def __init__(self, cfg) -> None:
         self.curr_episode = 0
         self.max_epsiode = cfg.max_epsiode
-        self.exp_queue = asyncio.Queue() # maxsize得调整，不然卡住
-        self.policy_params_queue = asyncio.Queue()
-        self.training_data = asyncio.Queue()
+        self.exps_que = Queue()
+        self.policy_params_que = Queue()
+        self.training_data_que = Queue()
         self.best_reward = -float('inf')
         self.policy_params = None
     def increment_episode(self):
@@ -27,6 +27,34 @@ class DataServer:
         return self.curr_episode >= self.max_epsiode
     def get_episode(self):
         return self.curr_episode
+    def enqueue_msg(self, msg, msg_type = None):
+        try:
+            if msg_type == "transition":
+                self.exps_que.put(msg, block=False)
+            elif msg_type == "training_data":
+                self.training_data_que.put(msg, block=False)
+            elif msg_type == "policy_params":
+                self.policy_params_que.put(msg, block=False)
+            else: 
+                raise NotImplementedError
+            return True
+        except Full:
+            return False 
+    def dequeue_msg(self, msg_type = None, timeout=0.01):
+        print(len(self.exps_que),len(self.training_data_que),len(self.policy_params_que))
+        try:
+            if msg_type == "transition":
+                return self.exps_que.get(timeout=timeout)
+            elif msg_type == "training_data":
+                return self.training_data_que.get(timeout=timeout)
+            elif msg_type == "policy_params":
+                return self.policy_params_que.get(timeout=timeout)
+            else:
+                raise NotImplementedError
+        except Empty:
+            print(f"{msg_type} empty")
+            
+            return None
     def set_policy_params(self, policy_params):
         self.policy_params = policy_params
     def get_policy_params(self):
@@ -35,19 +63,3 @@ class DataServer:
         self.best_reward = reward
     def get_best_reward(self):
         return self.best_reward
-    async def enqueue_exp(self, exp):
-        await self.exp_queue.put(exp)
-    async def dequeue_exp(self):
-        return await self.exp_queue.get()
-    async def enqueue_policy_params(self, policy_params):
-        self.set_policy_params(policy_params)
-        await self.policy_params_queue.put(policy_params)
-    async def dequeue_policy_params(self):
-        # return self.policy_params
-        if self.policy_params_queue.empty():
-            return self.policy_params
-        return await self.policy_params_queue.get()
-    async def enqueue_training_data(self, data):
-        await self.training_data.put(data)
-    async def dequeue_training_data(self):
-        return await self.training_data.get()
