@@ -143,15 +143,15 @@ python main.py --yaml config/custom_config_Train.yaml
 
 ## Benchmark开发
 
-|     环境名称     |                 作者                  |                 算法                 |
-| :--------------: | :-----------------------------------: | ---------------- |
+|     环境名称     |                 作者                  |                 算法                 | gif    |
+| :--------------: | :-----------------------------------: | ---------------- |---------------- |
 | [CartPole-v1](./envs/gym_info.md) | [johnjim0816](https://github.com/johnjim0816) | DQN, Double DQN, Dueling DQN, REINFORCE, A2C, A3C |
 |  | [wangzhongren](https://github.com/wangzhongren-code) | PER DQN |
 | [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) | PPO |
 | [LunarLanderContinuous-v2](./envs/gym_info.md) | [MekeyPan](https://github.com/pmy0721) | SAC |
-| [MountainCar-v0](./envs/gym_info.md) | [GeYuhong](https://github.com/GeYuhong) | DQN |
-| [BipedalWalker-v3](./envs/gym_info.md) | [scchy](https://github.com/scchy)   | DDPG   |
-
+| [MountainCar-v0](./envs/gym_info.md) | [GeYuhong](https://github.com/GeYuhong) | DQN | ![](./benchmarks/MountainCar-v0/Test_MountainCar-v0_DQN_20230404-212450/videos\video.gif) |
+| [BipedalWalker-v3](./envs/gym_info.md) | [scchy](https://github.com/scchy)   | DDPG   |![](./benchmarks/BipedalWalker-v3/Test_BipedalWalker-v3_DDPG_20230415-184448/videos/video.gif) |
+| [BipedalWalkerHardcore-v3](./envs/gym_info.md) | [scchy](https://github.com/scchy)   | TD3   | ![](./benchmarks/BipedalWalkerHardcore-v3/Test_BipedalWalkerHardcore-v3_TD3_20230507-144549/videos/video.gif) |
 
 ## 如何贡献
 
