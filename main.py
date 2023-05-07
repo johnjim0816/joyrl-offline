@@ -336,8 +336,7 @@ class Main(object):
             if self.general_cfg.mp_backend == 'mp':
                 self.multi_run(self.cfg)
             else:
-                asyncio.run(self.ray_run(self.cfg))
-
+                self.ray_run(self.cfg)
 
 if __name__ == "__main__":
     main = Main()

@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-05-05 21:11:55
+LastEditTime: 2023-05-07 19:46:59
 Discription: 
 '''
 import random
@@ -29,7 +29,7 @@ class Policy(BasePolicy):
         self.device = torch.device(cfg.device) 
         self.gamma = cfg.gamma  
         # e-greedy 策略相关参数
-        self.sample_count = 0  # 采样动作计数
+        self.sample_count = None
         self.epsilon_start = cfg.epsilon_start
         self.epsilon_end = cfg.epsilon_end
         self.epsilon_decay = cfg.epsilon_decay
@@ -48,18 +48,17 @@ class Policy(BasePolicy):
     def create_optm(self):
         self.optm = optim.Adam(self.policy_net.parameters(), lr=self.lr)
         
-    def get_action(self, state):
+    def get_action(self, state, sample_count=None):
         ''' 采样动作
         Args:
             state (array): 状态
         Returns:
             action (int): 动作
         '''
-        self.sample_count += 1
-        # print("self.sample_count",self.sample_count)
         # epsilon must decay(linear,exponential and etc.) for balancing exploration and exploitation
+        self.sample_count = sample_count
         self.epsilon = self.epsilon_end + (self.epsilon_start - self.epsilon_end) * \
-            math.exp(-1. * self.sample_count / self.epsilon_decay) 
+            math.exp(-1. * sample_count / self.epsilon_decay) 
         if random.random() > self.epsilon:
             action = self.predict_action(state)
         else:

@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-28 16:16:04
 LastEditor: JiangJi
-LastEditTime: 2023-05-07 15:04:16
+LastEditTime: 2023-05-07 19:42:40
 Discription: 
 '''
 import ray
@@ -15,6 +15,7 @@ from ray.util.queue import Queue, Empty, Full
 class DataServer:
     def __init__(self, cfg) -> None:
         self.curr_episode = 0
+        self.sample_count = 0
         self.max_epsiode = cfg.max_epsiode
         self.exps_que = Queue()
         self.policy_params_que = Queue()
@@ -27,6 +28,10 @@ class DataServer:
         return self.curr_episode >= self.max_epsiode
     def get_episode(self):
         return self.curr_episode
+    def increase_sample_count(self):
+        self.sample_count += 1
+    def get_sample_count(self):
+        return self.sample_count
     def enqueue_msg(self, msg, msg_type = None):
         try:
             if msg_type == "transition":
