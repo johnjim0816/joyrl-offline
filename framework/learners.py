@@ -3,29 +3,28 @@
 '''
 Author: JiangJi
 Email: johnjim0816@gmail.com
-Date: 2023-04-27 23:45:49
+Date: 2023-05-07 18:30:53
 LastEditor: JiangJi
-LastEditTime: 2023-05-07 15:35:18
+LastEditTime: 2023-05-07 21:38:09
 Discription: 
 '''
-import ray 
-import time
-@ray.remote(num_cpus=1)
+import ray
+@ray.remote
 class Learner:
-    def __init__(self, cfg, id = None, policy = None ) -> None:
+    def __init__(self,cfg,policy=None,data_handler=None) -> None:
         self.cfg = cfg
-        self.id = id
         self.policy = policy
-        self.i = 0
-    def run(self, data_server):
-        while not ray.get(data_server.check_episode_limit.remote()):
-            self.i += 1
-            training_data = ray.get(data_server.dequeue_msg.remote(msg_type="training_data"))
-            if training_data:
-                self.policy.update(**training_data)
-                policy_params = self.policy.get_params()
-                # ray.get(data_server.enqueue_msg.remote(msg = policy_params, msg_type="policy_params"))
-                while not ray.get(data_server.enqueue_msg.remote(msg = policy_params, msg_type="policy_params")):
-                    time.sleep(0.05)
-                
-            # print(f"learner is running {self.i}, {training_data==None}")
+        self.data_handler = data_handler
+    def add_transition(self,transition):
+        self.data_handler.add_transition(transition)
+    def get_action(self,state,data_server = None):
+        data_server.increase_sample_count.remote()
+        sample_count = ray.get(data_server.get_sample_count.remote())
+        return self.policy.get_action(state,sample_count=sample_count)
+    def train(self,data_server = None):
+        # print("Learner is training")
+        data_server.increase_update_step.remote()
+        update_step = ray.get(data_server.get_update_step.remote())
+        training_data = self.data_handler.sample_training_data()
+        if training_data is not None:
+            self.policy.update(**training_data,update_step=update_step)

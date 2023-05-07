@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-05-07 19:46:59
+LastEditTime: 2023-05-07 21:31:21
 Discription: 
 '''
 import random
@@ -85,6 +85,7 @@ class Policy(BasePolicy):
         next_states = kwargs.get('next_states')
         rewards = kwargs.get('rewards')
         dones = kwargs.get('dones')
+        update_step = kwargs.get('update_step')
         states = torch.tensor(states, device=self.device, dtype=torch.float32)
         actions = torch.tensor(actions, device=self.device, dtype=torch.int64).unsqueeze(dim=1)
         next_states = torch.tensor(next_states, device=self.device, dtype=torch.float32)
@@ -106,8 +107,7 @@ class Policy(BasePolicy):
         for param in self.policy_net.parameters():
             param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
-        if self.sample_count % self.target_update == 0: # 每 C 步更新一次 target_net
+        if update_step % self.target_update == 0: # 每 C 步更新一次 target_net
             self.target_net.load_state_dict(self.policy_net.state_dict())
-        self.update_step += 1
         self.update_summary()
  
