@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-05-07 22:57:00
+LastEditTime: 2023-05-08 00:33:49
 Discription: 
 '''
 import random
@@ -15,7 +15,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from algos.base.agents import BasePolicy
+from algos.base.policies import BasePolicy
 from algos.base.buffers import BufferCreator
 from algos.base.networks import ValueNetwork
 
@@ -65,18 +65,6 @@ class Policy(BasePolicy):
         else:
             action = self.action_space.sample()
         return action
-    def create_summary(self):
-        self.summary = {
-            'scalar': {
-                'loss': 0.0,
-            },
-            'histogram': {
-            },
-        }
-        for name, param in self.policy_net.named_parameters():
-            self.summary['histogram'][name] = param.clone().cpu().data.numpy()
-    def update_summary(self):
-        self.summary['scalar']['loss'] = self.loss.item()
     def predict_action(self,state):
         ''' 预测动作
         Args:
@@ -92,12 +80,9 @@ class Policy(BasePolicy):
     def update(self, **kwargs):
         # 从 replay buffer 中采样
         # print("learner update", self.update_step)
-        states = kwargs.get('states')
-        actions = kwargs.get('actions')
-        next_states = kwargs.get('next_states')
-        rewards = kwargs.get('rewards')
-        dones = kwargs.get('dones')
+        states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
         update_step = kwargs.get('update_step')
+
         states = torch.tensor(states, device=self.device, dtype=torch.float32)
         actions = torch.tensor(actions, device=self.device, dtype=torch.int64).unsqueeze(dim=1)
         next_states = torch.tensor(next_states, device=self.device, dtype=torch.float32)
@@ -121,5 +106,5 @@ class Policy(BasePolicy):
         self.optimizer.step()
         if update_step % self.target_update == 0: # 每 C 步更新一次 target_net
             self.target_net.load_state_dict(self.policy_net.state_dict())
-        self.update_summary()
+        self.update_summary() # 更新 summary
  

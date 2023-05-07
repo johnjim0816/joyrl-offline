@@ -287,9 +287,7 @@ class Main(object):
             worker = Worker.remote(cfg,id = i,env = envs[i])
             workers.append(worker)
         worker_tasks = [worker.run.remote(data_server = data_server,learner = learner,stats_recorder = stats_recorder) for worker in workers]
-        stats_task = [stats_recorder.run.remote(data_server)]
-        ray.get(worker_tasks + stats_task)
-
+        ray.get(worker_tasks)
 
     def check_n_workers(self,cfg):
 
@@ -299,8 +297,7 @@ class Main(object):
             raise ValueError("n_workers must >0!")
         if cfg.n_workers > mp.cpu_count():
             raise ValueError("n_workers must less than total numbers of cpus on your machine!")
-        if cfg.n_workers > 1 and cfg.device != 'cpu':
-            raise ValueError("multi process can only support cpu!")
+
     def run(self) -> None:
         self.get_default_cfg()  # 获取默认参数
         self.process_yaml_cfg()  # 处理yaml配置文件参数，并覆盖默认参数
@@ -313,17 +310,22 @@ class Main(object):
         self.print_cfgs(self.env_cfg,name = 'Env Configs') 
         all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
         self.check_n_workers(self.general_cfg)  # 检查n_workers参数
-        if self.general_cfg.n_workers == 1:
-            if self.general_cfg.mp_backend == 'ray':
-                self.ray_run(self.cfg)
-            else:
-                self.single_run(self.cfg)
-            # self.single_run(self.cfg)
-        else:
-            if self.general_cfg.mp_backend == 'mp':
-                self.multi_run(self.cfg)
-            else:
-                self.ray_run(self.cfg)
+        import time 
+        s_t = time.time()
+        self.ray_run(self.cfg)
+        e_t = time.time()
+        print(f"total time: {e_t-s_t}")
+        # if self.general_cfg.n_workers == 1:
+        #     if self.general_cfg.mp_backend == 'ray':
+        #         self.ray_run(self.cfg)
+        #     else:
+        #         self.single_run(self.cfg)
+        #     # self.single_run(self.cfg)
+        # else:
+        #     if self.general_cfg.mp_backend == 'mp':
+        #         self.multi_run(self.cfg)
+        #     else:
+        #         self.ray_run(self.cfg)
 
 if __name__ == "__main__":
     main = Main()

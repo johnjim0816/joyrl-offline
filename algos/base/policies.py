@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-07 22:44:18
+LastEditTime: 2023-05-08 00:25:55
 Discription: 
 '''
 import torch
@@ -24,11 +24,18 @@ class BasePolicy(nn.Module):
     def predict_action(self, state):
         raise NotImplementedError
     def create_summary(self):
-        raise NotImplementedError
+        '''
+        创建 tensorboard 数据
+        '''
+        self.summary = {
+            'scalar': {
+                'loss': 0.0,
+            },
+        }
     def update_summary(self):
         ''' 更新 tensorboard 数据
         '''
-        raise NotImplementedError
+        self.summary['scalar']['loss'] = self.loss.item()
     def update(self):
         raise NotImplementedError
     def save(self):

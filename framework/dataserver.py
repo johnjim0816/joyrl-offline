@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-28 16:16:04
 LastEditor: JiangJi
-LastEditTime: 2023-05-07 21:44:20
+LastEditTime: 2023-05-08 00:22:50
 Discription: 
 '''
 import ray
@@ -18,11 +18,7 @@ class DataServer:
         self.sample_count = 0
         self.update_step = 0
         self.max_epsiode = cfg.max_epsiode
-        self.exps_que = Queue()
-        self.policy_params_que = Queue()
-        self.training_data_que = Queue()
         self.best_reward = -float('inf')
-        self.policy_params = None
     def increase_episode(self):
         self.curr_episode += 1
     def check_episode_limit(self):
@@ -37,39 +33,4 @@ class DataServer:
         self.update_step += 1
     def get_update_step(self):
         return self.update_step
-    def enqueue_msg(self, msg, msg_type = None):
-        try:
-            if msg_type == "transition":
-                self.exps_que.put(msg, block=False)
-            elif msg_type == "training_data":
-                self.training_data_que.put(msg, block=False)
-            elif msg_type == "policy_params":
-                self.policy_params_que.put(msg, block=False)
-            else: 
-                raise NotImplementedError
-            return True
-        except Full:
-            return False 
-    def dequeue_msg(self, msg_type = None):
-        # print(len(self.exps_que),len(self.training_data_que),len(self.policy_params_que))
-        try:
-            if msg_type == "transition":
-                return self.exps_que.get() if self.exps_que.qsize() > 0 else None
-            elif msg_type == "training_data":
-                return self.training_data_que.get() if self.training_data_que.qsize() > 0 else None
-            elif msg_type == "policy_params":
-                return self.policy_params_que.get() if self.policy_params_que.qsize() > 0 else None
-            else:
-                raise NotImplementedError
-        except Empty:
-            print(f"{msg_type} empty")
-            
-            return None
-    def set_policy_params(self, policy_params):
-        self.policy_params = policy_params
-    def get_policy_params(self):
-        return self.policy_params
-    def set_best_reward(self, reward):
-        self.best_reward = reward
-    def get_best_reward(self):
-        return self.best_reward
+
