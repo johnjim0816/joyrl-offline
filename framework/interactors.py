@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 13:27:23
 LastEditor: JiangJi
-LastEditTime: 2023-05-05 23:22:53
+LastEditTime: 2023-05-07 15:34:04
 Discription: 
 '''
 import ray
@@ -33,7 +33,7 @@ class Interactor:
                 ep_reward += reward
                 ep_step += 1
                 transition = (state, action, reward, next_state, terminated,info)
-                data_server.enqueue_msg.remote(msg = transition, msg_type = "transition")
+                ray.get(data_server.enqueue_msg.remote(msg = transition, msg_type = "transition"))
                 self.load_policy(data_server)
                 state = next_state
                 if terminated:

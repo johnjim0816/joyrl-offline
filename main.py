@@ -271,8 +271,10 @@ class Main(object):
         from framework.learners import Learner
         from framework.stats import StatsRecorder
         from framework.dataserver import DataServer
+        from framework.trainers import Trainer
+        from framework.agents import Agent
         ray.shutdown()
-        ray.init()
+        ray.init(include_dashboard=True)
         envs = self.envs_config()  # configure environment
         algo_name = cfg.algo_name
         policy_mod = importlib.import_module(f"algos.{algo_name}.policy")
@@ -281,17 +283,26 @@ class Main(object):
         policy = policy_mod.Policy(cfg) 
         data_handler = data_handler_mod.DataHandler(cfg)
         interactors = []
-        for i in range(cfg.n_workers):
-            interactor = Interactor.remote(cfg,id = i,env = envs[i],policy = policy)
-            interactors.append(interactor)
-        collector = Collector.remote(cfg,data_handler = data_handler)
-        learner = Learner.remote(cfg,policy=policy)
-        stats_recorder = StatsRecorder.remote(cfg)
         data_server = DataServer.remote(cfg)
-        interactor_tasks = [interactor.run.remote(data_server) for interactor in interactors]
-        collector_tasks = [collector.run.remote(data_server)]
-        learner_tasks = [learner.run.remote(data_server)]
-        ray.get(interactor_tasks+collector_tasks+learner_tasks)
+        agent = Agent.remote(cfg,policy = policy,data_handler = data_handler)
+        trainers = []
+        for i in range(cfg.n_workers):
+            trainer = Trainer.remote(cfg,id = i,env = envs[i])
+            trainers.append(trainer)
+        trainer_tasks = [trainer.run.remote(data_server,agent) for trainer in trainers]
+        ray.get(trainer_tasks)
+        # trainer = Trainer.remote(cfg,agent = agent)
+        # for i in range(cfg.n_workers):
+        #     interactor = Interactor.remote(cfg,id = i,env = envs[i],policy = policy)
+        #     interactors.append(interactor)
+        # collector = Collector.remote(cfg,data_handler = data_handler)
+        # learner = Learner.remote(cfg,policy=policy)
+        # stats_recorder = StatsRecorder.remote(cfg)
+        # data_server = DataServer.remote(cfg)
+        # interactor_tasks = [interactor.run.remote(data_server) for interactor in interactors]
+        # collector_tasks = [collector.run.remote(data_server)]
+        # learner_tasks = [learner.run.remote(data_server)]
+        # ray.get(interactor_tasks+collector_tasks+learner_tasks)
 
     def check_n_workers(self,cfg):
 

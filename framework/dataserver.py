@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-28 16:16:04
 LastEditor: JiangJi
-LastEditTime: 2023-05-05 23:29:31
+LastEditTime: 2023-05-07 15:04:16
 Discription: 
 '''
 import ray
@@ -40,15 +40,15 @@ class DataServer:
             return True
         except Full:
             return False 
-    def dequeue_msg(self, msg_type = None, timeout=0.01):
-        print(len(self.exps_que),len(self.training_data_que),len(self.policy_params_que))
+    def dequeue_msg(self, msg_type = None):
+        # print(len(self.exps_que),len(self.training_data_que),len(self.policy_params_que))
         try:
             if msg_type == "transition":
-                return self.exps_que.get(timeout=timeout)
+                return self.exps_que.get() if self.exps_que.qsize() > 0 else None
             elif msg_type == "training_data":
-                return self.training_data_que.get(timeout=timeout)
+                return self.training_data_que.get() if self.training_data_que.qsize() > 0 else None
             elif msg_type == "policy_params":
-                return self.policy_params_que.get(timeout=timeout)
+                return self.policy_params_que.get() if self.policy_params_que.qsize() > 0 else None
             else:
                 raise NotImplementedError
         except Empty:
