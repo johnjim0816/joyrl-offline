@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-28 16:16:04
 LastEditor: JiangJi
-LastEditTime: 2023-05-07 21:30:11
+LastEditTime: 2023-05-07 21:44:20
 Discription: 
 '''
 import ray
@@ -23,7 +23,7 @@ class DataServer:
         self.training_data_que = Queue()
         self.best_reward = -float('inf')
         self.policy_params = None
-    def increment_episode(self):
+    def increase_episode(self):
         self.curr_episode += 1
     def check_episode_limit(self):
         return self.curr_episode >= self.max_epsiode

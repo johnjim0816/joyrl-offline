@@ -266,9 +266,6 @@ class Main(object):
     def ray_run(self,cfg):
         ''' 使用Ray并行化强化学习算法
         '''
-        from framework.interactors import Interactor
-        from framework.collectors import Collector
-        from framework.learners import Learner
         from framework.stats import StatsRecorder
         from framework.dataserver import DataServer
         from framework.workers import Worker

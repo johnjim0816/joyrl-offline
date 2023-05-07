@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-07 21:42:59
+LastEditTime: 2023-05-07 21:47:28
 Discription: 
 '''
 import ray
@@ -23,7 +23,6 @@ class Worker:
             ep_reward = 0
             ep_step = 0
             state = self.env.reset(seed = 1)
-            print(f"Worker {self.id} start episode {ray.get(data_server.get_episode.remote())}")
             for _ in range(self.cfg.max_step):
                 action = ray.get(learner.get_action.remote(state, data_server = data_server))
                 next_state, reward, terminated, truncated , info = self.env.step(action)
@@ -31,9 +30,8 @@ class Worker:
                 ep_step += 1
                 learner.add_transition.remote((state, action, reward, next_state, terminated,info))
                 learner.train.remote(data_server)
-                # time.sleep(0.1)
                 state = next_state
                 if terminated:
                     break
             print(f"Worker {self.id} finished episode {ray.get(data_server.get_episode.remote())} with reward {ep_reward}")
-            data_server.increment_episode.remote()
+            data_server.increase_episode.remote()
