@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-05-07 21:31:21
+LastEditTime: 2023-05-07 22:57:00
 Discription: 
 '''
 import random
@@ -37,6 +37,7 @@ class Policy(BasePolicy):
         self.target_update = cfg.target_update
         self.update_step = 0
         self.create_graph()
+        self.create_summary()
     def create_graph(self):
         self.state_size = [None, self.obs_space.shape[0]]
         action_dim = self.action_space.n
@@ -64,7 +65,18 @@ class Policy(BasePolicy):
         else:
             action = self.action_space.sample()
         return action
-    
+    def create_summary(self):
+        self.summary = {
+            'scalar': {
+                'loss': 0.0,
+            },
+            'histogram': {
+            },
+        }
+        for name, param in self.policy_net.named_parameters():
+            self.summary['histogram'][name] = param.clone().cpu().data.numpy()
+    def update_summary(self):
+        self.summary['scalar']['loss'] = self.loss.item()
     def predict_action(self,state):
         ''' 预测动作
         Args:

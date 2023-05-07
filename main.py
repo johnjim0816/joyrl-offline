@@ -121,7 +121,7 @@ class Main(object):
         ''' create logger
         '''
         self.logger = get_logger(self.cfg.log_dir)
-        self.tb_writter = SummaryWriter(log_dir=self.cfg.tb_dir)
+        # self.tb_writter = SummaryWriter(log_dir=self.cfg.tb_dir)
         # setattr(self.cfg, 'tb_writter', self.tb_writter)
     def create_single_env(self):
         ''' create single env
@@ -279,15 +279,16 @@ class Main(object):
         data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
         policy = policy_mod.Policy(cfg) 
         data_handler = data_handler_mod.DataHandler(cfg)
-        interactors = []
+        stats_recorder = StatsRecorder.remote(cfg)
         data_server = DataServer.remote(cfg)
         learner = Learner.remote(cfg,policy = policy,data_handler = data_handler)
         workers = []
         for i in range(cfg.n_workers):
             worker = Worker.remote(cfg,id = i,env = envs[i])
             workers.append(worker)
-        worker_tasks = [worker.run.remote(data_server = data_server,learner = learner) for worker in workers]
-        ray.get(worker_tasks)
+        worker_tasks = [worker.run.remote(data_server = data_server,learner = learner,stats_recorder = stats_recorder) for worker in workers]
+        stats_task = [stats_recorder.run.remote(data_server)]
+        ray.get(worker_tasks + stats_task)
 
 
     def check_n_workers(self,cfg):

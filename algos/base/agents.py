@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-04-29 00:13:47
+LastEditTime: 2023-05-07 22:44:18
 Discription: 
 '''
 import torch
@@ -20,15 +20,17 @@ class BasePolicy(nn.Module):
     def load_params(self, params_dict):
         self.load_state_dict(params_dict)
     def get_action(self, state):
-        pass
+        raise NotImplementedError
     def predict_action(self, state):
-        pass
+        raise NotImplementedError
+    def create_summary(self):
+        raise NotImplementedError
     def update_summary(self):
         ''' 更新 tensorboard 数据
         '''
-        # self.cfg.tb_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_loss", scalar_value=self.loss.item(), global_step = self.update_step)
+        raise NotImplementedError
     def update(self):
-        pass
+        raise NotImplementedError
     def save(self):
         pass
     def load(self):
