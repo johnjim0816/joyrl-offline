@@ -1,0 +1,34 @@
+general_cfg:
+  algo_name: TD3
+  device: cpu
+  env_name: gym
+  mode: test
+  eval_per_episode: 50
+  load_checkpoint: true
+  load_path: Train_BipedalWalkerHardcore-v3_TD3_20230506-003018
+  max_steps: 1000
+  save_fig: true
+  seed: 2023
+  show_fig: false
+  test_eps: 2
+  n_workers: 1
+  render: True
+  render_mode: rgb_array
+algo_cfg:
+  actor_hidden_dim: 200
+  actor_lr: 1.0e-4
+  batch_size: 256
+  buffer_size: 60000
+  critic_hidden_dim: 200
+  critic_lr: 1.2e-4
+  expl_noise: 0.25
+  explore_steps: 2048
+  gamma: 0.99
+  noise_clip: 0.5
+  policy_freq: 2
+  policy_noise: 0.2
+  tau: 0.005
+env_cfg:
+  new_step_api: True
+  id: BipedalWalkerHardcore-v3
+  render_mode: rgb_array

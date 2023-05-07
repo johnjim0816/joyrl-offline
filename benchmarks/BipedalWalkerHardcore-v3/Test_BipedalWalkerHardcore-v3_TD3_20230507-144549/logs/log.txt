@@ -1,0 +1,66 @@
+2023-05-07 14:45:49 - r - INFO: - General Configs:
+2023-05-07 14:45:49 - r - INFO: - ================================================================================
+2023-05-07 14:45:49 - r - INFO: -         Name        	       Value        	        Type        
+2023-05-07 14:45:49 - r - INFO: -       env_name      	        gym         	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -     new_step_api    	         1          	   <class 'bool'>   
+2023-05-07 14:45:49 - r - INFO: -       wrapper       	        None        	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -        render       	         1          	   <class 'bool'>   
+2023-05-07 14:45:49 - r - INFO: -     render_mode     	     rgb_array      	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -      algo_name      	        TD3         	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -         mode        	        test        	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -      mp_backend     	         mp         	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -         seed        	        2023        	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -        device       	        cpu         	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -      train_eps      	        1000        	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -       test_eps      	         2          	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -       eval_eps      	         10         	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -   eval_per_episode  	         50         	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -      max_steps      	        1000        	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -   load_checkpoint   	         1          	   <class 'bool'>   
+2023-05-07 14:45:49 - r - INFO: -      load_path      	Train_BipedalWalkerHardcore-v3_TD3_20230506-003018	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -       show_fig      	         0          	   <class 'bool'>   
+2023-05-07 14:45:49 - r - INFO: -       save_fig      	         1          	   <class 'bool'>   
+2023-05-07 14:45:49 - r - INFO: -      n_workers      	         1          	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: - ================================================================================
+2023-05-07 14:45:49 - r - INFO: - Algo Configs:
+2023-05-07 14:45:49 - r - INFO: - ================================================================================
+2023-05-07 14:45:49 - r - INFO: -         Name        	       Value        	        Type        
+2023-05-07 14:45:49 - r - INFO: -    explore_steps    	        2048        	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -     policy_freq     	         2          	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -       actor_lr      	       0.0001       	  <class 'float'>   
+2023-05-07 14:45:49 - r - INFO: -      critic_lr      	      0.00012       	  <class 'float'>   
+2023-05-07 14:45:49 - r - INFO: -   actor_hidden_dim  	        200         	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -  critic_hidden_dim  	        200         	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -        gamma        	        0.99        	  <class 'float'>   
+2023-05-07 14:45:49 - r - INFO: -         tau         	       0.005        	  <class 'float'>   
+2023-05-07 14:45:49 - r - INFO: -     policy_noise    	        0.2         	  <class 'float'>   
+2023-05-07 14:45:49 - r - INFO: -      expl_noise     	        0.25        	  <class 'float'>   
+2023-05-07 14:45:49 - r - INFO: -      noise_clip     	        0.5         	  <class 'float'>   
+2023-05-07 14:45:49 - r - INFO: -      batch_size     	        256         	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -     buffer_size     	       60000        	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: -  global_best_reward 	       -1800        	   <class 'int'>    
+2023-05-07 14:45:49 - r - INFO: - ================================================================================
+2023-05-07 14:45:49 - r - INFO: - Env Configs:
+2023-05-07 14:45:49 - r - INFO: - ================================================================================
+2023-05-07 14:45:49 - r - INFO: -         Name        	       Value        	        Type        
+2023-05-07 14:45:49 - r - INFO: -          id         	BipedalWalkerHardcore-v3	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -     new_step_api    	         1          	   <class 'bool'>   
+2023-05-07 14:45:49 - r - INFO: -     render_mode     	     rgb_array      	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -       wrapper       	        None        	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: -    ignore_params    	['wrapper', 'ignore_params']	   <class 'str'>    
+2023-05-07 14:45:49 - r - INFO: - ================================================================================
+2023-05-07 14:45:49 - r - INFO: - action_bound: 1.0
+2023-05-07 14:45:49 - r - INFO: - n_states: 24, n_actions: 4
+2023-05-07 14:45:49 - r - INFO: - obs_space: Box([-3.1415927 -5.        -5.        -5.        -3.1415927 -5.
+ -3.1415927 -5.        -0.        -3.1415927 -5.        -3.1415927
+ -5.        -0.        -1.        -1.        -1.        -1.
+ -1.        -1.        -1.        -1.        -1.        -1.       ], [3.1415927 5.        5.        5.        3.1415927 5.        3.1415927
+ 5.        5.        3.1415927 5.        3.1415927 5.        5.
+ 1.        1.        1.        1.        1.        1.        1.
+ 1.        1.        1.       ], (24,), float32), n_actions: Box(-1.0, 1.0, (4,), float32)
+2023-05-07 14:45:50 - r - INFO: - Start testing!
+2023-05-07 14:45:55 - r - INFO: - Episode: 1/2, Reward: -27.896, Step: 296
+2023-05-07 14:45:55 - r - INFO: - Episode: 1 -> GIF
+2023-05-07 14:46:36 - r - INFO: - Episode: 2/2, Reward: 289.232, Step: 991
+2023-05-07 14:46:36 - r - INFO: - Episode: 2 -> GIF
+2023-05-07 14:47:37 - r - INFO: - Finish testing!

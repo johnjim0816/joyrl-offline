@@ -31,20 +31,25 @@ class Trainer:
                 break
         res = {'ep_reward':ep_reward,'ep_step':ep_step}
         return agent,res
+
     def test_one_episode(self, env, agent, cfg):
         ep_reward = 0  # reward per episode
         ep_step = 0
+        ep_frames = []
         state = env.reset(seed = cfg.seed)  # reset and obtain initial state
         for _ in range(cfg.max_steps):
             ep_step += 1
+            if cfg.render and cfg.render_mode == 'rgb_array': # 用于可视化
+                frame = env.render()[0]
+                ep_frames.append(frame)
             action = agent.predict_action(state)  # sample action
             next_state, reward, terminated, truncated, info = env.step(action)  # update env and return transitions under new_step_api of OpenAI Gym
             state = next_state  # update next state for env
             ep_reward += reward  #
             if terminated:
                 break
-        res = {'ep_reward':ep_reward,'ep_step':ep_step}
-        return agent,res
+        res = {'ep_reward':ep_reward,'ep_step':ep_step,'ep_frames':ep_frames}
+        return agent, res
 
     def collect_one_episode(self, env, agent, cfg):
         # dict of arrays
@@ -121,6 +126,7 @@ class Worker(mp.Process):
                     self.share_agent.save_model(self.model_dir)
                     print(f"Worker {self.worker_id} saved model with current best eval reward {mean_eval_reward:.3f}")
         self.global_r_que.put(None)
+
     def test(self):
         while self.global_ep.value <= self.test_eps:
             state = self.env.reset(seed = self.worker_seed)

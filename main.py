@@ -15,7 +15,7 @@ from gym.wrappers import RecordVideo
 import ray
 from ray.util.queue import Queue
 import importlib
-from utils.stats
+# from utils.stats
 import torch.multiprocessing as mp
 from config.config import GeneralConfig, MergedConfig
 from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, save_traj,save_frames_as_gif
@@ -132,7 +132,23 @@ class Main(object):
             wrapper_class_name = self.env_cfg.wrapper.split('.')[-1]
             env_wapper = __import__('.'.join(wrapper_class_path), fromlist=[wrapper_class_name])
             env = getattr(env_wapper, wrapper_class_name)(env, new_step_api=self.env_cfg.new_step_api)
+        try:  # state dimension
+            n_states = env.observation_space.n  # print(hasattr(env.observation_space, 'n'))
+        except AttributeError:
+            n_states = env.observation_space.shape[0]  # print(hasattr(env.observation_space, 'shape'))
+        try:
+            n_actions = env.action_space.n  # action dimension
+        except AttributeError:
+            n_actions = env.action_space.shape[0]
+            self.logger.info(f"action_bound: {abs(env.action_space.low[0])}")
+            setattr(self.cfg, 'action_bound', abs(env.action_space.low[0]))
+        setattr(self.cfg, 'action_space', env.action_space)
+        self.logger.info(f"n_states: {n_states}, n_actions: {n_actions}")  # print info
+        # update to self.cfg paramters
+        setattr(self.cfg, 'n_states', n_states)
+        setattr(self.cfg, 'n_actions', n_actions)
         return env
+
     def envs_config(self):
         ''' configure environment
         '''
@@ -183,12 +199,13 @@ class Main(object):
                 # for _ in range
                 if (i_ep + 1) % cfg.eval_per_episode == 0:
                     mean_eval_reward = self.evaluate(self.cfg, trainer, env, agent)
-                    if mean_eval_reward >= best_ep_reward:  # update best reward
+                    if (mean_eval_reward >= best_ep_reward) or (i_ep >= 499 and mean_eval_reward >= best_ep_reward * 0.997):  # update best reward
                         self.logger.info(f"Current episode {i_ep + 1} has the best eval reward: {mean_eval_reward:.3f}")
                         best_ep_reward = mean_eval_reward
                         agent.save_model(cfg.model_dir)  # save models with best reward
             # env.close()
         elif cfg.mode.lower() == 'test':
+            best_ep_reward = -float('inf')
             for i_ep in range(cfg.test_eps):
                 agent, res = trainer.test_one_episode(env, agent, self.cfg)
                 ep_reward = res['ep_reward']
@@ -196,7 +213,10 @@ class Main(object):
                 self.logger.info(f"Episode: {i_ep + 1}/{cfg.test_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
                 rewards.append(ep_reward)
                 steps.append(ep_step)
-                if i_ep == 0 and cfg.render and cfg.render_mode == 'rgb_array':
+                # save the best vedio
+                if ep_reward > best_ep_reward and cfg.render and cfg.render_mode == 'rgb_array':
+                    self.logger.info(f"Episode: {i_ep + 1} -> GIF")
+                    best_ep_reward = ep_reward
                     frames = res['ep_frames']
                     save_frames_as_gif(frames, cfg.video_dir)
             agent.save_model(cfg.model_dir)  # save models
@@ -271,7 +291,7 @@ class Main(object):
         agent = agent_mod.Agent.remote(cfg)
         interactor_mod = importlib.import_module(f"algos.{algo_name}.interactor")
         data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
-        stat_recorder = 
+        # stat_recorder = 
         buffer = BufferCreator(cfg)()
         interactors = []
         for i in range(cfg.n_workers):
