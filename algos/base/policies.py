@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-08 23:08:26
+LastEditTime: 2023-05-09 13:01:57
 Discription: 
 '''
 import torch
@@ -22,8 +22,8 @@ class BasePolicy(nn.Module):
         self.load_state_dict(params_dict)
     def get_optimizer_params(self):
         return self.optimizer.state_dict()
-    def load_optimizer_params(self, params_dict):
-        self.optimizer.load_state_dict(params_dict)
+    def load_optimizer_params(self, optim_params_dict):
+        self.optimizer.load_state_dict(optim_params_dict)
     def get_action(self, state):
         raise NotImplementedError
     def predict_action(self, state):
