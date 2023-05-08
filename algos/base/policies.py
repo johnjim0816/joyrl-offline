@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-08 00:25:55
+LastEditTime: 2023-05-08 23:08:26
 Discription: 
 '''
 import torch
@@ -14,11 +14,16 @@ class BasePolicy(nn.Module):
     def __init__(self,cfg) -> None:
         super().__init__()
         self.cfg = cfg
-    def get_params(self):
+        self.optimizer = None
+    def get_policy_params(self):
         named_params_dict = dict(self.named_parameters())
         return named_params_dict
-    def load_params(self, params_dict):
+    def load_policy_params(self, params_dict):
         self.load_state_dict(params_dict)
+    def get_optimizer_params(self):
+        return self.optimizer.state_dict()
+    def load_optimizer_params(self, params_dict):
+        self.optimizer.load_state_dict(params_dict)
     def get_action(self, state):
         raise NotImplementedError
     def predict_action(self, state):

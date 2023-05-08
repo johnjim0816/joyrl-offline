@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-05-08 00:33:49
+LastEditTime: 2023-05-08 23:09:30
 Discription: 
 '''
 import random
@@ -44,10 +44,10 @@ class Policy(BasePolicy):
         self.policy_net = ValueNetwork(self.cfg, self.state_size, action_dim).to(self.device)
         self.target_net = ValueNetwork(self.cfg, self.state_size, action_dim).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.cfg.lr) 
+        self.create_optimizer()
        
-    def create_optm(self):
-        self.optm = optim.Adam(self.policy_net.parameters(), lr=self.lr)
+    def create_optimizer(self):
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.cfg.lr) 
         
     def get_action(self, state, sample_count=None):
         ''' 采样动作

@@ -281,10 +281,10 @@ class Main(object):
         data_handler = data_handler_mod.DataHandler(cfg)
         stats_recorder = StatsRecorder.remote(cfg)
         data_server = DataServer.remote(cfg)
-        learner = Learner.remote(cfg,policy = policy,data_handler = data_handler)
+        learner = Learner.remote(cfg, policy = policy,data_handler = data_handler)
         workers = []
         for i in range(cfg.n_workers):
-            worker = Worker.remote(cfg,id = i,env = envs[i])
+            worker = Worker.remote(cfg,id = i,env = envs[i], policy = policy)
             workers.append(worker)
         worker_tasks = [worker.run.remote(data_server = data_server,learner = learner,stats_recorder = stats_recorder) for worker in workers]
         ray.get(worker_tasks)

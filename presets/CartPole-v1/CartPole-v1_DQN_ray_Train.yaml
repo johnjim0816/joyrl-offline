@@ -12,7 +12,7 @@ general_cfg:
   seed: 1
   show_fig: false
   test_eps: 10
-  max_epsiode: 100
+  max_epsiode: 200
 algo_cfg:
   value_layers:
     - layer_type: linear
