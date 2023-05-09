@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-08 15:16:25
+LastEditTime: 2023-05-09 13:13:48
 Discription: 
 '''
 import ray
@@ -25,7 +25,7 @@ class Worker:
             self.episode = ray.get(data_server.get_episode.remote())
             state = self.env.reset(seed = self.worker_seed)
             for _ in range(self.cfg.max_step):
-                self.load_global_policy(learner)
+                
                 action = self.get_action(state, data_server=data_server)
                 next_state, reward, terminated, truncated , info = self.env.step(action)
                 self.ep_reward += reward
@@ -33,6 +33,7 @@ class Worker:
                 learner.add_transition.remote((state, action, reward, next_state, terminated,info))
                 training_data = ray.get(learner.get_training_data.remote())
                 if training_data is not None:
+                    self.load_global_policy(learner)
                     self.update_policy(training_data, data_server=data_server)
                     self.set_global_policy(learner)
                     self.add_policy_summary(stats_recorder)

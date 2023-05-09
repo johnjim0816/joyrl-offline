@@ -5,11 +5,11 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:53
 LastEditor: JiangJi
-LastEditTime: 2023-05-08 15:18:22
+LastEditTime: 2023-05-09 13:04:12
 Discription: 
 '''
 import ray
-@ray.remote()
+@ray.remote
 class Learner:
     def __init__(self,cfg,policy=None,data_handler=None) -> None:
         self.cfg = cfg
