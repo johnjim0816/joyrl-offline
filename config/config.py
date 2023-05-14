@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-21 20:32:12
 LastEditor: JiangJi
-LastEditTime: 2023-05-15 01:10:34
+LastEditTime: 2023-05-15 01:23:24
 Discription: 
 '''
 class DefaultConfig:
@@ -27,7 +27,7 @@ class GeneralConfig():
         self.render_mode = "human" # 渲染模式, "human" 或者 "rgb_array"
         self.algo_name = "DQN" # name of algorithm
         self.mode = "test" # train or test
-        self.mp_backend = None # multiprocessing backend: "ray", default None
+        self.mp_backend = "single" # multiprocessing backend: "ray", default "single"
         self.seed = 0 # random seed
         self.device = "cpu" # device to use
         self.max_episode = 1000 # number of episodes for training

@@ -118,7 +118,7 @@ class Main(object):
             setattr(self.cfg, name, dir)
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
         env_name = self.env_cfg.id if self.env_cfg.id is not None else self.general_cfg.env_name
-        task_dir = f"{curr_path}/tasks/{self.general_cfg.mode.capitalize()}_{env_name}_{self.general_cfg.algo_name}_{curr_time}"
+        task_dir = f"{curr_path}/tasks/{self.general_cfg.mode.capitalize()}_{self.general_cfg.mp_backend}_{env_name}_{self.general_cfg.algo_name}_{curr_time}"
         dirs_dic = {
             'task_dir':task_dir,
             'model_dir':f"{task_dir}/models",

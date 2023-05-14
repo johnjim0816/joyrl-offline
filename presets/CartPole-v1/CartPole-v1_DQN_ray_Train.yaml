@@ -3,7 +3,7 @@ general_cfg:
   device: cpu # device, cpu or cuda
   env_name: gym # env name, differ from env_id in env_cfgs
   mode: train # run mode: train, test
-  mp_backend: null # multi-processing mode: null(default), ray
+  mp_backend: single # multi-processing mode: null(default), ray
   n_workers: 1 # number of workers if using multi-processing, default 1
   load_checkpoint: false # if load checkpoint or not
   load_path: Train_CartPole-v1_DQN_20221026-054757 # if load checkpoint, then config path in 'tasks' dir
