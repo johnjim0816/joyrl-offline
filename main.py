@@ -24,7 +24,7 @@ from torch.utils.tensorboard import SummaryWriter
 from config.config import GeneralConfig, MergedConfig
 from utils.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, save_traj,save_frames_as_gif
 from common.ray_utils import GlobalVarRecorder
-from envs.register import register_env
+# from envs.register import register_env
 from framework.stats import StatsRecorder, SimpleLogger, RayLogger
 from framework.dataserver import DataServer
 from framework.workers import Worker
@@ -156,7 +156,7 @@ class Main(object):
     def envs_config(self):
         ''' configure environment
         '''
-        register_env(self.env_cfg.id)
+        # register_env(self.env_cfg.id)
         envs = [] # numbers of envs, equal to cfg.n_workers
         for i in range(self.cfg.n_workers):
             env = self.create_single_env()
@@ -195,28 +195,30 @@ class Main(object):
     def single_run(self,cfg):
         ''' single process run
         '''
-        env = self.create_single_env()
+        envs = self.envs_config()  # configure environment
+        env = envs[0]
         policy, data_handler = self.policy_config(cfg)
-        i_ep , update_step = 0, 0
+        i_ep , update_step, sample_count = 0, 0, 1
         self.logger.info(f"Start {cfg.mode}ing!") # print info
         while True:
             ep_reward, ep_step = 0, 0 # reward per episode, step per episode
-            state = env.reset(seed = cfg.seed) # reset env
+            state, info = env.reset(seed = cfg.seed) # reset env
             while True:
-                action = policy.sample_action(state) # sample action
+                action = policy.sample_action(state,sample_count = sample_count) # sample action
                 next_state, reward, terminated, truncated , info = env.step(action) # update env
                 if cfg.mode.lower() == 'train':
                     data_handler.add_transition((state, action, reward, next_state, terminated, info)) # store transition
-                    training_data = data_handler.get_training_data() # get training data
+                    training_data = data_handler.sample_training_data() # get training data
                     if training_data is not None:
                         update_step += 1
                         policy.update(**training_data,update_step=update_step)
-                        model_summary = policy.get_summary()
+                        model_summary = policy.summary
                         for key, value in model_summary['scalar'].items():
                             self.policy_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = update_step)
                 state = next_state
                 ep_reward += reward
                 ep_step += 1
+                sample_count += 1
                 if terminated or (0<= cfg.max_steps <= ep_step):
                     self.logger.info(f"episode: {i_ep}, ep_reward: {ep_reward}, ep_step: {ep_step}")
                     interact_summary = {'ep_reward': ep_reward, 'ep_step': ep_step}
@@ -227,89 +229,71 @@ class Main(object):
             if i_ep >= cfg.max_episode:
                 break
             
-
-        ep_reward = 0  # 每回合的reward之和
-        ep_step = 0 # 每回合的step之和
-        state = env.reset(seed = cfg.seed)  # 重置环境并返回初始状态
-        for _ in range(cfg.max_steps):
-            ep_step += 1
-            action = agent.sample_action(state)  # 采样动作
-            next_state, reward, terminated, truncated , info = env.step(action)  # 更新环境并返回转移
-            exp = [Exp(state = state, action = action, reward = reward, next_state = next_state, done = terminated, info = info)]
-            agent.memory.push(exp)  # 存储样本(转移)
-            # if ep_step % 1 == 0:
-            # if ep_step % 2 == 0:
-            agent.update()  # 更新智能体
-            state = next_state  # 更新下一个状态
-            ep_reward += reward   
-            if terminated:
-                break
-
-        algo_name = cfg.algo_name
-        agent_mod = importlib.import_module(f"algos.{algo_name}.agent")
-        agent = agent_mod.Agent(self.cfg)  # create agent
-        trainer_mod = importlib.import_module(f"algos.{algo_name}.trainer")
-        trainer = trainer_mod.Trainer()  # create trainer
-        if cfg.load_checkpoint:
-            agent.load_model(f"tasks/{cfg.load_path}/models")
-        self.logger.info(f"Start {cfg.mode}ing!")
-        rewards = []  # record rewards for all episodes
-        steps = []  # record steps for all episodes
-        if cfg.mode.lower() == 'train':
-            best_ep_reward = -float('inf')
-            for i_ep in range(cfg.train_eps):
-                agent, res = trainer.train_one_episode(env, agent, self.cfg)
-                ep_reward = res['ep_reward']
-                ep_step = res['ep_step']
-                self.logger.info(f"Episode: {i_ep + 1}/{cfg.train_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
-                # for key, value in res.items():
-                #     self.tb_writter.add_scalar(tag = f"{cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep + 1)
-                rewards.append(ep_reward)
-                steps.append(ep_step)
-                # for _ in range
-                if (i_ep + 1) % cfg.eval_per_episode == 0:
-                    mean_eval_reward = self.evaluate(self.cfg, trainer, env, agent)
-                    if mean_eval_reward >= best_ep_reward:  # update best reward
-                        self.logger.info(f"Current episode {i_ep + 1} has the best eval reward: {mean_eval_reward:.3f}")
-                        best_ep_reward = mean_eval_reward
-                        agent.save_model(cfg.model_dir)  # save models with best reward
-            # env.close()
-        elif cfg.mode.lower() == 'test':
-            for i_ep in range(cfg.test_eps):
-                agent, res = trainer.test_one_episode(env, agent, self.cfg)
-                ep_reward = res['ep_reward']
-                ep_step = res['ep_step']
-                self.logger.info(f"Episode: {i_ep + 1}/{cfg.test_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
-                rewards.append(ep_reward)
-                steps.append(ep_step)
-                if i_ep == 0 and cfg.render and cfg.render_mode == 'rgb_array':
-                    frames = res['ep_frames']
-                    save_frames_as_gif(frames, cfg.video_dir)
-            agent.save_model(cfg.model_dir)  # save models
-            env.close()
-        elif cfg.mode.lower() == 'collect':  # collect
-            trajectories = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'terminals': []}
-            for i_ep in range(cfg.collect_eps):
-                print ("i_ep = ", i_ep, "cfg.collect_eps = ", cfg.collect_eps)
-                total_reward, ep_state, ep_action, ep_next_state, ep_reward, ep_terminal = trainer.collect_one_episode(env, agent, self.cfg)
-                trajectories['states'] += ep_state
-                trajectories['actions'] += ep_action
-                trajectories['next_states'] += ep_next_state
-                trajectories['rewards'] += ep_reward
-                trajectories['terminals'] += ep_terminal
-                self.logger.info(f'trajectories {i_ep + 1} collected, reward {total_reward}')
-                rewards.append(total_reward)
-                steps.append(cfg.max_steps)
-            env.close()
-            save_traj(trajectories, cfg.traj_dir)
-            self.logger.info(f"trajectories saved to {cfg.traj_dir}")
-        self.logger.info(f"Finish {cfg.mode}ing!")
-        res_dic = {'episodes': range(len(rewards)), 'rewards': rewards, 'steps': steps}
-        save_results(res_dic, cfg.res_dir)  # save results
-        save_cfgs(self.save_cfgs, cfg.task_dir)  # save config
-        plot_rewards(rewards,
-                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {self.env_cfg.id}",
-                     fpath=cfg.res_dir)
+        # algo_name = cfg.algo_name
+        # agent_mod = importlib.import_module(f"algos.{algo_name}.agent")
+        # agent = agent_mod.Agent(self.cfg)  # create agent
+        # trainer_mod = importlib.import_module(f"algos.{algo_name}.trainer")
+        # trainer = trainer_mod.Trainer()  # create trainer
+        # if cfg.load_checkpoint:
+        #     agent.load_model(f"tasks/{cfg.load_path}/models")
+        # self.logger.info(f"Start {cfg.mode}ing!")
+        # rewards = []  # record rewards for all episodes
+        # steps = []  # record steps for all episodes
+        # if cfg.mode.lower() == 'train':
+        #     best_ep_reward = -float('inf')
+        #     for i_ep in range(cfg.train_eps):
+        #         agent, res = trainer.train_one_episode(env, agent, self.cfg)
+        #         ep_reward = res['ep_reward']
+        #         ep_step = res['ep_step']
+        #         self.logger.info(f"Episode: {i_ep + 1}/{cfg.train_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
+        #         # for key, value in res.items():
+        #         #     self.tb_writter.add_scalar(tag = f"{cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep + 1)
+        #         rewards.append(ep_reward)
+        #         steps.append(ep_step)
+        #         # for _ in range
+        #         if (i_ep + 1) % cfg.eval_per_episode == 0:
+        #             mean_eval_reward = self.evaluate(self.cfg, trainer, env, agent)
+        #             if mean_eval_reward >= best_ep_reward:  # update best reward
+        #                 self.logger.info(f"Current episode {i_ep + 1} has the best eval reward: {mean_eval_reward:.3f}")
+        #                 best_ep_reward = mean_eval_reward
+        #                 agent.save_model(cfg.model_dir)  # save models with best reward
+        #     # env.close()
+        # elif cfg.mode.lower() == 'test':
+        #     for i_ep in range(cfg.test_eps):
+        #         agent, res = trainer.test_one_episode(env, agent, self.cfg)
+        #         ep_reward = res['ep_reward']
+        #         ep_step = res['ep_step']
+        #         self.logger.info(f"Episode: {i_ep + 1}/{cfg.test_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
+        #         rewards.append(ep_reward)
+        #         steps.append(ep_step)
+        #         if i_ep == 0 and cfg.render and cfg.render_mode == 'rgb_array':
+        #             frames = res['ep_frames']
+        #             save_frames_as_gif(frames, cfg.video_dir)
+        #     agent.save_model(cfg.model_dir)  # save models
+        #     env.close()
+        # elif cfg.mode.lower() == 'collect':  # collect
+        #     trajectories = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'terminals': []}
+        #     for i_ep in range(cfg.collect_eps):
+        #         print ("i_ep = ", i_ep, "cfg.collect_eps = ", cfg.collect_eps)
+        #         total_reward, ep_state, ep_action, ep_next_state, ep_reward, ep_terminal = trainer.collect_one_episode(env, agent, self.cfg)
+        #         trajectories['states'] += ep_state
+        #         trajectories['actions'] += ep_action
+        #         trajectories['next_states'] += ep_next_state
+        #         trajectories['rewards'] += ep_reward
+        #         trajectories['terminals'] += ep_terminal
+        #         self.logger.info(f'trajectories {i_ep + 1} collected, reward {total_reward}')
+        #         rewards.append(total_reward)
+        #         steps.append(cfg.max_steps)
+        #     env.close()
+        #     save_traj(trajectories, cfg.traj_dir)
+        #     self.logger.info(f"trajectories saved to {cfg.traj_dir}")
+        # self.logger.info(f"Finish {cfg.mode}ing!")
+        # res_dic = {'episodes': range(len(rewards)), 'rewards': rewards, 'steps': steps}
+        # save_results(res_dic, cfg.res_dir)  # save results
+        # save_cfgs(self.save_cfgs, cfg.task_dir)  # save config
+        # plot_rewards(rewards,
+        #              title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {self.env_cfg.id}",
+        #              fpath=cfg.res_dir)
     def ray_run(self,cfg):
         ''' ray run
         '''
@@ -339,7 +323,7 @@ class Main(object):
         else:
             self.single_run(self.cfg)
         e_t = time.time()
-        self.logger.info(f"task finished, total time consumed: {e_t-s_t}")
+        self.logger.info(f"task finished, total time consumed: {e_t-s_t:.2f}s")
 
 if __name__ == "__main__":
     main = Main()

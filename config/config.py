@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-21 20:32:12
 LastEditor: JiangJi
-LastEditTime: 2023-05-14 23:06:27
+LastEditTime: 2023-05-15 01:10:34
 Discription: 
 '''
 class DefaultConfig:
@@ -22,7 +22,6 @@ class MergedConfig:
 class GeneralConfig():
     def __init__(self) -> None:
         self.env_name = "gym" # name of environment
-        self.new_step_api = True # whether to use new step api of gym
         self.wrapper = None # wrapper of environment
         self.render = False # whether to render environment
         self.render_mode = "human" # 渲染模式, "human" 或者 "rgb_array"
@@ -31,8 +30,8 @@ class GeneralConfig():
         self.mp_backend = None # multiprocessing backend: "ray", default None
         self.seed = 0 # random seed
         self.device = "cpu" # device to use
-        self.train_eps = 1000 # number of episodes for training
-        self.test_eps = 200 # number of episodes for testing
+        self.max_episode = 1000 # number of episodes for training
+        self.max_step = 200 # number of episodes for testing
         self.eval_eps = 10 # number of episodes for evaluation
         self.eval_per_episode = 5 # evaluation per episode
         self.max_steps = 200 # max steps for each episode

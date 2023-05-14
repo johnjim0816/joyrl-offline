@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:55:32
 LastEditor: JiangJi
-LastEditTime: 2023-04-29 15:23:10
+LastEditTime: 2023-05-15 01:20:32
 Discription: 
 '''
 import ray
@@ -29,12 +29,13 @@ class DataHandler:
             return None
     def create_exp(self,transtion):
         state, action, reward, next_state, terminated, info = transtion
-        algo_name = self.cfg.algo_name
-        exp_mod = __import__(f"algos.{algo_name}.exp", fromlist=['Exp'])
+        exp_mod = __import__(f"algos.{self.cfg.algo_name}.exp", fromlist=['Exp'])
         exp = exp_mod.Exp(state = state, action = action, reward = reward, next_state = next_state, done = terminated, info = info)
         return [exp]
     def handle_exps_before_update(self, exps):
         # 将采样的数据转换为 tensor
+        # for exp in exps:
+        #     print(exp.state)
         states = np.array([exp.state for exp in exps])
         actions = np.array([exp.action for exp in exps])
         rewards = np.array([exp.reward for exp in exps])
