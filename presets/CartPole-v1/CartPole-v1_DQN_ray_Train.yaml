@@ -1,18 +1,18 @@
 general_cfg:
-  algo_name: DQN_new
-  device: cpu
-  env_name: gym
-  mode: train
-  mp_backend: ray 
-  n_workers: 2
-  load_checkpoint: false
-  load_path: Train_CartPole-v1_DQN_20221026-054757
-  max_step: 200
-  save_fig: true
-  seed: 1
-  show_fig: false
+  algo_name: DQN_new # algo name
+  device: cpu # device, cpu or cuda
+  env_name: gym # env name, differ from env_id in env_cfgs
+  mode: train # run mode: train, test
+  mp_backend: null # multi-processing mode: null(default), ray
+  n_workers: 2 # number of workers if using multi-processing, default 1
+  load_checkpoint: false # if load checkpoint or not
+  load_path: Train_CartPole-v1_DQN_20221026-054757 # if load checkpoint, then config path in 'tasks' dir
+  max_epsiode: 100 # max episodes, set -1 to keep running
+  max_step: 200 # max steps per episode
+  seed: 1 # random seed, set 0 not to use seed
+  save_fig: true # if save fig or not
+  show_fig: false # if show fig or not
   test_eps: 10
-  max_epsiode: 200
 algo_cfg:
   value_layers:
     - layer_type: linear

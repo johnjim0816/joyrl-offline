@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-28 16:16:04
 LastEditor: JiangJi
-LastEditTime: 2023-05-08 00:22:50
+LastEditTime: 2023-05-14 00:28:45
 Discription: 
 '''
 import ray
@@ -22,7 +22,7 @@ class DataServer:
     def increase_episode(self):
         self.curr_episode += 1
     def check_episode_limit(self):
-        return self.curr_episode >= self.max_epsiode
+        return self.curr_episode > self.max_epsiode
     def get_episode(self):
         return self.curr_episode
     def increase_sample_count(self):

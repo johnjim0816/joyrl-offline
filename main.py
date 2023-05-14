@@ -11,25 +11,42 @@ import yaml
 
 from pathlib import Path
 import datetime
-import gym
-from gym.wrappers import RecordVideo
+import gymnasium as gym
+import time 
+# import gym
+# from gym.wrappers import RecordVideo
 import ray
-import asyncio
 from ray.util.queue import Queue
 import importlib
 from algos.base.buffers import BufferCreator
 import torch.multiprocessing as mp
+from torch.utils.tensorboard import SummaryWriter  
 from config.config import GeneralConfig, MergedConfig
-from common.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, save_traj,save_frames_as_gif
+from utils.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, save_traj,save_frames_as_gif
 from common.ray_utils import GlobalVarRecorder
 from envs.register import register_env
-from torch.utils.tensorboard import SummaryWriter  
+from framework.stats import StatsRecorder, SimpleLogger, RayLogger
+from framework.dataserver import DataServer
+from framework.workers import Worker
+from framework.learners import Learner
 
 class Main(object):
     def __init__(self) -> None:
-        pass
+        self.get_default_cfg()  # 获取默认参数
+        self.process_yaml_cfg()  # 处理yaml配置文件参数，并覆盖默认参数
+        self.merge_cfgs() # 合并参数为 self.cfg
+        self.create_dirs()  # 创建文件夹
+        self.create_loggers()  # 创建日志记录器
+        # 打印参数
+        self.print_cfgs(self.general_cfg,name = 'General Configs')  
+        self.print_cfgs(self.algo_cfg,name = 'Algo Configs')
+        self.print_cfgs(self.env_cfg,name = 'Env Configs') 
+        all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
+        self.check_n_workers(self.general_cfg)  # 检查n_workers参数
 
     def get_default_cfg(self):
+        ''' get default config
+        '''
         self.general_cfg = GeneralConfig()
         self.algo_name = self.general_cfg.algo_name
         algo_mod = importlib.import_module(f"algos.{self.algo_name}.config")
@@ -96,33 +113,34 @@ class Main(object):
             for k, v in load_cfg[item].items():
                 setattr(target_cfg, k, v)
     def create_dirs(self):
+        def config_dir(dir,name = None):
+            Path(dir).mkdir(parents=True, exist_ok=True)
+            setattr(self.cfg, name, dir)
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
-        if self.env_cfg.id is not None:
-            env_name = self.env_cfg.id
-        else:
-            env_name = self.env_cfg.env_name
+        env_name = self.env_cfg.id if self.env_cfg.id is not None else self.general_cfg.env_name
         task_dir = f"{curr_path}/tasks/{self.general_cfg.mode.capitalize()}_{env_name}_{self.general_cfg.algo_name}_{curr_time}"
-        setattr(self.cfg, 'task_dir', task_dir)
-        Path(task_dir).mkdir(parents=True, exist_ok=True)
-
-        model_dir = f"{task_dir}/models"
-        setattr(self.cfg, 'model_dir', model_dir)
-        res_dir = f"{task_dir}/results"
-        setattr(self.cfg, 'res_dir', res_dir)
-        log_dir = f"{task_dir}/logs"
-        setattr(self.cfg, 'log_dir', log_dir)
-        traj_dir = f"{task_dir}/traj"
-        setattr(self.cfg, 'traj_dir', traj_dir)
-        video_dir = f"{task_dir}/videos"
-        setattr(self.cfg, 'video_dir', video_dir)
-        tb_dir = f"{task_dir}/tb_logs"
-        setattr(self.cfg, 'tb_dir', tb_dir)
+        dirs_dic = {
+            'task_dir':task_dir,
+            'model_dir':f"{task_dir}/models",
+            'res_dir':f"{task_dir}/results",
+            'log_dir':f"{task_dir}/logs",
+            'traj_dir':f"{task_dir}/traj",
+            'video_dir':f"{task_dir}/videos",
+            'tb_dir':f"{task_dir}/tb_logs"
+        }
+        for k,v in dirs_dic.items():
+            config_dir(v,name=k)
     def create_loggers(self):
         ''' create logger
         '''
-        self.logger = get_logger(self.cfg.log_dir)
-        # self.tb_writter = SummaryWriter(log_dir=self.cfg.tb_dir)
-        # setattr(self.cfg, 'tb_writter', self.tb_writter)
+        if self.general_cfg.mp_backend == 'ray':
+            self.logger = RayLogger(self.cfg.log_dir)
+        else:
+            self.logger = SimpleLogger(self.cfg.log_dir)
+
+        self.interact_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/interact")
+        self.policy_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/model")
+
     def create_single_env(self):
         ''' create single env
         '''
@@ -147,7 +165,25 @@ class Main(object):
         setattr(self.cfg, 'action_space', envs[0].action_space)
         self.logger.info(f"obs_space: {envs[0].observation_space}, n_actions: {envs[0].action_space}")  # print info
         return envs
+    def policy_config(self,cfg):
+        algo_name = cfg.algo_name
+        policy_mod = importlib.import_module(f"algos.{algo_name}.policy")
+         # create agent
+        data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
+        policy = policy_mod.Policy(cfg) 
+        if cfg.load_checkpoint:
+            policy.load_model(f"tasks/{cfg.load_path}/models")
+        data_handler = data_handler_mod.DataHandler(cfg)
+        return policy, data_handler
     
+    def check_n_workers(self,cfg):
+        if cfg.__dict__.get('n_workers',None) is None: # set n_workers to 1 if not set
+            setattr(cfg, 'n_workers', 1)
+        if not isinstance(cfg.n_workers,int) or cfg.n_workers<=0: # n_workers must >0
+            raise ValueError("the parameter 'n_workers' must >0!")
+        if cfg.n_workers > mp.cpu_count() - 1:
+            raise ValueError("the parameter 'n_workers' must less than total numbers of cpus on your machine!")
+        
     def evaluate(self, cfg, trainer, env, agent):
         sum_eval_reward = 0
         for _ in range(cfg.eval_eps):
@@ -159,8 +195,56 @@ class Main(object):
     def single_run(self,cfg):
         ''' single process run
         '''
-        envs = self.envs_config()  # configure environment
-        env = envs[0]
+        env = self.create_single_env()
+        policy, data_handler = self.policy_config(cfg)
+        i_ep , update_step = 0, 0
+        self.logger.info(f"Start {cfg.mode}ing!") # print info
+        while True:
+            ep_reward, ep_step = 0, 0 # reward per episode, step per episode
+            state = env.reset(seed = cfg.seed) # reset env
+            while True:
+                action = policy.sample_action(state) # sample action
+                next_state, reward, terminated, truncated , info = env.step(action) # update env
+                if cfg.mode.lower() == 'train':
+                    data_handler.add_transition((state, action, reward, next_state, terminated, info)) # store transition
+                    training_data = data_handler.get_training_data() # get training data
+                    if training_data is not None:
+                        update_step += 1
+                        policy.update(**training_data,update_step=update_step)
+                        model_summary = policy.get_summary()
+                        for key, value in model_summary['scalar'].items():
+                            self.policy_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = update_step)
+                state = next_state
+                ep_reward += reward
+                ep_step += 1
+                if terminated or (0<= cfg.max_steps <= ep_step):
+                    self.logger.info(f"episode: {i_ep}, ep_reward: {ep_reward}, ep_step: {ep_step}")
+                    interact_summary = {'ep_reward': ep_reward, 'ep_step': ep_step}
+                    for key, value in interact_summary.items():
+                        self.interact_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep)
+                    i_ep += 1
+                    break
+            if i_ep >= cfg.max_episode:
+                break
+            
+
+        ep_reward = 0  # 每回合的reward之和
+        ep_step = 0 # 每回合的step之和
+        state = env.reset(seed = cfg.seed)  # 重置环境并返回初始状态
+        for _ in range(cfg.max_steps):
+            ep_step += 1
+            action = agent.sample_action(state)  # 采样动作
+            next_state, reward, terminated, truncated , info = env.step(action)  # 更新环境并返回转移
+            exp = [Exp(state = state, action = action, reward = reward, next_state = next_state, done = terminated, info = info)]
+            agent.memory.push(exp)  # 存储样本(转移)
+            # if ep_step % 1 == 0:
+            # if ep_step % 2 == 0:
+            agent.update()  # 更新智能体
+            state = next_state  # 更新下一个状态
+            ep_reward += reward   
+            if terminated:
+                break
+
         algo_name = cfg.algo_name
         agent_mod = importlib.import_module(f"algos.{algo_name}.agent")
         agent = agent_mod.Agent(self.cfg)  # create agent
@@ -178,8 +262,8 @@ class Main(object):
                 ep_reward = res['ep_reward']
                 ep_step = res['ep_step']
                 self.logger.info(f"Episode: {i_ep + 1}/{cfg.train_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
-                for key, value in res.items():
-                    self.tb_writter.add_scalar(tag = f"{cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep + 1)
+                # for key, value in res.items():
+                #     self.tb_writter.add_scalar(tag = f"{cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep + 1)
                 rewards.append(ep_reward)
                 steps.append(ep_step)
                 # for _ in range
@@ -226,106 +310,36 @@ class Main(object):
         plot_rewards(rewards,
                      title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {self.env_cfg.id}",
                      fpath=cfg.res_dir)
-    
-    def multi_run(self,cfg):
-        ''' multi process run
-        '''
-        envs = self.envs_config(cfg)  # configure environment
-        agent_mod = __import__(f"algos.{cfg.algo_name}.agent", fromlist=['Agent'])
-        share_agent = agent_mod.Agent(cfg,is_share_agent = True)  # create agent
-        local_agents = [agent_mod.Agent(cfg) for _ in range(cfg.n_workers)]
-        worker_mod = __import__(f"algos.{cfg.algo_name}.trainer", fromlist=['Worker'])
-        mp.set_start_method("spawn") # 兼容windows和unix
-        if cfg.load_checkpoint:
-            share_agent.load_model(f"tasks/{cfg.load_path}/models")
-            for local_agent in local_agents:
-                local_agent.load_model(f"tasks/{cfg.load_path}/models")
-        self.logger.info(f"Start {cfg.mode}ing!")
-        self.logger.info(f"Env: {cfg.env_name}, Algorithm: {cfg.algo_name}, Device: {cfg.device}")
-        global_ep = mp.Value('i', 0)
-        global_best_reward = mp.Value('d', 0.)
-        global_r_que = mp.Queue()
-        workers = [worker_mod.Worker(cfg,i,share_agent,envs[i],local_agents[i],global_ep=global_ep,global_r_que=global_r_que,global_best_reward=global_best_reward) for i in range(cfg.n_workers)]
-        [w.start() for w in workers]
-        rewards = [] # record episode reward to plot
-        while True:
-            r = global_r_que.get()
-            if r is not None:
-                rewards.append(r)
-            else:
-                break
-        [w.join() for w in workers]
-        self.logger.info(f"Finish {cfg.mode}ing!")
-        res_dic = {'episodes': range(len(rewards)), 'rewards': rewards}
-        save_results(res_dic, cfg.res_dir)  # save results
-        save_cfgs(self.cfgs, cfg.task_dir)  # save config
-        plot_rewards(rewards,
-                     title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {cfg.id}",
-                     fpath=cfg.res_dir)
-        
     def ray_run(self,cfg):
-        ''' 使用Ray并行化强化学习算法
+        ''' ray run
         '''
-        from framework.stats import StatsRecorder
-        from framework.dataserver import DataServer
-        from framework.workers import Worker
-        from framework.learners import Learner
         ray.shutdown()
         ray.init(include_dashboard=True)
         envs = self.envs_config()  # configure environment
-        algo_name = cfg.algo_name
-        policy_mod = importlib.import_module(f"algos.{algo_name}.policy")
-         # create agent
-        data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
-        policy = policy_mod.Policy(cfg) 
-        data_handler = data_handler_mod.DataHandler(cfg)
+        policy, data_handler = self.policy_config(cfg)
         stats_recorder = StatsRecorder.remote(cfg)
         data_server = DataServer.remote(cfg)
+        self.logger = RayLogger.remote(cfg.log_dir)
         learner = Learner.remote(cfg, policy = policy,data_handler = data_handler)
         workers = []
         for i in range(cfg.n_workers):
-            worker = Worker.remote(cfg,id = i,env = envs[i], policy = policy)
+            worker = Worker.remote(cfg,id = i,env = envs[i], logger = self.logger)
             workers.append(worker)
         worker_tasks = [worker.run.remote(data_server = data_server,learner = learner,stats_recorder = stats_recorder) for worker in workers]
         ray.get(worker_tasks)
+        ray.shutdown()
 
-    def check_n_workers(self,cfg):
-
-        if cfg.__dict__.get('n_workers',None) is None: # set n_workers to 1 if not set
-            setattr(cfg, 'n_workers', 1)
-        if not isinstance(cfg.n_workers,int) or cfg.n_workers<=0: # n_workers must >0
-            raise ValueError("n_workers must >0!")
-        if cfg.n_workers > mp.cpu_count():
-            raise ValueError("n_workers must less than total numbers of cpus on your machine!")
+    
 
     def run(self) -> None:
-        self.get_default_cfg()  # 获取默认参数
-        self.process_yaml_cfg()  # 处理yaml配置文件参数，并覆盖默认参数
-        self.merge_cfgs() # 合并参数为 self.cfg
-        self.create_dirs()  # 创建文件夹
-        self.create_loggers()  # 创建日志记录器
-        # 打印参数
-        self.print_cfgs(self.general_cfg,name = 'General Configs')  
-        self.print_cfgs(self.algo_cfg,name = 'Algo Configs')
-        self.print_cfgs(self.env_cfg,name = 'Env Configs') 
-        all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
-        self.check_n_workers(self.general_cfg)  # 检查n_workers参数
-        import time 
+
         s_t = time.time()
-        self.ray_run(self.cfg)
+        if self.general_cfg.mp_backend == 'ray':
+            self.ray_run(self.cfg)
+        else:
+            self.single_run(self.cfg)
         e_t = time.time()
-        print(f"total time: {e_t-s_t}")
-        # if self.general_cfg.n_workers == 1:
-        #     if self.general_cfg.mp_backend == 'ray':
-        #         self.ray_run(self.cfg)
-        #     else:
-        #         self.single_run(self.cfg)
-        #     # self.single_run(self.cfg)
-        # else:
-        #     if self.general_cfg.mp_backend == 'mp':
-        #         self.multi_run(self.cfg)
-        #     else:
-        #         self.ray_run(self.cfg)
+        self.logger.info(f"task finished, total time consumed: {e_t-s_t}")
 
 if __name__ == "__main__":
     main = Main()

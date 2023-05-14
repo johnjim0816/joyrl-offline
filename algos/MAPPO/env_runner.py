@@ -7,7 +7,7 @@ import torch
 from tensorboardX import SummaryWriter
 import imageio
 from common.memories import SeparatedReplayBuffer
-from common.utils import update_linear_schedule
+from utils.utils import update_linear_schedule
 
 def _t2n(x):
     """Convert torch tensor to a numpy array."""

@@ -122,8 +122,9 @@ def merge_class_attrs(ob1, ob2):
     return ob1
 def get_logger(fpath):
     Path(fpath).mkdir(parents=True, exist_ok=True)
-    logger = logging.getLogger(name='r')  # set root logger if not set name
-    logger.setLevel(logging.DEBUG)
+    # logger = logging.getLogger(name='r')  # set root logger if not set name
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s: - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S')

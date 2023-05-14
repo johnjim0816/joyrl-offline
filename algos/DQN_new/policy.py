@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-05-08 23:09:30
+LastEditTime: 2023-05-15 00:43:45
 Discription: 
 '''
 import random
@@ -47,9 +47,10 @@ class Policy(BasePolicy):
         self.create_optimizer()
        
     def create_optimizer(self):
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.cfg.lr) 
+        # self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.cfg.lr) 
+        self.optimizer = optim.Adam(self.parameters(), lr=self.cfg.lr) 
         
-    def get_action(self, state, sample_count=None):
+    def sample_action(self, state, sample_count=None):
         ''' 采样动作
         Args:
             state (array): 状态

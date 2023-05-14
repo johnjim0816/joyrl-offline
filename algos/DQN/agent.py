@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-04-29 15:33:45
+LastEditTime: 2023-05-14 00:19:37
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -21,7 +21,7 @@ import ray
 import numpy as np
 from common.optms import SharedAdam
 from algos.base.buffers import BufferCreator
-from algos.base.agents import BasePolicy
+from algos.base.policies import BasePolicy
 from algos.base.networks import ValueNetwork
 
 class Agent(BasePolicy):
@@ -48,6 +48,7 @@ class Agent(BasePolicy):
         self.memory = BufferCreator(cfg)()
         self.update_step = 0
         self.create_graph()
+        self.create_summary()
     def create_graph(self):
         self.state_size = [None, self.obs_space.shape[0]]
         action_dim = self.action_space.n
@@ -63,6 +64,7 @@ class Agent(BasePolicy):
             # self.target_net.share_memory()
             # self.target_optimizer = SharedAdam(self.target_net.parameters(), lr=cfg.lr)
             # self.target_optimizer.share_memory()
+        
     def create_optm(self):
         self.optm = optim.Adam(self.policy_net.parameters(), lr=self.lr)
         

@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-21 20:32:12
 LastEditor: JiangJi
-LastEditTime: 2023-04-18 13:23:26
+LastEditTime: 2023-05-14 23:06:27
 Discription: 
 '''
 class DefaultConfig:
@@ -26,9 +26,9 @@ class GeneralConfig():
         self.wrapper = None # wrapper of environment
         self.render = False # whether to render environment
         self.render_mode = "human" # 渲染模式, "human" 或者 "rgb_array"
-        self.algo_name = "BCQ" # name of algorithm
+        self.algo_name = "DQN" # name of algorithm
         self.mode = "test" # train or test
-        self.mp_backend = "mp" # 多线程框架，ray或者mp(multiprocessing)，默认mp
+        self.mp_backend = None # multiprocessing backend: "ray", default None
         self.seed = 0 # random seed
         self.device = "cpu" # device to use
         self.train_eps = 1000 # number of episodes for training
