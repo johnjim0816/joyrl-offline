@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2021-04-29 12:59:22
 LastEditor: JiangJi
-LastEditTime: 2021-12-22 16:27:13
+LastEditTime: 2023-05-14 20:36:34
 Discription: 
 Environment: 
 '''
@@ -20,8 +20,8 @@ import datetime
 
 from SoftActorCritic.env_wrapper import NormalizedActions
 from SoftActorCritic.sac import SAC
-from common.utils import save_results, make_dir
-from common.utils import plot_rewards
+from utils.utils import save_results, make_dir
+from utils.utils import plot_rewards
 
 curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # 获取当前时间
 algo_name = 'SAC'  # 算法名称

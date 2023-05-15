@@ -12,7 +12,7 @@ import numpy as np
 import torch.nn as nn
 from common.memories import ReplayBufferQue
 from common.models import MLP
-from common.utils import save_results,all_seed,plot_rewards,save_args
+from utils.utils import save_results,all_seed,plot_rewards,save_args
 from softq import SoftQ
 
 def get_args():

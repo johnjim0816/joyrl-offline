@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:15
 LastEditor: JiangJi
-LastEditTime: 2023-04-24 00:27:19
+LastEditTime: 2023-04-26 00:53:56
 Discription: 
 '''
 import torch
@@ -20,29 +20,31 @@ class LayerConfig:
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-def get_out_size_with_batch(layers,input_size,dtype=torch.float):
+def get_output_size_with_batch(layers,input_size,dtype=torch.float):
     """ 获取层的输出维度
         layer: 层
         in_dim: 层的输入维度
     """
     with torch.no_grad():
-        x = torch.randn(10,*input_size[-1],dtype=dtype)
+        x = torch.zeros(10, *input_size[1:], dtype=dtype)
         out = layers(x)
-    return [None,list(out.size())[1:] ]        
+    output_size = [None] + list(out.size())[1:]
+    return output_size      
+  
 def embedding_layer(input_size, layer_cfg: LayerConfig):
     n_embeddings = layer_cfg.n_embeddings
     embedding_dim = layer_cfg.embedding_dim
     class EmbeddingLayer(nn.Module):
         def __init__(self, n_embeddings, embedding_dim):
             super(EmbeddingLayer, self).__init__()
-            self.layer = nn.Embedding(n_embeddings=n_embeddings, embedding_dim=embedding_dim)
+            self.layer = nn.Embedding(num_embeddings=n_embeddings, embedding_dim=embedding_dim)
 
         def forward(self, x: torch.Tensor):
-            # if x.dtype != torch.int:
-            #     x = x.int()
+            if x.dtype != torch.int:
+                x = x.int()
             return self.layer(x)
     layer = EmbeddingLayer(n_embeddings, embedding_dim)
-    output_size = get_out_size_with_batch(layer, input_size=input_size, dtype=torch.long)
+    output_size = get_output_size_with_batch(layer, input_size=input_size, dtype=torch.long)
     return layer, output_size 
 def linear_layer(input_size,layer_cfg: LayerConfig):
     """ 生成一个线性层
@@ -75,7 +77,6 @@ def create_layer(input_size: list, layer_cfg: LayerConfig):
         activation: 激活函数
     """
     layer_type = layer_cfg.layer_type.lower()
-    print(layer_type)
     if layer_type == "linear":
         return linear_layer(input_size, layer_cfg)
     elif layer_type == "conv2d":

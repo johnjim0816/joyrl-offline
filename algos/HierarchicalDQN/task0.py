@@ -5,7 +5,7 @@ Author: John
 Email: johnjim0816@gmail.com
 Date: 2021-03-29 10:37:32
 LastEditor: John
-LastEditTime: 2021-05-04 22:35:56
+LastEditTime: 2023-05-14 20:36:57
 Discription: 
 Environment: 
 '''
@@ -20,8 +20,8 @@ import numpy as np
 import torch
 import gym
 
-from common.utils import save_results,make_dir
-from common.utils import plot_rewards
+from utils.utils import save_results,make_dir
+from utils.utils import plot_rewards
 from HierarchicalDQN.agent import HierarchicalDQN
 from HierarchicalDQN.train import train,test
 
