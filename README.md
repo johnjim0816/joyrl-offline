@@ -47,12 +47,6 @@ pip install -r requirements.txt
 
 ## 安装多线程
 
-### Multiprocessing框架
-
-```bash
-pip install multiprocess
-```
-
 ### Ray框架
 
 ```bash
