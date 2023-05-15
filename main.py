@@ -1,28 +1,18 @@
 import sys, os
-
 os.environ[
     "KMP_DUPLICATE_LIB_OK"] = "TRUE"  # avoid "OMP: Error #15: Initializing libiomp5md.dll, but found libiomp5md.dll already initialized."
 curr_path = os.path.dirname(os.path.abspath(__file__))  # current path
 parent_path = os.path.dirname(curr_path)  # parent path 
 sys.path.append(parent_path)  # add path to system path
 
-import argparse
-import yaml
-
-from pathlib import Path
-import datetime
+import argparse,datetime,importlib,yaml,time 
 import gymnasium as gym
-import time 
-# import gym
-# from gym.wrappers import RecordVideo
 import ray
-from ray.util.queue import Queue
-import importlib
-from algos.base.buffers import BufferCreator
 import torch.multiprocessing as mp
+from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter  
 from config.config import GeneralConfig, MergedConfig
-from utils.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, save_traj,save_frames_as_gif
+from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
 from common.ray_utils import GlobalVarRecorder
 # from envs.register import register_env
 from framework.stats import StatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
