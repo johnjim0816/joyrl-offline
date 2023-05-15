@@ -17,8 +17,6 @@ import torch.nn.functional as F
 import numpy as np
 from algos.base.policies import BasePolicy
 from common.layers import ValueNetwork
-
-
 class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
         super(Policy, self).__init__(cfg)
