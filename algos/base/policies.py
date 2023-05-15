@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-15 00:43:34
+LastEditTime: 2023-05-15 13:16:29
 Discription: 
 '''
 import torch
@@ -24,7 +24,17 @@ class BasePolicy(nn.Module):
         return self.optimizer.state_dict()
     def load_optimizer_params(self, optim_params_dict):
         self.optimizer.load_state_dict(optim_params_dict)
-    def sample_action(self, state):
+    def get_action(self,state, sample_count = None, mode = 'sample'):
+        ''' 
+        获取动作
+        '''
+        if mode == 'sample':
+            return self.sample_action(state, sample_count = sample_count)
+        elif mode == 'predict':
+            return self.predict_action(state)
+        else:
+            raise NotImplementedError
+    def sample_action(self, state, sample_count = None):
         raise NotImplementedError
     def predict_action(self, state):
         raise NotImplementedError
@@ -43,7 +53,7 @@ class BasePolicy(nn.Module):
         self.summary['scalar']['loss'] = self.loss.item()
     def update(self):
         raise NotImplementedError
-    def save(self):
-        pass
-    def load(self):
-        pass
+    def save_model(self, fpath):
+        torch.save(self.state_dict(), fpath)
+    def load_model(self, fpath):
+        self.load_state_dict(torch.load(fpath))

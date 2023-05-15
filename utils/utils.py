@@ -5,7 +5,7 @@ Author: John
 Email: johnjim0816@gmail.com
 Date: 2021-03-12 16:02:24
 LastEditor: John
-LastEditTime: 2023-04-04 21:35:48
+LastEditTime: 2023-05-15 13:18:09
 Discription: 
 Environment: 
 '''
@@ -68,7 +68,7 @@ def save_frames_as_gif(frames, fpath=None):
         patch.set_data(frames[i])
 
     anim = animation.FuncAnimation(plt.gcf(), animate, frames = len(frames), interval=50)
-    anim.save(f"{fpath}/video.gif", writer='imagemagick', fps=60)
+    anim.save(f"{fpath}/video.gif", writer='pillow', fps=60)
 def smooth(data, weight=0.9):  
     '''用于平滑曲线，类似于Tensorboard中的smooth
 

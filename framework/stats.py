@@ -5,12 +5,13 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-28 16:18:44
 LastEditor: JiangJi
-LastEditTime: 2023-05-14 22:32:36
+LastEditTime: 2023-05-15 12:26:49
 Discription: 
 '''
 import ray 
 from ray.util.queue import Queue, Empty, Full
 from pathlib import Path
+import pickle
 import logging
 from torch.utils.tensorboard import SummaryWriter  
 @ray.remote
@@ -66,3 +67,45 @@ class RayLogger(BaseLogger):
     def __init__(self, fpath=None) -> None:
         super().__init__(fpath)
         self.logger.name = "RayLog"
+
+class BaseTrajCollector:
+    def __init__(self, fpath) -> None:
+        pass
+class SimpleTrajCollector(BaseTrajCollector):
+    def __init__(self, fpath) -> None:
+        super().__init__(fpath)
+        self.fpath = fpath
+        self.traj_num = 0
+        self.init_traj()
+        self.init_traj_cache()
+    def init_traj(self):
+        ''' init trajectories
+        '''
+        self.trajs = {'state':[],'action':[],'reward':[],'next_state':[],'terminated':[],'info':[]}
+    def init_traj_cache(self):
+        ''' init trajectory cache for one episode
+        '''
+        self.ep_states, self.ep_actions, self.ep_rewards, self.ep_next_states, self.ep_terminated, self.ep_infos = [], [], [], [], [], []
+    def add_traj_cache(self,state,action,reward,next_state,terminated,info):
+        ''' store one episode trajectory
+        '''
+        self.ep_states.append(state)
+        self.ep_actions.append(action)
+        self.ep_rewards.append(reward)
+        self.ep_next_states.append(next_state)
+        self.ep_terminated.append(terminated)
+        self.ep_infos.append(info)
+    def store_traj(self, task_end_flag = False):
+        ''' store trajectory cache into trajectories
+        '''
+        self.trajs['state'].append(self.ep_states)
+        self.trajs['action'].append(self.ep_actions)
+        self.trajs['reward'].append(self.ep_rewards)
+        self.trajs['next_state'].append(self.ep_next_states)
+        self.trajs['terminated'].append(self.ep_terminated)
+        self.trajs['info'].append(self.ep_infos)
+        if len(self.trajs['state']) >= 1000 or task_end_flag: # save traj when traj number is greater than 1000
+            with open(f"{self.fpath}/trajs_{self.traj_num}.pkl", 'wb') as f:
+                pickle.dump(self.trajs, f)
+                self.traj_num += 1
+            self.init_traj_cache()

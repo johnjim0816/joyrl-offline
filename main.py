@@ -25,24 +25,24 @@ from config.config import GeneralConfig, MergedConfig
 from utils.utils import get_logger, save_results, save_cfgs, plot_rewards, merge_class_attrs, all_seed, save_traj,save_frames_as_gif
 from common.ray_utils import GlobalVarRecorder
 # from envs.register import register_env
-from framework.stats import StatsRecorder, SimpleLogger, RayLogger
+from framework.stats import StatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.dataserver import DataServer
 from framework.workers import Worker
 from framework.learners import Learner
 
 class Main(object):
     def __init__(self) -> None:
-        self.get_default_cfg()  # 获取默认参数
-        self.process_yaml_cfg()  # 处理yaml配置文件参数，并覆盖默认参数
-        self.merge_cfgs() # 合并参数为 self.cfg
-        self.create_dirs()  # 创建文件夹
-        self.create_loggers()  # 创建日志记录器
-        # 打印参数
+        self.get_default_cfg()  # get default config
+        self.process_yaml_cfg()  # load yaml config
+        self.merge_cfgs() # merge all configs
+        self.create_dirs()  # create dirs
+        self.create_loggers()  # create loggers
+        # print all configs
         self.print_cfgs(self.general_cfg,name = 'General Configs')  
         self.print_cfgs(self.algo_cfg,name = 'Algo Configs')
         self.print_cfgs(self.env_cfg,name = 'Env Configs') 
         all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
-        self.check_n_workers(self.general_cfg)  # 检查n_workers参数
+        self.check_n_workers(self.general_cfg)  # check n_workers
 
     def get_default_cfg(self):
         ''' get default config
@@ -83,24 +83,24 @@ class Main(object):
 
                             help='the path of config file')
         args = parser.parse_args()
-        ## 加载yaml参数
+        # load config from yaml file
         if args.yaml is not None:
             with open(args.yaml) as f:
                 load_cfg = yaml.load(f, Loader=yaml.FullLoader)
-                ## 加载通用参数
+                # load general config
                 self.load_yaml_cfg(self.general_cfg,load_cfg,'general_cfg')
-                ## 加载算法参数
+                # load algo config
                 self.algo_name = self.general_cfg.algo_name
                 algo_mod = importlib.import_module(f"algos.{self.algo_name}.config")
                 self.algo_cfg = algo_mod.AlgoConfig()
                 self.load_yaml_cfg(self.algo_cfg,load_cfg,'algo_cfg')
-                ## 加载环境参数
+                # load env config
                 self.env_name = self.general_cfg.env_name
                 env_mod = importlib.import_module(f"envs.{self.env_name}.config")
                 self.env_cfg = env_mod.EnvConfig()
                 self.load_yaml_cfg(self.env_cfg,load_cfg,'env_cfg')
     def merge_cfgs(self):
-        ''' 合并参数
+        ''' merge all configs
         '''
         self.cfg = MergedConfig()
         self.cfg = merge_class_attrs(self.cfg, self.general_cfg)
@@ -140,6 +140,7 @@ class Main(object):
 
         self.interact_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/interact")
         self.policy_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/model")
+        self.traj_collector = SimpleTrajCollector(self.cfg.res_dir)
 
     def create_single_env(self):
         ''' create single env
@@ -172,7 +173,7 @@ class Main(object):
         data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
         policy = policy_mod.Policy(cfg) 
         if cfg.load_checkpoint:
-            policy.load_model(f"tasks/{cfg.load_path}/models")
+            policy.load_model(f"tasks/{cfg.load_path}/models/{cfg.load_model_step}")
         data_handler = data_handler_mod.DataHandler(cfg)
         return policy, data_handler
     
@@ -191,7 +192,24 @@ class Main(object):
             sum_eval_reward += res['ep_reward']
         mean_eval_reward = sum_eval_reward / cfg.eval_eps
         return mean_eval_reward
-
+    def online_eval(self, cfg, policy):
+        env = self.create_single_env()
+        sum_eval_reward = 0
+        for _ in range(cfg.online_eval_episode):
+            state, info = env.reset()
+            ep_reward, ep_step = 0, 0 # reward per episode, step per episode
+            while True:
+                action = policy.predict_action(state)
+                next_state, reward, terminated, truncated, info = env.step(action)
+                state = next_state
+                ep_reward += reward
+                ep_step += 1
+                if terminated or (0<= cfg.max_steps <= ep_step):
+                    break
+            sum_eval_reward += ep_reward
+        mean_eval_reward = sum_eval_reward / cfg.online_eval_episode
+        return mean_eval_reward
+    
     def single_run(self,cfg):
         ''' single process run
         '''
@@ -199,26 +217,43 @@ class Main(object):
         env = envs[0]
         policy, data_handler = self.policy_config(cfg)
         i_ep , update_step, sample_count = 0, 0, 1
+        best_eval_reward = -float('inf')
         self.logger.info(f"Start {cfg.mode}ing!") # print info
         while True:
             ep_reward, ep_step = 0, 0 # reward per episode, step per episode
+            ep_frames = [] # frames per episode
             state, info = env.reset(seed = cfg.seed) # reset env
+            if cfg.collect_traj: self.traj_collector.init_traj_cache() # init traj cache
             while True:
-                action = policy.sample_action(state,sample_count = sample_count) # sample action
+                if cfg.render_mode == 'rgb_array': ep_frames.append(env.render()) # render env
+                get_action_mode = "sample" if cfg.mode.lower() == 'train' else "predict"
+                action = policy.get_action(state,sample_count = sample_count,mode = get_action_mode) # sample action
                 next_state, reward, terminated, truncated , info = env.step(action) # update env
-                if cfg.mode.lower() == 'train':
+                ep_reward += reward
+                ep_step += 1
+                sample_count += 1
+                # store trajectories per step
+                if cfg.collect_traj: self.traj_collector.add_traj_cache(state, action, reward, next_state, terminated, info)
+                if cfg.mode.lower() == 'train': # train mode
                     data_handler.add_transition((state, action, reward, next_state, terminated, info)) # store transition
                     training_data = data_handler.sample_training_data() # get training data
                     if training_data is not None:
                         update_step += 1
                         policy.update(**training_data,update_step=update_step)
+                        # save model
+                        if update_step % cfg.model_save_fre == 0:
+                            policy.save_model(f"{cfg.model_dir}/{update_step}")
+                            if cfg.online_eval == True:
+                                online_eval_reward = self.online_eval(cfg, policy)
+                                self.logger.info(f"update_step: {update_step}, online_eval_reward: {online_eval_reward:.3f}")
+                                if online_eval_reward >= best_eval_reward:
+                                    best_eval_reward = online_eval_reward
+                                    self.logger.info(f"current update step obtain a better online_eval_reward: {online_eval_reward:.3f}, save the best model!")
+                                    policy.save_model(f"{cfg.model_dir}/best")
                         model_summary = policy.summary
                         for key, value in model_summary['scalar'].items():
                             self.policy_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = update_step)
                 state = next_state
-                ep_reward += reward
-                ep_step += 1
-                sample_count += 1
                 if terminated or (0<= cfg.max_steps <= ep_step):
                     self.logger.info(f"episode: {i_ep}, ep_reward: {ep_reward}, ep_step: {ep_step}")
                     interact_summary = {'ep_reward': ep_reward, 'ep_step': ep_step}
@@ -226,7 +261,10 @@ class Main(object):
                         self.interact_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep)
                     i_ep += 1
                     break
-            if i_ep >= cfg.max_episode:
+            task_end_flag = (i_ep >= cfg.max_episode)
+            if cfg.collect_traj: self.traj_collector.store_traj(task_end_flag = task_end_flag)
+            if i_ep == 1 and cfg.render_mode == 'rgb_array': save_frames_as_gif(ep_frames, cfg.video_dir) # only save the first episode
+            if task_end_flag:
                 break
             
         # algo_name = cfg.algo_name
@@ -313,17 +351,15 @@ class Main(object):
         ray.get(worker_tasks)
         ray.shutdown()
 
-    
-
     def run(self) -> None:
-
         s_t = time.time()
         if self.general_cfg.mp_backend == 'ray':
             self.ray_run(self.cfg)
         else:
             self.single_run(self.cfg)
         e_t = time.time()
-        self.logger.info(f"task finished, total time consumed: {e_t-s_t:.2f}s")
+        self.logger.info(f"Finish {self.cfg.mode}ing! total time consumed: {e_t-s_t:.2f}s")
+        save_cfgs(self.save_cfgs, self.cfg.task_dir)  # save config
 
 if __name__ == "__main__":
     main = Main()

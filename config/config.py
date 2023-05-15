@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-21 20:32:12
 LastEditor: JiangJi
-LastEditTime: 2023-05-15 01:23:24
+LastEditTime: 2023-05-15 13:26:18
 Discription: 
 '''
 class DefaultConfig:
@@ -22,19 +22,20 @@ class MergedConfig:
 class GeneralConfig():
     def __init__(self) -> None:
         self.env_name = "gym" # name of environment
-        self.wrapper = None # wrapper of environment
-        self.render = False # whether to render environment
-        self.render_mode = "human" # 渲染模式, "human" 或者 "rgb_array"
+        self.render_mode = None # render mode: None, human, rgb_array, ansi
         self.algo_name = "DQN" # name of algorithm
-        self.mode = "test" # train or test
+        self.mode = "train" # train, test
+        self.collect_traj = False # collect trajectory or not
+        # multiprocessing settings
         self.mp_backend = "single" # multiprocessing backend: "ray", default "single"
+        self.n_workers = 1 # number of workers
         self.seed = 0 # random seed
         self.device = "cpu" # device to use
-        self.max_episode = 1000 # number of episodes for training
+        self.max_episode = 100 # number of episodes for training
         self.max_step = 200 # number of episodes for testing
-        self.eval_eps = 10 # number of episodes for evaluation
-        self.eval_per_episode = 5 # evaluation per episode
-        self.max_steps = 200 # max steps for each episode
+        # online evaluation settings
+        self.online_eval = False # online evaluation or not
+        self.online_eval_episode = 10 # online eval episodes
         self.load_checkpoint = True
         self.load_path = "Train_gym_BCQ_20230417-141811" # path to load model
         self.show_fig = False # show figure or not
