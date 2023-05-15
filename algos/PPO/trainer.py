@@ -10,7 +10,7 @@ Discription:
 Environment: 
 '''
 import torch.multiprocessing as mp
-from common.utils import all_seed
+from utils.utils import all_seed
 
 class Trainer:
     def __init__(self) -> None:

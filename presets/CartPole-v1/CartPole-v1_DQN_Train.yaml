@@ -22,9 +22,9 @@ algo_cfg:
       activation: relu
   buffer_type: REPLAY_QUE
   buffer_size: 100000
-  batch_size: 64
-  epsilon_decay: 500
-  epsilon_end: 0.01
+  batch_size: 128
+  epsilon_decay: 200
+  epsilon_end: 0.005
   epsilon_start: 0.95
   gamma: 0.95
   lr: 0.0001

@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:34:27
 LastEditor: JiangJi
-LastEditTime: 2023-04-19 02:02:52
+LastEditTime: 2023-04-28 23:40:56
 Discription: 
 '''
 import random
@@ -60,7 +60,7 @@ class ReplayBufferQue:
             _type_: _description_
         '''
         if batch_size > len(self.buffer): # 如果小批量大于经验池的容量，则取经验池的容量
-            batch_size = len(self.buffer)
+            return None
         if sequential: # sequential sampling
             rand = random.randint(0, len(self.buffer) - batch_size)
             batch = [self.buffer[i] for i in range(rand, rand + batch_size)]
@@ -230,7 +230,7 @@ class PrioritizedReplayBufferQue:
 
 
 # MAPPO beginning
-from common.utils import check, get_shape_from_obs_space, get_shape_from_act_space
+from utils.utils import check, get_shape_from_obs_space, get_shape_from_act_space
 
 def _flatten(T, N, x):
     return x.reshape(T * N, *x.shape[2:])
@@ -621,7 +621,7 @@ class SeparatedReplayBuffer(object):
             yield share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch, value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, adv_targ, available_actions_batch
 
 
-from common.utils import get_shape_from_obs_space, get_shape_from_act_space
+from utils.utils import get_shape_from_obs_space, get_shape_from_act_space
 
 def _cast(x):
     return x.transpose(1, 2, 0, 3).reshape(-1, *x.shape[3:])

@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-04-24 15:12:45
+LastEditTime: 2023-04-26 00:01:36
 Discription: 
 '''
 import sys, os
@@ -40,13 +40,15 @@ if __name__ == "__main__":
     import torch
     from config.config import MergedConfig
     cfg = MergedConfig()
-    state_dim = [None,4]
+    state_dim = [None]
     cfg.n_actions = 2
     cfg.value_layers = [
+        {'layer_type': 'embed', 'n_embeddings': 10, 'embedding_dim': 32, 'activation': 'none'},
         {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
         {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
     ]
     value_net = ValueNetwork(cfg, state_dim, cfg.n_actions)
     print(value_net)
-    x = torch.randn(1,4)
+    x = torch.tensor([36])
+    print(x.shape)
     print(value_net(x))

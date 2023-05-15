@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-04-24 15:13:15
+LastEditTime: 2023-05-14 00:19:37
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -21,10 +21,10 @@ import ray
 import numpy as np
 from common.optms import SharedAdam
 from algos.base.buffers import BufferCreator
-from algos.base.agents import BaseAgent
+from algos.base.policies import BasePolicy
 from algos.base.networks import ValueNetwork
 
-class Agent(BaseAgent):
+class Agent(BasePolicy):
     def __init__(self, cfg, is_share_agent = False):
         super(Agent, self ).__init__(cfg)
         '''智能体类
@@ -48,6 +48,7 @@ class Agent(BaseAgent):
         self.memory = BufferCreator(cfg)()
         self.update_step = 0
         self.create_graph()
+        self.create_summary()
     def create_graph(self):
         self.state_size = [None, self.obs_space.shape[0]]
         action_dim = self.action_space.n
@@ -63,6 +64,7 @@ class Agent(BaseAgent):
             # self.target_net.share_memory()
             # self.target_optimizer = SharedAdam(self.target_net.parameters(), lr=cfg.lr)
             # self.target_optimizer.share_memory()
+        
     def create_optm(self):
         self.optm = optim.Adam(self.policy_net.parameters(), lr=self.lr)
         
@@ -74,6 +76,7 @@ class Agent(BaseAgent):
             action (int): 动作
         '''
         self.sample_count += 1
+        # print("self.sample_count",self.sample_count)
         # epsilon must decay(linear,exponential and etc.) for balancing exploration and exploitation
         self.epsilon = self.epsilon_end + (self.epsilon_start - self.epsilon_end) * \
             math.exp(-1. * self.sample_count / self.epsilon_decay) 
@@ -97,7 +100,11 @@ class Agent(BaseAgent):
         return action
     def update(self, share_agent=None):
         # 从 replay buffer 中采样
+        # print("learner update", self.update_step)
         exps = self.memory.sample(self.batch_size)
+        # print("len(exps)", len(self.memory))
+        if exps is None: # 如果经验池中的经验数量不足 batch_size
+            return
         # 将采样的数据转换为 tensor
         states = torch.tensor(np.array([exp.state for exp in exps]), device=self.device, dtype=torch.float32)
         actions = torch.tensor(np.array([exp.action for exp in exps]), device=self.device, dtype=torch.long).unsqueeze(dim=1)

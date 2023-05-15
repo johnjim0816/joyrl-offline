@@ -5,13 +5,13 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-21 20:32:11
 LastEditor: JiangJi
-LastEditTime: 2023-04-05 01:17:26
+LastEditTime: 2023-05-14 20:36:50
 Discription: 
 '''
 
 import torch.multiprocessing as mp
 import ray
-from common.utils import all_seed
+from utils.utils import all_seed
 
 
 class Trainer:
