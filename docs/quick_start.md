@@ -64,7 +64,7 @@ class Qnet(nn.Module):
         return self.fc3(x)
 ```
 
-然后定义经验池，如下：
+然后定义经验回放，如下：
 
 ```python
 class ReplayBuffer:
@@ -162,34 +162,47 @@ class Trainer:
 
 ## 超参数设置
 
-在`JoyRL`中，我们可以通过`yaml`文件来设置超参数，如下：
+在`JoyRL`中, 主要包含以下几类超参数：
+
+* `general_cfg`: 通用超参数，包括算法名称`algo_name`，环境名称`env_name`，设备`device`，运行模式`mode`，随机种子`seed`等等
+* `algo_cfg`: 算法超参数，包括网络结构配置、不同算法的参数等等
+* `env_cfg`：环境超参数，例如`env_id`等等
+
+用户可以通过`config\config.py`、`algos\[algo_name]\config.py`、`envs\[env_name]\config.py`来分别设置默认的通用超参数、算法超参数和环境超参数。并且在这些`py`文件中对各参数进行了注释说明。
+
+此外，用户还可以通过`yaml`文件来设置超参数，如下：
 
 ```yaml
 general_cfg:
-  algo_name: DQN
-  device: cpu
-  env_name: CartPole-v1
-  mode: train
-  load_checkpoint: false
-  load_path: Train_CartPole-v1_DQN_20221026-054757
-  max_steps: 200
-  save_fig: true
-  seed: 1
-  show_fig: false
-  test_eps: 10
-  train_eps: 100
+  algo_name: DQN_new # algo name
+  device: cpu # device, cpu or cuda
+  env_name: gym # env name, differ from env_id in env_cfgs
+  mode: train # run mode: train, test
+  collect_traj: true
+  mp_backend: single # multi-processing mode: null(default), ray
+  n_workers: 1 # number of workers if using multi-processing, default 1
+  load_checkpoint: false # if load checkpoint or not
+  load_path: Train_CartPole-v1_DQN_20221026-054757 # if load checkpoint, then config path in 'tasks' dir
+  max_episode: 100 # max episodes, set -1 to keep running
+  max_step: 200 # max steps per episode
+  seed: 1 # random seed, set 0 not to use seed
+  online_eval: true # if online eval or not
+  online_eval_episode: 10 # online eval episodes
+  model_save_fre: 500 # update step frequency of saving model
+  save_best_model: # if save the best model or not, online_eval must be true)
+  save_fig: true # if save fig or not
+  show_fig: false # if show fig or not
+
 algo_cfg:
   value_layers:
     - layer_type: linear
-      layer_dim: ['n_states',256]
+      layer_dim: [256]
       activation: relu
     - layer_type: linear
-      layer_dim: [256,256]
+      layer_dim: [256]
       activation: relu
-    - layer_type: linear
-      layer_dim: [256,'n_actions']
-      activation: none
   batch_size: 64
+  buffer_type: REPLAY_QUE
   buffer_size: 100000
   epsilon_decay: 500
   epsilon_end: 0.01
@@ -197,28 +210,199 @@ algo_cfg:
   gamma: 0.95
   lr: 0.0001
   target_update: 4
+env_cfg:
+  id: CartPole-v1
+  render_mode: null
 ```
-其中包括通用参数`general_cfg`和算法参数`algo_cfg`，也可以通过`python`文件来设置超参数，通用的默认参数在`config/config.py`中，算法参数则在各自算法文件夹下的`config.py`中，这些`python`文件均对各参数做了注释说明。此外，当两者都设置时，`yaml`文件中的参数会覆盖`python`文件中的参数。
+## 运行
 
-## 训练模式
+配置好默认参数之后，可以直接执行`python main.py`来运行。
 
-配置好参数之后，可以直接执行```python main.py --yaml [yaml_file]```来训练。
+也可以通过配置好`yaml`文件参数之后，执行`python main.py --yaml [yaml_file]`来运行，其中`[yaml_file]`是`yaml`文件的路径。
+
+注意，`yaml`文件中的参数会覆盖`python`文件中的默认参数。
+
+### 训练模式
+
+设置参数：
+
+```yaml
+general_cfg:
+  mode: train
+```
+即可开始训练。
+
+如果想加载模型继续训练，可以设置参数：
+
+```yaml
+general_cfg:
+  load_checkpoint: true # 加载模型
+  load_path: Train_CartPole-v1_DQN_20221026-054757 # tasks文件夹下的模型路径
+  mode: train
+```
 
 ## 测试模式
 
-将通用参数中的`mode: train`改为`mode: test`，加载模型时将`load_checkpoint`改成`True`，`load_path`改成`tasks`路径下已经训好的文件夹，然后执行```python main.py --yaml [yaml_file]```即可。
-## 收集模型
+设置参数：
 
-对于`BC`等算法，需要收集数据，可以将通用参数中的`mode: train`改为`mode: collect`，然后执行```python main.py --yaml [yaml_file]```即可。
+```yaml
+general_cfg:
+  load_checkpoint: true # 加载模型
+  load_path: Train_CartPole-v1_DQN_20221026-054757 # tasks文件夹下的模型路径
+  mode: test
+```
+
+即可开始测试训练好的模型。
+
 ## 渲染模式
 
-渲染模式主要有两个参数来控制：
+即可视化，通常用于测试模式。设置测试模式的参数之后，进一步设置参数
+
 ```yaml
-render: True # 是否渲染
-render_mode: human # 渲染模式
+env_cfg:
+  render_mode: human # 渲染模式, None, human, rgb_array
 ```
-当渲染模式为`human`时，会在屏幕上渲染。
+其中`None`表示不渲染，`human`表示在屏幕上渲染，`rgb_array`表示返回渲染的图像。
 
-当渲染模式为`rgb_array`时，会返回一个`numpy`数组，在`JoyRL`中会在`[task_dir]/videos`下生成`video.gif`文件。
+当渲染模式为`rgb_array`时，会返回一个`numpy`数组，会在`[task_dir]/videos`下生成`video.gif`文件
 
-另外注意，`JoyRL`中的只有单线程下支持渲染模式。
+## 在线测试模式
+
+设置参数：
+
+```yaml
+general_cfg:
+  online_eval: true # if online eval or not
+  online_eval_episode: 10 # online eval episodes
+  model_save_fre: 500 # update step frequency of saving model
+```
+在训练中，`JoyRL`会在每`model_save_fre`个更新步骤时保存模型，模型的名称为对应的`update_step`。
+
+当开启在线测试模式时，即`online_eval`为`true`，此时会进行一次测试，测试的回合数为`online_eval_episode`，同时会额外保存一个`best`模型
+
+## 收集模式
+
+对于模仿学习、离线强化学习算法，需要收集轨迹，设置参数：
+
+```yaml
+general_cfg:
+    collect_traj: true # if collect trajectories or not
+```
+运行结束时，会在`[task_dir]/results`下生成`trajs.pkl`文件，考虑到文件内存问题，每个`trajs.pkl`文件最多包含1000条轨迹, 超过1000条轨迹会生成多个`trajs.pkl`文件, 即`trajs_0.pkl`, `trajs_1.pkl`等等。
+
+## 多进程模式
+
+设置参数：
+
+```yaml
+general_cfg:
+  mp_backend: ray # multi-processing mode: single(default), ray
+  n_workers: 4 # number of workers if using multi-processing, default 1
+```
+其中`single`表示普通的单进程模式，而多进程模式需要安装`ray`库，`n_workers`表示进程数，进程数越多，训练速度越快。
+
+关于多进程需要注意的地方：
+
+* 单进程模式下，cuda不一定比cpu更快
+* 对于简单的环境多进程不一定比单进程速度更快
+
+第一点是因为当网络基本都是线性层时，cuda的并行计算能力并没有发挥出来。 第二点是因为简单的环境，例如`CartPole-v1`，每个`Worker`运行单回合时间很短，此时瓶颈主要在`Learner`这里，加上其他的通信开销等，反而会使得训练速度变慢。这种情况下，可以使用`multi-learner`模式(待开发)，以下是一个多进程瓶颈的简单实例：
+
+```python
+import ray
+import time
+
+@ray.remote
+class Worker:
+    def __init__(self,id) -> None:
+        self.id = id
+    def run(self,data_server,learners):
+        while not ray.get(data_server.check_episode_limit.remote()):
+            # print(f"curr_episode {ray.get(data_server.get_episode.remote())}")
+            # 模拟单-learner
+            ray.get(learners[0].learn.remote())
+            # 模拟multi-learner
+            # if self.id % 2 == 0:
+            #     ray.get(learners[0].learn.remote())
+            # else:
+            #     ray.get(learners[1].learn.remote())
+            ray.get(data_server.increase_episode.remote())
+            time.sleep(0.1) # 模拟交互时间
+@ray.remote
+class Learner:
+    def __init__(self) -> None:
+        self.learn_count = 0
+    def learn(self):
+        self.learn_count += 1
+        # time.sleep(0.1) # 模拟训练时间
+@ray.remote            
+class DataServer:
+    def __init__(self):
+        self.curr_episode = 0
+        self.max_epsiode = 100
+    def increase_episode(self):
+        self.curr_episode += 1
+    def get_episode(self):
+        return self.curr_episode
+    def check_episode_limit(self):
+        return self.curr_episode > self.max_epsiode
+if __name__ == "__main__":
+    # 启动并行任务
+    ray.shutdown()
+    for n_workers in [1,2,4]:
+        ray.init()
+        s_t = time.time()
+        print(f"n_workers {n_workers}")
+        workers = []
+        for i in range(n_workers):
+            workers.append(Worker.remote(i))
+        data_server = DataServer.remote()
+        learners = []
+        for i in range(2):
+            learner = Learner.remote()
+            learners.append(learner)
+        worker_tasks = [worker.run.remote(data_server,learners) for worker in workers]
+        # 等待任务完成
+        ray.get(worker_tasks)
+        e_t = time.time()
+        print("time cost: ",e_t-s_t)
+        ray.shutdown()
+```
+
+首先，注释掉`Learner`中的`time.sleep(0.1)`，运行结果如下：
+
+```bash
+n_workers 1
+time cost:  10.974063396453857
+n_workers 2
+time cost:  5.955186367034912
+n_workers 4
+time cost:  3.4605765342712402
+```
+可以看到随着`n_workers`数增加，计算时间会减少，这是因为`Learner`的计算时间占比较小，而`Worker`的交互时间占比较大，多进程可以减少交互时间。
+
+接着，注释掉`Worker`中的`time.sleep(0.1)`，并取消注释`Learner`中的`time.sleep(0.1)`，运行结果如下：
+
+```bash
+n_workers 1
+time cost:  11.051950216293335
+n_workers 2
+time cost:  11.00266146659851
+n_workers 4
+time cost:  11.287662506103516
+```
+可以看到随着`n_workers`数增加，计算时间并没有减少，约维持在`10s`左右，这是因为`Learner`的计算时间占比较大，而`Worker`的交互时间占比较小，因此该程序的瓶颈主要在于`Learner`，多进程并不能加速训练。
+
+但是当我们进一步开启`multi-learner`模式，见`Worker`中相关代码，运行结果如下：
+
+```bash
+n_workers 1
+time cost:  11.067777156829834
+n_workers 2
+time cost:  5.9282824993133545
+n_workers 4
+time cost:  6.0641443729400635
+```
+我们发现会发现`n_workers`数目增加到2时，计算时间开始减少，但进一步增加`n_workers`时，时间瓶颈维持在`5s`左右，这是因为只模拟了两个`Learner`。
+
+综合以上实验，我们可以得出结论，需要根据交互时间和训练时间综合考虑多进程的设置方式，当然对于复杂的环境尤其是需要图像的Atari环境或者一些`on-policy`算法(这类算法并不会每步都更新算法，而是搜集一定的样本在更新算法，相当于`Worker`的交互时间占比更多)，多进程一般都能加速训练。

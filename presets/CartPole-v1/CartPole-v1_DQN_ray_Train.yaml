@@ -3,8 +3,8 @@ general_cfg:
   device: cpu # device, cpu or cuda
   env_name: gym # env name, differ from env_id in env_cfgs
   mode: train # run mode: train, test
-  collect_traj: true
-  mp_backend: single # multi-processing mode: null(default), ray
+  collect_traj: true # if collect trajectories or not
+  mp_backend: single # multi-processing mode: single(default), ray
   n_workers: 1 # number of workers if using multi-processing, default 1
   load_checkpoint: false # if load checkpoint or not
   load_path: Train_CartPole-v1_DQN_20221026-054757 # if load checkpoint, then config path in 'tasks' dir
@@ -14,7 +14,6 @@ general_cfg:
   online_eval: true # if online eval or not
   online_eval_episode: 10 # online eval episodes
   model_save_fre: 500 # update step frequency of saving model
-  save_best_model: # if save the best model or not, online_eval must be true)
   save_fig: true # if save fig or not
   show_fig: false # if show fig or not
 
