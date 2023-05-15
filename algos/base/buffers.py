@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:34:27
 LastEditor: JiangJi
-LastEditTime: 2023-04-28 23:40:56
+LastEditTime: 2023-05-15 18:08:50
 Discription: 
 '''
 import random
@@ -13,7 +13,7 @@ import torch
 import numpy as np
 from collections import deque
 
-from common.core_types import BufferType
+from utils.core_types import BufferType
 from common.config import MergedConfig
 
 class ReplayBuffer:

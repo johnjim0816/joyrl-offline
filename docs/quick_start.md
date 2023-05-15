@@ -31,134 +31,85 @@ for i_episode in range(n_episodes):
 ```
 [joyrl-book](https://github.com/datawhalechina/joyrl-book/tree/main/pseudocodes)提供了丰富的强化学习算法伪代码，帮助读者们更好地理解算法，也欢迎多多`star`～。在`JoyRL`中，我们将训练接口封装到了`Trainer`中，而在多线程中，我们将训练接口封装到了`Worker`中，具体参考相关说明部分。
 
-## 创建环境
+## 定义环境
 
 `JoyRL`中的环境主要有两种，一种是`gym`环境，一种是自定义环境，两者皆遵循`gym`接口。
 
 ```python
-import gym
+import gymnasium as gym
 env = gym.make('CartPole-v1')
 ``` 
-## 创建智能体
+## 定义策略
 
-对于`DRL`算法，`JoyRL`中的智能体主要包含两个元素，一个是网络，一个是经验池。
+对于`DRL`算法，`JoyRL`中的策略主要包含两个元素，一个是网络，一个是数据处理器。
 
-首先定义网络，例如在`DQN`算法中我们可以定义一个简单的全连接网络，如下：
+首先定义网络，例如在`DQN`算法中我们可以定义一个简单的网络：
 
 ```python
-class Qnet(nn.Module):
+class ValueNetwork(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_dim=128):
-        """ 初始化q网络，为全连接网络
-            state_dim: 环境的状态维度
-            action_dim: 输出的动作维度
-        """
-        super(MLP, self).__init__()
-        self.fc1 = nn.Linear(state_dim, hidden_dim) # 输入层
-        self.fc2 = nn.Linear(hidden_dim,hidden_dim) # 隐藏层
-        self.fc3 = nn.Linear(hidden_dim, action_dim) # 输出层
-        
-    def forward(self, x):
-        # 各层对应的激活函数
-        x = F.relu(self.fc1(x)) 
-        x = F.relu(self.fc2(x))
-        return self.fc3(x)
-```
-
-然后定义经验回放，如下：
-
-```python
-class ReplayBuffer:
-    def __init__(self, capacity):
-        self.capacity = capacity # 经验回放的容量
-        self.buffer = [] # 缓冲区
-        self.position = 0 
-    
-    def push(self, state, action, reward, next_state, done):
-        ''' 缓冲区是一个队列，容量超出时去掉开始存入的转移(transition)
-        '''
-        if len(self.buffer) < self.capacity:
-            self.buffer.append(None)
-        self.buffer[self.position] = (state, action, reward, next_state, done)
-        self.position = (self.position + 1) % self.capacity 
-    
-    def sample(self, batch_size):
-        batch = random.sample(self.buffer, batch_size) # 随机采出小批量转移
-        state, action, reward, next_state, done =  zip(*batch) # 解压成状态，动作等
-        return state, action, reward, next_state, done
-    
-    def __len__(self):
-        ''' 返回当前存储的量
-        '''
-        return len(self.buffer)
-```
-
-最后定义智能体，如下：
-
-```python
-class Agent:
-    def __init__(cfg):
-        self.qnet = Qnet(cfg.state_dim, cfg.action_dim) # 定义q网络
-        self.target_qnet = Qnet(cfg.state_dim, cfg.action_dim) # 定义目标q网络
-        self.target_qnet.load_state_dict(self.qnet.state_dict()) # 将q网络的参数复制到目标q网络
-        self.buffer = ReplayBuffer(cfg.capacity) # 定义经验池
-    def sample(self, state):
-        ''' 根据状态采样动作
-        '''
         pass
-    def predict(self, state):
-        ''' 根据状态预测动作
+```
+然后定义策略：
+
+```python
+class Policy:
+    def __init__(cfg):
+        self.policy_net = ValueNetwork(cfg.state_dim, cfg.action_dim) # 定义策略网络
+        self.target_net = ValueNetwork(cfg.state_dim, cfg.action_dim) # 定义目标网络
+    def get_action(self, state):
+        ''' 根据状态采样动作
         '''
         pass
     def update(self):
         ''' 更新网络
         '''
 ```
-这里省去了一些细节，具体可以参考`JoyRL`中的`DQN`算法。
 
-## 创建训练器
-
-如下是`DQN`算法的训练器：
+然后需要定义数据处理器，即`DataHandler`，其作用主要是将与环境交互产生的样本转换成训练的样本，也是经验回放的载体，在`DQN`算法中，我们可以定义一个简单的数据处理器：
 
 ```python
-class Trainer:
-    def __init__(self) -> None:
-        pass
-    def train_one_episode(self, env, agent, cfg): 
-        ep_reward = 0  # 每回合的reward之和
-        ep_step = 0 # 每回合的step之和
-        state = env.reset(seed = cfg.seed)  # 重置环境并返回初始状态
-        for _ in range(cfg.max_steps):
-            ep_step += 1
-            action = agent.sample_action(state)  # 采样动作
-            next_state, reward, terminated, truncated , info = env.step(action)  # 更新环境并返回转移
-            agent.memory.push(state, action, reward, next_state, terminated)  # 存储样本(转移)
-            agent.update()  # 更新智能体
-            state = next_state  # 更新下一个状态
-            ep_reward += reward   
-            if terminated:
-                break
-        res = {'ep_reward':ep_reward,'ep_step':ep_step}
-        return agent,res
-    def test_one_episode(self, env, agent, cfg):
-        ep_reward = 0  
-        ep_step = 0
-        ep_frames = []
-        state = env.reset(seed = cfg.seed)  
-        for _ in range(cfg.max_steps):
-            ep_step += 1
-            if cfg.render and cfg.render_mode == 'rgb_array': # 用于可视化
-                frame = env.render()[0]
-                ep_frames.append(frame)
-            action = agent.predict_action(state) # 预测动作
-            next_state, reward, terminated, truncated , info = env.step(action)  
-            state = next_state  
-            ep_reward += reward  
-            if terminated:
-                break
-        res = {'ep_reward':ep_reward,'ep_step':ep_step,'ep_frames':ep_frames}
-        return agent,res
+class DataHandler:
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.buffer = BufferCreator(cfg)() # create buffer
+    def add_transition(self, transition):
+        ''' 将与环境交互产生的样本添加到经验池中
+        '''
+        exp = self.create_exp(transition)
+        self.buffer.push(exp)
+    def sample_training_data(self):
+        ''' 从经验池中采样训练数据
+        '''
+        exps = self.buffer.sample(self.cfg.batch_size)
+        if exps is not None:
+            return self.handle_exps_before_update(exps)
+        else:
+            return None
+    def create_exp(self,transtion):
+        ''' 将与环境交互产生的样本转换为经验
+        '''
+        state, action, reward, next_state, terminated, info = transtion
+        exp_mod = __import__(f"algos.{self.cfg.algo_name}.exp", fromlist=['Exp'])
+        exp = exp_mod.Exp(state = state, action = action, reward = reward, next_state = next_state, done = terminated, info = info)
+        return [exp]
+    def handle_exps_before_update(self, exps):
+        ''' 将经验转换为训练数据
+        '''
+        states = np.array([exp.state for exp in exps])
+        actions = np.array([exp.action for exp in exps])
+        rewards = np.array([exp.reward for exp in exps])
+        next_states = np.array([exp.next_state for exp in exps])
+        dones = np.array([exp.done for exp in exps])
+        data = {'states': states, 'actions': actions, 'rewards': rewards, 'next_states': next_states, 'dones': dones}
+        return data
 ```
-这里`JoyRL`提供了`train_one_episode`和`test_one_episode`两个函数，分别用于训练和测试。
+
+其中`JoyRL`中内置了一些常见的`Buffer`，用户可根据需要在`base/buffers.py`中自定义`Buffer`, 然后在`utils/core_types.py`中的`BufferType`类注册`Buffer`类型，即可在配置文件中使用。
+
+## 定义训练器
+
+基础的RL算法基本通过定义以上三种元素，即环境、策略和数据处理器，就可以进行训练了。对于更高级一些的算法，`JoyRL`提供更多的训练器，而对于多进程模式，训练器则以`Worker`和`Learner`的形式存在，具体参考相关说明部分。
 
 ## 超参数设置
 
