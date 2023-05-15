@@ -22,7 +22,6 @@ class MergedConfig:
 class GeneralConfig():
     def __init__(self) -> None:
         self.env_name = "gym" # name of environment
-        self.render_mode = None # render mode: None, human, rgb_array, ansi
         self.algo_name = "DQN" # name of algorithm
         self.mode = "train" # train, test
         self.collect_traj = False # collect trajectory or not

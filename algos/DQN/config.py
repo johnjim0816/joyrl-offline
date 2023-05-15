@@ -3,11 +3,12 @@
 '''
 Author: JiangJi
 Email: johnjim0816@gmail.com
-Date: 2023-01-01 16:45:22
+Date: 2023-04-23 00:55:26
 LastEditor: JiangJi
-LastEditTime: 2023-04-19 10:45:06
+LastEditTime: 2023-04-26 22:46:24
 Discription: 
 '''
+
 from config.config import DefaultConfig
 
 class AlgoConfig(DefaultConfig):

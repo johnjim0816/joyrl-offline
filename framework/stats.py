@@ -67,6 +67,9 @@ class RayLogger(BaseLogger):
     def __init__(self, fpath=None) -> None:
         super().__init__(fpath)
         self.logger.name = "RayLog"
+    def info(self, msg):
+        super().info(msg)
+        print(msg)
 
 class BaseTrajCollector:
     def __init__(self, fpath) -> None:

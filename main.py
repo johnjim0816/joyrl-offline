@@ -27,7 +27,7 @@ from common.ray_utils import GlobalVarRecorder
 # from envs.register import register_env
 from framework.stats import StatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.dataserver import DataServer
-from framework.workers import Worker
+from framework.workers import Worker, SimpleTester, RayTester   
 from framework.learners import Learner
 
 class Main(object):
@@ -133,11 +133,7 @@ class Main(object):
     def create_loggers(self):
         ''' create logger
         '''
-        if self.general_cfg.mp_backend == 'ray':
-            self.logger = RayLogger(self.cfg.log_dir)
-        else:
-            self.logger = SimpleLogger(self.cfg.log_dir)
-
+        self.logger = SimpleLogger(self.cfg.log_dir)
         self.interact_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/interact")
         self.policy_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/model")
         self.traj_collector = SimpleTrajCollector(self.cfg.res_dir)
@@ -185,39 +181,14 @@ class Main(object):
         if cfg.n_workers > mp.cpu_count() - 1:
             raise ValueError("the parameter 'n_workers' must less than total numbers of cpus on your machine!")
         
-    def evaluate(self, cfg, trainer, env, agent):
-        sum_eval_reward = 0
-        for _ in range(cfg.eval_eps):
-            _, res = trainer.test_one_episode(env, agent, cfg)
-            sum_eval_reward += res['ep_reward']
-        mean_eval_reward = sum_eval_reward / cfg.eval_eps
-        return mean_eval_reward
-    def online_eval(self, cfg, policy):
-        env = self.create_single_env()
-        sum_eval_reward = 0
-        for _ in range(cfg.online_eval_episode):
-            state, info = env.reset()
-            ep_reward, ep_step = 0, 0 # reward per episode, step per episode
-            while True:
-                action = policy.predict_action(state)
-                next_state, reward, terminated, truncated, info = env.step(action)
-                state = next_state
-                ep_reward += reward
-                ep_step += 1
-                if terminated or (0<= cfg.max_steps <= ep_step):
-                    break
-            sum_eval_reward += ep_reward
-        mean_eval_reward = sum_eval_reward / cfg.online_eval_episode
-        return mean_eval_reward
-    
     def single_run(self,cfg):
         ''' single process run
         '''
         envs = self.envs_config()  # configure environment
         env = envs[0]
+        self.online_tester = SimpleTester(cfg,env) # create online tester
         policy, data_handler = self.policy_config(cfg)
         i_ep , update_step, sample_count = 0, 0, 1
-        best_eval_reward = -float('inf')
         self.logger.info(f"Start {cfg.mode}ing!") # print info
         while True:
             ep_reward, ep_step = 0, 0 # reward per episode, step per episode
@@ -244,17 +215,16 @@ class Main(object):
                         if update_step % cfg.model_save_fre == 0:
                             policy.save_model(f"{cfg.model_dir}/{update_step}")
                             if cfg.online_eval == True:
-                                online_eval_reward = self.online_eval(cfg, policy)
+                                best_flag, online_eval_reward = self.online_tester.eval(policy)
                                 self.logger.info(f"update_step: {update_step}, online_eval_reward: {online_eval_reward:.3f}")
-                                if online_eval_reward >= best_eval_reward:
-                                    best_eval_reward = online_eval_reward
+                                if best_flag:
                                     self.logger.info(f"current update step obtain a better online_eval_reward: {online_eval_reward:.3f}, save the best model!")
                                     policy.save_model(f"{cfg.model_dir}/best")
                         model_summary = policy.summary
                         for key, value in model_summary['scalar'].items():
                             self.policy_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = update_step)
                 state = next_state
-                if terminated or (0<= cfg.max_steps <= ep_step):
+                if terminated or (0<= cfg.max_step <= ep_step):
                     self.logger.info(f"episode: {i_ep}, ep_reward: {ep_reward}, ep_step: {ep_step}")
                     interact_summary = {'ep_reward': ep_reward, 'ep_step': ep_step}
                     for key, value in interact_summary.items():
@@ -266,86 +236,23 @@ class Main(object):
             if i_ep == 1 and cfg.render_mode == 'rgb_array': save_frames_as_gif(ep_frames, cfg.video_dir) # only save the first episode
             if task_end_flag:
                 break
-            
-        # algo_name = cfg.algo_name
-        # agent_mod = importlib.import_module(f"algos.{algo_name}.agent")
-        # agent = agent_mod.Agent(self.cfg)  # create agent
-        # trainer_mod = importlib.import_module(f"algos.{algo_name}.trainer")
-        # trainer = trainer_mod.Trainer()  # create trainer
-        # if cfg.load_checkpoint:
-        #     agent.load_model(f"tasks/{cfg.load_path}/models")
-        # self.logger.info(f"Start {cfg.mode}ing!")
-        # rewards = []  # record rewards for all episodes
-        # steps = []  # record steps for all episodes
-        # if cfg.mode.lower() == 'train':
-        #     best_ep_reward = -float('inf')
-        #     for i_ep in range(cfg.train_eps):
-        #         agent, res = trainer.train_one_episode(env, agent, self.cfg)
-        #         ep_reward = res['ep_reward']
-        #         ep_step = res['ep_step']
-        #         self.logger.info(f"Episode: {i_ep + 1}/{cfg.train_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
-        #         # for key, value in res.items():
-        #         #     self.tb_writter.add_scalar(tag = f"{cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep + 1)
-        #         rewards.append(ep_reward)
-        #         steps.append(ep_step)
-        #         # for _ in range
-        #         if (i_ep + 1) % cfg.eval_per_episode == 0:
-        #             mean_eval_reward = self.evaluate(self.cfg, trainer, env, agent)
-        #             if mean_eval_reward >= best_ep_reward:  # update best reward
-        #                 self.logger.info(f"Current episode {i_ep + 1} has the best eval reward: {mean_eval_reward:.3f}")
-        #                 best_ep_reward = mean_eval_reward
-        #                 agent.save_model(cfg.model_dir)  # save models with best reward
-        #     # env.close()
-        # elif cfg.mode.lower() == 'test':
-        #     for i_ep in range(cfg.test_eps):
-        #         agent, res = trainer.test_one_episode(env, agent, self.cfg)
-        #         ep_reward = res['ep_reward']
-        #         ep_step = res['ep_step']
-        #         self.logger.info(f"Episode: {i_ep + 1}/{cfg.test_eps}, Reward: {ep_reward:.3f}, Step: {ep_step}")
-        #         rewards.append(ep_reward)
-        #         steps.append(ep_step)
-        #         if i_ep == 0 and cfg.render and cfg.render_mode == 'rgb_array':
-        #             frames = res['ep_frames']
-        #             save_frames_as_gif(frames, cfg.video_dir)
-        #     agent.save_model(cfg.model_dir)  # save models
-        #     env.close()
-        # elif cfg.mode.lower() == 'collect':  # collect
-        #     trajectories = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'terminals': []}
-        #     for i_ep in range(cfg.collect_eps):
-        #         print ("i_ep = ", i_ep, "cfg.collect_eps = ", cfg.collect_eps)
-        #         total_reward, ep_state, ep_action, ep_next_state, ep_reward, ep_terminal = trainer.collect_one_episode(env, agent, self.cfg)
-        #         trajectories['states'] += ep_state
-        #         trajectories['actions'] += ep_action
-        #         trajectories['next_states'] += ep_next_state
-        #         trajectories['rewards'] += ep_reward
-        #         trajectories['terminals'] += ep_terminal
-        #         self.logger.info(f'trajectories {i_ep + 1} collected, reward {total_reward}')
-        #         rewards.append(total_reward)
-        #         steps.append(cfg.max_steps)
-        #     env.close()
-        #     save_traj(trajectories, cfg.traj_dir)
-        #     self.logger.info(f"trajectories saved to {cfg.traj_dir}")
-        # self.logger.info(f"Finish {cfg.mode}ing!")
-        # res_dic = {'episodes': range(len(rewards)), 'rewards': rewards, 'steps': steps}
-        # save_results(res_dic, cfg.res_dir)  # save results
-        # save_cfgs(self.save_cfgs, cfg.task_dir)  # save config
-        # plot_rewards(rewards,
-        #              title=f"{cfg.mode.lower()}ing curve on {cfg.device} of {cfg.algo_name} for {self.env_cfg.id}",
-        #              fpath=cfg.res_dir)
+        
     def ray_run(self,cfg):
         ''' ray run
         '''
         ray.shutdown()
         ray.init(include_dashboard=True)
         envs = self.envs_config()  # configure environment
+        env = envs[0]
+        self.online_tester = RayTester.remote(cfg,env) # create online tester
         policy, data_handler = self.policy_config(cfg)
         stats_recorder = StatsRecorder.remote(cfg)
         data_server = DataServer.remote(cfg)
-        self.logger = RayLogger.remote(cfg.log_dir)
-        learner = Learner.remote(cfg, policy = policy,data_handler = data_handler)
+        ray_logger = RayLogger.remote(cfg.log_dir)
+        learner = Learner.remote(cfg, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
         workers = []
         for i in range(cfg.n_workers):
-            worker = Worker.remote(cfg,id = i,env = envs[i], logger = self.logger)
+            worker = Worker.remote(cfg,id = i,env = envs[i], logger = ray_logger)
             workers.append(worker)
         worker_tasks = [worker.run.remote(data_server = data_server,learner = learner,stats_recorder = stats_recorder) for worker in workers]
         ray.get(worker_tasks)
