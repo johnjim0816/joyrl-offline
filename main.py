@@ -37,12 +37,12 @@ class Main(object):
     def get_default_cfg(self):
         ''' get default config
         '''
-        self.general_cfg = GeneralConfig()
+        self.general_cfg = GeneralConfig() # general config
         self.algo_name = self.general_cfg.algo_name
-        algo_mod = importlib.import_module(f"algos.{self.algo_name}.config")
+        algo_mod = importlib.import_module(f"algos.{self.algo_name}.config") # import algo config
         self.algo_cfg = algo_mod.AlgoConfig()
         self.env_name = self.general_cfg.env_name
-        env_mod = importlib.import_module(f"envs.{self.env_name}.config")
+        env_mod = importlib.import_module(f"envs.{self.env_name}.config") # import env config
         self.env_cfg = env_mod.EnvConfig()
     
     def print_cfgs(self, cfg, name = ''):
@@ -153,10 +153,11 @@ class Main(object):
         self.logger.info(f"obs_space: {envs[0].observation_space}, n_actions: {envs[0].action_space}")  # print info
         return envs
     def policy_config(self,cfg):
-        algo_name = cfg.algo_name
-        policy_mod = importlib.import_module(f"algos.{algo_name}.policy")
+        ''' configure policy and data_handler
+        '''
+        policy_mod = importlib.import_module(f"algos.{cfg.algo_name}.policy")
          # create agent
-        data_handler_mod = importlib.import_module(f"algos.{algo_name}.data_handler")
+        data_handler_mod = importlib.import_module(f"algos.{cfg.algo_name}.data_handler")
         policy = policy_mod.Policy(cfg) 
         if cfg.load_checkpoint:
             policy.load_model(f"tasks/{cfg.load_path}/models/{cfg.load_model_step}")
@@ -164,6 +165,8 @@ class Main(object):
         return policy, data_handler
     
     def check_n_workers(self,cfg):
+        ''' check n_workers
+        '''
         if cfg.__dict__.get('n_workers',None) is None: # set n_workers to 1 if not set
             setattr(cfg, 'n_workers', 1)
         if not isinstance(cfg.n_workers,int) or cfg.n_workers<=0: # n_workers must >0
@@ -235,18 +238,18 @@ class Main(object):
         envs = self.envs_config()  # configure environment
         env = envs[0]
         self.online_tester = RayTester.remote(cfg,env) # create online tester
-        policy, data_handler = self.policy_config(cfg)
-        stats_recorder = StatsRecorder.remote(cfg)
-        data_server = DataServer.remote(cfg)
-        ray_logger = RayLogger.remote(cfg.log_dir)
-        learner = Learner.remote(cfg, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
+        policy, data_handler = self.policy_config(cfg) # create policy and data_handler
+        stats_recorder = StatsRecorder.remote(cfg) # create stats recorder
+        data_server = DataServer.remote(cfg) # create data server
+        ray_logger = RayLogger.remote(cfg.log_dir) # create ray logger 
+        learner = Learner.remote(cfg, policy = policy,data_handler = data_handler, online_tester = self.online_tester) # create learner
         workers = []
         for i in range(cfg.n_workers):
             worker = Worker.remote(cfg,id = i,env = envs[i], logger = ray_logger)
             workers.append(worker)
         worker_tasks = [worker.run.remote(data_server = data_server,learner = learner,stats_recorder = stats_recorder) for worker in workers]
-        ray.get(worker_tasks)
-        ray.shutdown()
+        ray.get(worker_tasks) # wait for all workers finish
+        ray.shutdown() # shutdown ray
 
     def run(self) -> None:
         s_t = time.time()

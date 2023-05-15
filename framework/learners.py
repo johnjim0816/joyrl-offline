@@ -5,13 +5,15 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:53
 LastEditor: JiangJi
-LastEditTime: 2023-05-15 22:19:13
+LastEditTime: 2023-05-15 23:38:06
 Discription: 
 '''
 import ray
 from ray.util.queue import Queue, Empty, Full
 @ray.remote
 class Learner:
+    ''' learner
+    '''
     def __init__(self,cfg,policy=None,data_handler=None,online_tester=None) -> None:
         self.cfg = cfg
         self.policy = policy
@@ -19,12 +21,18 @@ class Learner:
         self.online_tester = online_tester
         self.model_params_que = Queue(maxsize=128)
     def add_transition(self,transition):
+        ''' add transition to data handler
+        '''
         self.data_handler.add_transition(transition)
     def get_action(self,state,data_server = None):
+        ''' get action from policy
+        '''
         ray.get(data_server.increase_sample_count.remote())
         sample_count = ray.get(data_server.get_sample_count.remote())
         return self.policy.get_action(state,sample_count=sample_count)
     def train(self,data_server = None, logger = None):
+        ''' train policy
+        '''
         training_data = self.data_handler.sample_training_data()
         if training_data is not None:
             data_server.increase_update_step.remote()

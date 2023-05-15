@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-15 22:16:47
+LastEditTime: 2023-05-15 23:39:17
 Discription: 
 '''
 import ray
@@ -38,7 +38,7 @@ class Worker:
                     break
             self.logger.info.remote(f"Worker {self.id} finished episode {self.episode} with reward {self.ep_reward} in {self.ep_step} steps")
             ray.get(data_server.increase_episode.remote()) # increase episode count
-            self.add_interact_summary(stats_recorder) 
+            self.add_interact_summary(stats_recorder)  # add interact summary to stats_recorder
 
     def add_interact_summary(self,stats_recorder):
         ''' Add interact summary to stats_recorder
@@ -56,11 +56,15 @@ class Worker:
             ray.get(stats_recorder.add_model_summary.remote((self.update_step,self.model_summary)))
 
 class SimpleTester:
+    ''' Simple online tester
+    '''
     def __init__(self,cfg,env=None) -> None:
         self.cfg = cfg
         self.env = env
         self.best_eval_reward = -float('inf')
     def eval(self,policy):
+        ''' Evaluate policy
+        '''
         sum_eval_reward = 0
         for _ in range(self.cfg.online_eval_episode):
             state, info = self.env.reset(seed = self.cfg.seed)
@@ -81,6 +85,8 @@ class SimpleTester:
         return False, mean_eval_reward
 @ray.remote    
 class RayTester(SimpleTester):
+    ''' Ray online tester
+    '''
     def __init__(self,cfg,env=None) -> None:
         super().__init__(cfg,env)
     
