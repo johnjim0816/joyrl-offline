@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 # coding=utf-8
 '''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-04-23 00:54:59
-LastEditor: JiangJi
-LastEditTime: 2023-05-16 00:04:13
-Discription: 
+@Author: John
+@Email: johnjim0816@gmail.com
+@Date: 2020-06-12 00:50:49
+@LastEditor: John
+LastEditTime: 2023-05-16 00:07:44
+@Discription: 
+@Environment: python 3.7.7
 '''
+
+import math, random
 import torch
 import torch.nn as nn
-
-import math,random
+import torch.nn.functional as F
 import numpy as np
 from algos.base.policies import BasePolicy
-from algos.base.networks import ValueNetwork
+from common.layers import ValueNetwork
 
 
 class Policy(BasePolicy):
@@ -23,7 +25,7 @@ class Policy(BasePolicy):
         self.cfg = cfg
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
-        self.device = torch.device(cfg.device) 
+        self.device = torch.device(cfg.device)
         self.gamma = cfg.gamma  
         # e-greedy parameters
         self.sample_count = None
@@ -34,6 +36,7 @@ class Policy(BasePolicy):
         self.target_update = cfg.target_update
         self.create_graph() # create graph and optimizer
         self.create_summary() # create summary
+
     def create_graph(self):
         self.state_size = [None, self.obs_space.shape[0]]
         action_dim = self.action_space.n
@@ -54,6 +57,7 @@ class Policy(BasePolicy):
         else:
             action = self.action_space.sample()
         return action
+    
     def predict_action(self,state):
         ''' predict action
         '''
@@ -62,27 +66,33 @@ class Policy(BasePolicy):
             q_values = self.policy_net(state)
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
         return action
+
     def update(self, **kwargs):
         ''' update policy
         '''
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
         update_step = kwargs.get('update_step')
+
         # convert numpy to tensor
         states = torch.tensor(states, device=self.device, dtype=torch.float32)
         actions = torch.tensor(actions, device=self.device, dtype=torch.int64).unsqueeze(dim=1)
         next_states = torch.tensor(next_states, device=self.device, dtype=torch.float32)
         rewards = torch.tensor(rewards, device=self.device, dtype=torch.float32).unsqueeze(dim=1)
         dones = torch.tensor(dones, device=self.device, dtype=torch.float32).unsqueeze(dim=1)
-        # compute current Q values
-        q_values = self.policy_net(states).gather(1, actions)
-        # compute next max q value
-        next_q_values = self.target_net(next_states).max(1)[0].unsqueeze(dim=1)
-        # compute target Q values
-        target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
-        # compute loss
-        self.loss = nn.MSELoss()(q_values, target_q_values)
-        self.optimizer.zero_grad()
-        self.loss.backward()
+
+        # compute current Q values Q(s_t, a_t)
+        q_values = self.policy_net(states).gather(dim=1, index=actions)  # shape(batchsize,1)
+        # compute next Q values Q(s_t+1, a)
+        next_q_values = self.policy_net(next_states)
+        # compute next target Q values Q'(s_t+1, a)，which is different from DQN
+        next_target_value_batch = self.target_net(next_states)
+        # compute Q'(s_t+1, a=argmax Q(s_t+1, a))
+        next_target_q_value_batch = next_target_value_batch.gather(1, torch.max(next_q_values, 1)[1].unsqueeze(
+            1))  # shape(batchsize,1)
+        expected_q_values = rewards + self.gamma * next_target_q_value_batch * (1 - dones)  
+        self.loss = nn.MSELoss()(q_values, expected_q_values)  
+        self.optimizer.zero_grad()  
+        self.loss.backward()  
         # clip to avoid gradient explosion
         for param in self.policy_net.parameters():
             param.grad.data.clamp_(-1, 1)
@@ -91,4 +101,6 @@ class Policy(BasePolicy):
         if update_step % self.target_update == 0: 
             self.target_net.load_state_dict(self.policy_net.state_dict())
         self.update_summary() # update summary
- 
+
+
+

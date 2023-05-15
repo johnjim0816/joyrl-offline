@@ -5,16 +5,19 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-15 13:16:29
+LastEditTime: 2023-05-15 23:59:03
 Discription: 
 '''
 import torch
 import torch.nn as nn
+import torch.optim as optim
 class BasePolicy(nn.Module):
     def __init__(self,cfg) -> None:
         super().__init__()
         self.cfg = cfg
         self.optimizer = None
+    def create_optimizer(self):
+        self.optimizer = optim.Adam(self.parameters(), lr=self.cfg.lr) 
     def get_policy_params(self):
         named_params_dict = dict(self.named_parameters())
         return named_params_dict
