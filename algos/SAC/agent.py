@@ -23,13 +23,13 @@ def weights_init_(m):
         torch.nn.init.xavier_uniform_(m.weight, gain=1)
         torch.nn.init.constant_(m.bias, 0)
 
-class ValueNetwork(nn.Module):
+class QNetwork(nn.Module):
     '''神经网络模型：用于估计给定状态的价值函数
     Args:
         nn : 继承 nn.Module
     '''
     def __init__(self, num_inputs, hidden_dim):
-        super(ValueNetwork, self).__init__()
+        super(QNetwork, self).__init__()
 
         self.linear1 = nn.Linear(num_inputs, hidden_dim)
         self.linear2 = nn.Linear(hidden_dim, hidden_dim)

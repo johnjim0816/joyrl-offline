@@ -5,11 +5,11 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2022-11-22 23:19:20
 LastEditor: JiangJi
-LastEditTime: 2023-04-09 16:02:32
+LastEditTime: 2023-05-14 20:36:43
 Discription: 
 '''
 import torch.multiprocessing as mp
-from common.utils import all_seed
+from utils.utils import all_seed
 class Trainer:
     def __init__(self) -> None:
         pass

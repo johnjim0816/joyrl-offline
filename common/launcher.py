@@ -1,4 +1,4 @@
-from common.utils import get_logger,save_results,save_cfgs,plot_rewards,merge_class_attrs,load_cfgs
+from utils.utils import get_logger,save_results,save_cfgs,plot_rewards,merge_class_attrs,load_cfgs
 from common.config import GeneralConfig,AlgoConfig,MergedConfig
 import time
 from pathlib import Path

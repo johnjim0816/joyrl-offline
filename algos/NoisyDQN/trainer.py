@@ -1,6 +1,6 @@
 import torch.multiprocessing as mp
 import ray
-from common.utils import all_seed
+from utils.utils import all_seed
 
 class Trainer:
     def __init__(self) -> None:
