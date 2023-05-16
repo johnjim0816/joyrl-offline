@@ -1,5 +1,6 @@
 class AlgoConfig:
     def __init__(self):
+        self.independent_actor = False # whether to use independent actor
         self.ppo_type = 'clip' # clip or kl
         if self.ppo_type == 'kl':
             self.kl_target = 0.1 # target KL divergence

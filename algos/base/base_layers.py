@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:15
 LastEditor: JiangJi
-LastEditTime: 2023-04-26 00:53:56
+LastEditTime: 2023-05-16 16:12:47
 Discription: 
 '''
 import torch
@@ -70,6 +70,7 @@ def conv2d_layer(in_channel, out_channel, kernel_size, stride, padding, act_name
     """
     padding = 'same' if stride == 1 else 'valid'
     return nn.Sequential(nn.Conv2d(in_channel,out_channel,kernel_size,stride,padding),activation_dics[act_name]() )
+
 def create_layer(input_size: list, layer_cfg: LayerConfig):
     """ 生成一个层
         layer_type: 层的类型

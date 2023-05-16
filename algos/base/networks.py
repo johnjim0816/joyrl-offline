@@ -5,19 +5,18 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-16 13:26:40
+LastEditTime: 2023-05-16 16:11:46
 Discription: 
 '''
-import sys, os
-sys.path.append(os.getcwd())
 import torch.nn as nn
-from algos.base.layers import create_layer, LayerConfig
-
+from algos.base.base_layers import create_layer, LayerConfig
 class BaseNework(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
 class QNetwork(BaseNework):
+    ''' Q network, for value-based methods like DQN
+    '''
     def __init__(self, cfg, state_size, action_size):
         super(QNetwork, self).__init__()
         self.cfg = cfg
@@ -54,7 +53,20 @@ class QNetwork(BaseNework):
             q_value = self.action_value_layer(x)
         return q_value
         
-    
+class ValueNetwork(BaseNework):
+    ''' Value network, for policy-based methods like DDPG, in which the actor and critic share the same network
+    '''
+    def __init__(self, cfg, state_size):
+        super(ValueNetwork, self).__init__()
+        pass
+
+class BaseActor:
+    def __init__(self) -> None:
+        pass
+class BaseCritic:
+    def __init__(self) -> None:
+        pass
+
 if __name__ == "__main__":
     # 调试用：export PYTHONPATH=./:$PYTHONPATH
     import torch

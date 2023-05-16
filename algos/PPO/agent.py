@@ -6,12 +6,14 @@ from torch.distributions import Categorical,Normal
 import torch.utils.data as Data
 import numpy as np
 
+from algos.base.policies import BasePolicy
 from common.models import ActorSoftmax, ActorNormal, Critic
 from common.memories import PGReplay
 from common.optms import SharedAdam
 
-class Agent:
-    def __init__(self, cfg, is_share_agent = False) -> None:
+class Policy(BasePolicy):
+    def __init__(self, cfg) -> None:
+        self.independ_actor = cfg.independ_actor
         self.ppo_type = 'clip' # clip or kl
         if self.ppo_type == 'kl':
             self.kl_target = cfg.kl_target 
@@ -22,6 +24,7 @@ class Agent:
         self.device = torch.device(cfg.device)
         self.continuous = cfg.continuous # continuous action space
         self.action_space = cfg.action_space
+
         if self.continuous:
             self.action_scale = torch.tensor((self.action_space.high - self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
             self.action_bias = torch.tensor((self.action_space.high + self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
@@ -38,14 +41,11 @@ class Agent:
         self.sample_count = 0
         self.train_batch_size = cfg.train_batch_size
         self.sgd_batch_size = cfg.sgd_batch_size
-
-        if is_share_agent:
-            self.actor.share_memory()
-            self.actor_optimizer = SharedAdam(self.actor.parameters(), lr=cfg.actor_lr)
-            self.actor_optimizer.share_memory()
-            self.critic.share_memory()
-            self.critic_optimizer = SharedAdam(self.critic.parameters(), lr=cfg.critic_lr)
-            self.critic_optimizer.share_memory()
+    def create_graph(self):
+        if self.independ_actor:
+            self.actor = ActorSoftmax(self.n_states,self.n_actions, hidden_dim = self.actor_hidden_dim).to(self.device)
+        else:
+            self.actor = ActorSoftmax(self.n_states,self.n_actions, hidden_dim = self.actor_hidden_dim).to(self.device)
 
     def sample_action(self,state):
         self.sample_count += 1
