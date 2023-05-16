@@ -145,7 +145,7 @@ class Main(object):
         '''
         # register_env(self.env_cfg.id)
         envs = [] # numbers of envs, equal to cfg.n_workers
-        for i in range(self.cfg.n_workers):
+        for _ in range(self.cfg.n_workers):
             env = self.create_single_env()
             envs.append(env)
         setattr(self.cfg, 'obs_space', envs[0].observation_space)
@@ -178,8 +178,9 @@ class Main(object):
         ''' single process run
         '''
         envs = self.envs_config()  # configure environment
-        env = envs[0]
-        self.online_tester = SimpleTester(cfg,env) # create online tester
+        env = envs[0] # single env
+        test_env = self.create_single_env() # create single env
+        self.online_tester = SimpleTester(cfg,test_env) # create online tester
         policy, data_handler = self.policy_config(cfg)
         i_ep , update_step, sample_count = 0, 0, 1
         self.logger.info(f"Start {cfg.mode}ing!") # print info
@@ -236,8 +237,8 @@ class Main(object):
         ray.shutdown()
         ray.init(include_dashboard=True)
         envs = self.envs_config()  # configure environment
-        env = envs[0]
-        self.online_tester = RayTester.remote(cfg,env) # create online tester
+        test_env = self.create_single_env() # create single env
+        self.online_tester = RayTester.remote(cfg,test_env) # create online tester
         policy, data_handler = self.policy_config(cfg) # create policy and data_handler
         stats_recorder = StatsRecorder.remote(cfg) # create stats recorder
         data_server = DataServer.remote(cfg) # create data server

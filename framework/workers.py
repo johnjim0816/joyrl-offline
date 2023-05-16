@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-15 23:39:17
+LastEditTime: 2023-05-16 11:40:32
 Discription: 
 '''
 import ray
@@ -76,8 +76,8 @@ class SimpleTester:
                 ep_reward += reward
                 ep_step += 1
                 if terminated or (0<= self.cfg.max_step <= ep_step):
+                    sum_eval_reward += ep_reward
                     break
-            sum_eval_reward += ep_reward
         mean_eval_reward = sum_eval_reward / self.cfg.online_eval_episode
         if mean_eval_reward > self.best_eval_reward:
             self.best_eval_reward = mean_eval_reward

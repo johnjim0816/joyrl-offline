@@ -5,18 +5,16 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-05-16 00:07:44
+LastEditTime: 2023-05-16 10:20:52
 @Discription: 
 @Environment: python 3.7.7
 '''
-
-import math, random
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import math, random
 import numpy as np
 from algos.base.policies import BasePolicy
-from common.layers import ValueNetwork
+from algos.base.networks import ValueNetwork
 class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
         super(Policy, self).__init__(cfg)
