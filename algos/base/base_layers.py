@@ -5,13 +5,19 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:15
 LastEditor: JiangJi
-LastEditTime: 2023-05-16 16:12:47
+LastEditTime: 2023-05-17 00:05:03
 Discription: 
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-activation_dics = {'relu': nn.ReLU, 'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid, 'softmax': nn.Softmax,'none': nn.Identity}  
+
+activation_dics = {'relu': nn.ReLU, 
+                   'tanh': nn.Tanh, 
+                   'sigmoid': nn.Sigmoid, 
+                   'softmax': nn.Softmax,
+                   'leakyrelu': nn.LeakyReLU,
+                   'none': nn.Identity}  
 
 class LayerConfig:
     ''' 层的配置类
@@ -46,6 +52,7 @@ def embedding_layer(input_size, layer_cfg: LayerConfig):
     layer = EmbeddingLayer(n_embeddings, embedding_dim)
     output_size = get_output_size_with_batch(layer, input_size=input_size, dtype=torch.long)
     return layer, output_size 
+
 def linear_layer(input_size,layer_cfg: LayerConfig):
     """ 生成一个线性层
         layer_size: 线性层的输入输出维度
@@ -57,6 +64,7 @@ def linear_layer(input_size,layer_cfg: LayerConfig):
     out_dim = layer_size[0]
     layer = nn.Sequential(nn.Linear(in_dim,out_dim),activation_dics[act_name]())
     return layer, [None, out_dim]
+
 def dense_layer(in_dim,out_dim,act_name='relu'):
     """ 生成一个全连接层
         layer_size: 全连接层的输入输出维度

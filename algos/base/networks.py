@@ -5,11 +5,12 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-16 16:11:46
+LastEditTime: 2023-05-17 00:43:09
 Discription: 
 '''
 import torch.nn as nn
 from algos.base.base_layers import create_layer, LayerConfig
+from algos.base.action_layers import DiscreteActionLayer, ContinousActionLayer
 class BaseNework(nn.Module):
     def __init__(self) -> None:
         super().__init__()
@@ -60,12 +61,64 @@ class ValueNetwork(BaseNework):
         super(ValueNetwork, self).__init__()
         pass
 
-class BaseActor:
+class BaseActorNetwork(nn.Module):
     def __init__(self) -> None:
         pass
-class BaseCritic:
+class BaseCriticNetwork(nn.Module):
     def __init__(self) -> None:
-        pass
+        super().__init__()
+
+class ActorNetwork(BaseActorNetwork):
+    def __init__(self, cfg, state_size, action_space) -> None:
+        super().__init__()
+        self.cfg = cfg
+        self.continous = action_space.continous
+        self.layers_cfg_dic = cfg.actor_layers # load layers config
+        self.layers = nn.ModuleList()
+        output_size = state_size
+        for layer_cfg_dic in self.layers_cfg_dic:
+            if "layer_type" not in layer_cfg_dic:
+                raise ValueError("layer_type must be specified in layer_cfg")
+            layer_cfg = LayerConfig(**layer_cfg_dic)
+            layer, layer_out_size = create_layer(output_size, layer_cfg)
+            output_size = layer_out_size
+            self.layers.append(layer) 
+        if self.continous:
+            self.action_layer = ContinousActionLayer(cfg, output_size, action_space)
+        else:
+            self.action_layer = DiscreteActionLayer(cfg, output_size, action_space)
+    def forward(self, x, legal_actions=None):
+        for layer in self.layers:
+            x = layer(x)
+        if self.continous:
+            mu, sigma = self.action_layer(x)
+            return mu, sigma
+        else:
+            probs = self.action_layer(x, legal_actions)
+            return probs
+
+class CriticNetwork(BaseCriticNetwork):
+    def __init__(self, cfg, state_size):
+        super(CriticNetwork, self).__init__()
+        self.cfg = cfg
+        self.layers_cfg_dic = cfg.critic_layers # load layers config
+        self.layers = nn.ModuleList()
+        output_size = state_size
+        for layer_cfg_dic in self.layers_cfg_dic:
+            if "layer_type" not in layer_cfg_dic:
+                raise ValueError("layer_type must be specified in layer_cfg")
+            layer_cfg = LayerConfig(**layer_cfg_dic)
+            layer, layer_out_size = create_layer(output_size, layer_cfg)
+            output_size = layer_out_size
+            self.layers.append(layer) 
+        head_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[1], activation='none')
+        self.head_layer, layer_out_size = create_layer(output_size, head_layer_cfg)
+    def forward(self, x):
+        for layer in self.layers:
+            x = layer(x)
+        value = self.head_layer(x)
+        return value
+        
 
 if __name__ == "__main__":
     # 调试用：export PYTHONPATH=./:$PYTHONPATH
