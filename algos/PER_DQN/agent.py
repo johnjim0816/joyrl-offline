@@ -16,7 +16,7 @@ import random
 import math
 import ray
 import numpy as np
-from common.layers import ValueNetwork
+from common.layers import QNetwork
 from common.memories import PrioritizedReplayBuffer,PrioritizedReplayBufferQue
 from common.optms import SharedAdam
 
@@ -35,8 +35,8 @@ class Agent:
         self.batch_size = cfg.batch_size
         self.target_update = cfg.target_update
         
-        self.policy_net = ValueNetwork(cfg).to(self.device)
-        self.target_net = ValueNetwork(cfg).to(self.device)
+        self.policy_net = QNetwork(cfg).to(self.device)
+        self.target_net = QNetwork(cfg).to(self.device)
         ## copy parameters from policy net to target net
         for target_param, param in zip(self.target_net.parameters(),self.policy_net.parameters()): 
             target_param.data.copy_(param.data)
@@ -50,8 +50,8 @@ class Agent:
             self.optimizer = SharedAdam(self.policy_net.parameters(), lr=cfg.lr)
             self.optimizer.share_memory()
         # ray中share_agent
-        self.share_policy_ray = ValueNetwork(cfg).to(self.device)
-        self.share_target_ray = ValueNetwork(cfg).to(self.device)
+        self.share_policy_ray = QNetwork(cfg).to(self.device)
+        self.share_target_ray = QNetwork(cfg).to(self.device)
         self.optimizer_ray = SharedAdam(self.share_policy_ray.parameters(), lr=cfg.lr)
 
     def sample_action(self, state):
@@ -186,8 +186,8 @@ class ShareAgent:
         Args:
             cfg (class): 超参数类
         '''
-        self.policy_net = ValueNetwork(cfg).to(cfg.device)
-        self.target_net = ValueNetwork(cfg).to(cfg.device)
+        self.policy_net = QNetwork(cfg).to(cfg.device)
+        self.target_net = QNetwork(cfg).to(cfg.device)
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=cfg.lr) 
         self.lr = cfg.lr
         # self.memory = ReplayBuffer(cfg.buffer_size)

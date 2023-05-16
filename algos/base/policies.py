@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-15 23:59:03
+LastEditTime: 2023-05-16 13:21:43
 Discription: 
 '''
 import torch
@@ -15,7 +15,13 @@ class BasePolicy(nn.Module):
     def __init__(self,cfg) -> None:
         super().__init__()
         self.cfg = cfg
+        self.obs_space = cfg.obs_space
+        self.action_space = cfg.action_space
         self.optimizer = None
+    def get_state_action_size(self):
+        self.state_size = [None, self.obs_space.shape[0]]
+        self.action_size = [self.action_space.n]
+        return self.state_size, self.action_size
     def create_optimizer(self):
         self.optimizer = optim.Adam(self.parameters(), lr=self.cfg.lr) 
     def get_policy_params(self):

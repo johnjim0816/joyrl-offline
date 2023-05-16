@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-05-16 10:20:52
+LastEditTime: 2023-05-16 13:22:36
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -14,7 +14,7 @@ import torch.nn as nn
 import math, random
 import numpy as np
 from algos.base.policies import BasePolicy
-from algos.base.networks import ValueNetwork
+from algos.base.networks import QNetwork
 class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
         super(Policy, self).__init__(cfg)
@@ -34,10 +34,9 @@ class Policy(BasePolicy):
         self.create_summary() # create summary
 
     def create_graph(self):
-        self.state_size = [None, self.obs_space.shape[0]]
-        action_dim = self.action_space.n
-        self.policy_net = ValueNetwork(self.cfg, self.state_size, action_dim).to(self.device)
-        self.target_net = ValueNetwork(self.cfg, self.state_size, action_dim).to(self.device)
+        self.state_size, self.action_size = self.get_state_action_size()
+        self.policy_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
+        self.target_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
         self.create_optimizer()
 

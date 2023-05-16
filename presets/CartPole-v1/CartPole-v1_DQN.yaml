@@ -3,7 +3,7 @@ general_cfg:
   env_name: gym # env name, differ from env_id in env_cfgs
   device: cpu # device, cpu or cuda
   mode: train # run mode: train, test
-  collect_traj: true # if collect trajectories or not
+  collect_traj: false # if collect trajectories or not
   mp_backend: single # multi-processing mode: single(default), ray
   n_workers: 2 # number of workers if using multi-processing, default 1
   load_checkpoint: false # if load checkpoint or not

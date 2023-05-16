@@ -46,7 +46,7 @@ env = gym.make('CartPole-v1')
 首先定义网络，例如在`DQN`算法中我们可以定义一个简单的网络：
 
 ```python
-class ValueNetwork(nn.Module):
+class QNetwork(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_dim=128):
         pass
 ```
@@ -55,8 +55,8 @@ class ValueNetwork(nn.Module):
 ```python
 class Policy:
     def __init__(cfg):
-        self.policy_net = ValueNetwork(cfg.state_dim, cfg.action_dim) # 定义策略网络
-        self.target_net = ValueNetwork(cfg.state_dim, cfg.action_dim) # 定义目标网络
+        self.policy_net = QNetwork(cfg.state_dim, cfg.action_dim) # 定义策略网络
+        self.target_net = QNetwork(cfg.state_dim, cfg.action_dim) # 定义目标网络
     def get_action(self, state):
         ''' 根据状态采样动作
         '''
