@@ -45,42 +45,21 @@ class Policy(BasePolicy):
         self.create_optimizer()
         self.create_summary()
         self.to(self.device)
+
     def create_graph(self):
         if self.independ_actor:
-            self.policy_net = ActorNetwork(self.cfg, self.state_size, self.action_space)
+            self.policy_net = ValueNetwork(self.cfg, self.state_size, self.action_space)
         else:
             self.actor = ActorNetwork(self.cfg, self.state_size, self.action_space)
             self.critic = CriticNetwork(self.cfg, self.state_size, self.action_space)
-    def get_action(self, state, sample_count=None, mode='sample'):
-        if self.independ_actor:
-           if self.continuous:
-                value, mu , sigma = self.policy_net(state)
-           else:
-                probs = self.policy_net(state)
-        else:
-            if self.continuous:
-                value = self.critic(state)
-                mu, sigma = self.actor(state)
-            else:
-                value = self.critic(state)
-                probs = self.actor(state)
-        if self.continuous:
-            dist = Normal(mu, sigma)
-            action = dist.sample()
-            action = torch.clamp(action, torch.tensor(self.action_space.low, device=self.device, dtype=torch.float32), torch.tensor(self.action_space.high, device=self.device, dtype=torch.float32))
-        else:
-            dist = Categorical(probs)
-            action = dist.sample()
+            
+    def get_action(self, state, mode='sample', **kwargs):
         if mode == 'sample':
-            if self.continuous:
-                return action.detach().cpu().numpy()[0]
-            else:
-                return action.detach().cpu().numpy().item()
+            return self.sample_action(state, **kwargs)
         elif mode == 'predict':
-            if self.continuous:
-                return mu.detach().cpu().numpy()[0]
-            else:
-                return torch.argmax(probs).detach().cpu().numpy().item()
+            return self.predict_action(state, **kwargs)
+        else:
+            raise NameError
             
     def sample_action(self,state,**kwargs):
         # sample_count = kwargs.get('sample_count', 0)
@@ -106,7 +85,7 @@ class Policy(BasePolicy):
             return action.detach().cpu().numpy().item()
         
     @torch.no_grad()
-    def predict_action(self,state,**kwargs):
+    def predict_action(self, state, **kwargs):
         if self.independ_actor:
             if self.continuous:
                 value, mu , sigma = self.policy_net(state)
