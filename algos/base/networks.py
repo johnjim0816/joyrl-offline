@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 00:43:09
+LastEditTime: 2023-05-17 00:48:25
 Discription: 
 '''
 import torch.nn as nn
@@ -57,10 +57,37 @@ class QNetwork(BaseNework):
 class ValueNetwork(BaseNework):
     ''' Value network, for policy-based methods like DDPG, in which the actor and critic share the same network
     '''
-    def __init__(self, cfg, state_size):
+    def __init__(self, cfg, state_size, action_space) -> None:
         super(ValueNetwork, self).__init__()
-        pass
-
+        self.cfg = cfg
+        self.continous = action_space.continous
+        self.layers_cfg_dic = cfg.value_layers # load layers config
+        self.layers = nn.ModuleList()
+        output_size = state_size
+        for layer_cfg_dic in self.layers_cfg_dic:
+            if "layer_type" not in layer_cfg_dic:
+                raise ValueError("layer_type must be specified in layer_cfg")
+            layer_cfg = LayerConfig(**layer_cfg_dic)
+            layer, layer_out_size = create_layer(output_size, layer_cfg)
+            output_size = layer_out_size
+            self.layers.append(layer) 
+        value_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[1], activation='none')
+        self.value_layer, layer_out_size = create_layer(output_size, value_layer_cfg)
+        if self.continous:
+            self.action_layer = ContinousActionLayer(cfg, output_size, action_space)
+        else:
+            self.action_layer = DiscreteActionLayer(cfg, output_size, action_space)
+    def forward(self, x, legal_actions=None):
+        for layer in self.layers:
+            x = layer(x)
+        value = self.value_layer(x)
+        if self.continous:
+            mu, sigma = self.action_layer(x)
+            return value, mu, sigma
+        else:
+            probs = self.action_layer(x, legal_actions)
+            return value, probs
+        
 class BaseActorNetwork(nn.Module):
     def __init__(self) -> None:
         pass
