@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:34:27
 LastEditor: JiangJi
-LastEditTime: 2023-05-15 18:08:50
+LastEditTime: 2023-05-16 23:47:47
 Discription: 
 '''
 import random
@@ -13,53 +13,58 @@ import torch
 import numpy as np
 from collections import deque
 
-from utils.core_types import BufferType
 from common.config import MergedConfig
+from enum import Enum
+
+class BufferType(Enum):
+    REPLAY = 1
+    REPLAY_QUE = 2
+    PER = 3
+    PER_QUE = 4
 
 class ReplayBuffer:
-    def __init__(self, capacity):
-        self.capacity = capacity # 经验回放的容量
-        self.buffer = [] # 缓冲区
-        self.position = 0 
+    def __init__(self, cfg: MergedConfig):
+        self.capacity = cfg.buffer_size
+        self.buffer = [] 
+        self.position = 0 # pointer of buffer
     
-    def push(self, state, action, reward, next_state, done):
-        ''' 缓冲区是一个队列，容量超出时去掉开始存入的转移(transition)
+    def push(self, exps):
+        ''' 
         '''
-        if len(self.buffer) < self.capacity:
-            self.buffer.append(None)
-        self.buffer[self.position] = (state, action, reward, next_state, done)
-        self.position = (self.position + 1) % self.capacity 
-    
+        for exp in exps:
+            if len(self.buffer) < self.capacity:
+                self.buffer.append(None)
+            self.buffer[self.position] = exp
+            self.position = (self.position + 1) % self.capacity
+
     def sample(self, batch_size):
-        batch = random.sample(self.buffer, batch_size) # 随机采出小批量转移
-        state, action, reward, next_state, done =  zip(*batch) # 解压成状态，动作等
-        return state, action, reward, next_state, done
+        ''' sample a batch of transitions   
+        '''
+        batch = random.sample(self.buffer, batch_size) 
+        return batch
     
     def __len__(self):
-        ''' 返回当前存储的量
+        ''' return the current size of the buffer
         '''
         return len(self.buffer)
 
 class ReplayBufferQue:
+    ''' same as ReplayBuffer, but use deque to store the transitions
+    '''
     def __init__(self, cfg: MergedConfig):
-        self.capacity = cfg.buffer_size # 经验回放的容量
+        self.capacity = cfg.buffer_size 
         self.buffer = deque(maxlen=self.capacity)
+
     def push(self, exps: list):
-        ''' 添加样本到经验池
-        Args:
-            trainsitions (tuple): _description_
+        ''' push a transition into the buffer
         '''
         for exp in exps:
             self.buffer.append(exp)
+
     def sample(self, batch_size: int, sequential: bool = False):
-        ''' 从经验池中随机采样小批量样本
-        Args:
-            batch_size (int): _description_
-            sequential (bool, optional): _description_. Defaults to False.
-        Returns:
-            _type_: _description_
+        ''' sample a batch of transitions
         '''
-        if batch_size > len(self.buffer): # 如果小批量大于经验池的容量，则取经验池的容量
+        if batch_size > len(self.buffer): # if the buffer is not full, return None
             return None
         if sequential: # sequential sampling
             rand = random.randint(0, len(self.buffer) - batch_size)
@@ -68,9 +73,14 @@ class ReplayBufferQue:
         else:
             batch = random.sample(self.buffer, batch_size)
             return batch
+        
     def clear(self):
+        ''' clear the buffer
+        '''
         self.buffer.clear()
     def __len__(self):
+        ''' return the current size of the buffer
+        '''
         return len(self.buffer)
 
 class PGReplay(ReplayBufferQue):
