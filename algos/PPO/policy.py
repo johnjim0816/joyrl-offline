@@ -6,6 +6,7 @@ from torch.distributions import Categorical,Normal
 import torch.utils.data as Data
 import numpy as np
 
+from algos.base.networks import ValueNetwork, CriticNetwork, ActorNetwork
 from algos.base.policies import BasePolicy
 from common.models import ActorSoftmax, ActorNormal, Critic
 from common.memories import PGReplay
@@ -38,54 +39,90 @@ class Policy(BasePolicy):
         self.k_epochs = cfg.k_epochs # update policy for K epochs
         self.eps_clip = cfg.eps_clip # clip parameter for PPO
         self.entropy_coef = cfg.entropy_coef # entropy coefficient
-        self.sample_count = 0
         self.train_batch_size = cfg.train_batch_size
         self.sgd_batch_size = cfg.sgd_batch_size
+        self.create_graph()
+        self.create_optimizer()
+        self.create_summary()
+        self.to(self.device)
     def create_graph(self):
         if self.independ_actor:
-            self.actor = ActorSoftmax(self.n_states,self.n_actions, hidden_dim = self.actor_hidden_dim).to(self.device)
+            self.policy_net = ActorNetwork(self.cfg, self.state_size, self.action_space)
         else:
-            self.actor = ActorSoftmax(self.n_states,self.n_actions, hidden_dim = self.actor_hidden_dim).to(self.device)
-
-    def sample_action(self,state):
-        self.sample_count += 1
+            self.actor = ActorNetwork(self.cfg, self.state_size, self.action_space)
+            self.critic = CriticNetwork(self.cfg, self.state_size, self.action_space)
+    def get_action(self, state, sample_count=None, mode='sample'):
+        if self.independ_actor:
+           if self.continuous:
+                value, mu , sigma = self.policy_net(state)
+           else:
+                probs = self.policy_net(state)
+        else:
+            if self.continuous:
+                value = self.critic(state)
+                mu, sigma = self.actor(state)
+            else:
+                value = self.critic(state)
+                probs = self.actor(state)
         if self.continuous:
-            state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
-            mu, sigma = self.actor(state)
-            mean = mu * self.action_scale + self.action_bias
-            std = sigma
-            dist = Normal(mean, std)
+            dist = Normal(mu, sigma)
             action = dist.sample()
             action = torch.clamp(action, torch.tensor(self.action_space.low, device=self.device, dtype=torch.float32), torch.tensor(self.action_space.high, device=self.device, dtype=torch.float32))
-            self.probs = probs.detach()
-            self.log_probs = dist.log_prob(action).detach()
-            return action.detach().cpu().numpy()[0]
-        else: 
-            state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
-            probs = self.actor(state)
+        else:
             dist = Categorical(probs)
             action = dist.sample()
-            self.probs = probs.detach()
-            self.log_probs = dist.log_prob(action).detach()
-            return action.detach().cpu().numpy().item()
-    @torch.no_grad()
-    def predict_action(self,state):
+        if mode == 'sample':
+            if self.continuous:
+                return action.detach().cpu().numpy()[0]
+            else:
+                return action.detach().cpu().numpy().item()
+        elif mode == 'predict':
+            if self.continuous:
+                return mu.detach().cpu().numpy()[0]
+            else:
+                return torch.argmax(probs).detach().cpu().numpy().item()
+            
+    def sample_action(self,state,**kwargs):
+        # sample_count = kwargs.get('sample_count', 0)
+        if self.independ_actor:
+            if self.continuous:
+                value, mu , sigma = self.policy_net(state)
+            else:
+                probs = self.policy_net(state)
+        else:
+            value = self.critic(state)
+            if self.continuous:
+                mu, sigma = self.actor(state)
+            else:
+                probs = self.actor(state)
         if self.continuous:
-            state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
-            mu, sigma = self.actor(state)
-            mean = mu * self.action_scale + self.action_bias
-            std = sigma
-            dist = Normal(mean, std)
+            dist = Normal(mu, sigma)
             action = dist.sample()
-            self.log_probs = dist.log_prob(action).detach()
+            action = torch.clamp(action, torch.tensor(self.action_space.low, device=self.device, dtype=torch.float32), torch.tensor(self.action_space.high, device=self.device, dtype=torch.float32))
             return action.detach().cpu().numpy()[0]
-        else: 
-            state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
-            probs = self.actor(state)
+        else:
             dist = Categorical(probs)
             action = dist.sample()
-            self.log_probs = dist.log_prob(action).detach()
             return action.detach().cpu().numpy().item()
+        
+    @torch.no_grad()
+    def predict_action(self,state,**kwargs):
+        if self.independ_actor:
+            if self.continuous:
+                value, mu , sigma = self.policy_net(state)
+            else:
+                probs = self.policy_net(state)
+        else:
+            value = self.critic(state)
+            if self.continuous:
+                mu, sigma = self.actor(state)
+            else:
+                probs = self.actor(state)
+        if self.continuous:
+            return mu.detach().cpu().numpy()[0]
+        else:
+            return torch.argmax(probs).detach().cpu().numpy().item()
+ 
     def update(self, share_agent=None):
         # update policy every train_batch_size steps
         if self.sample_count % self.train_batch_size != 0:
