@@ -85,11 +85,11 @@ class Policy(BasePolicy):
                 self.probs = self.actor(state)
         if mode == 'sample':
             action = self.sample_action(**kwargs)
+            self.update_policy_transition()
         elif mode == 'predict':
             action = self.predict_action(**kwargs)
         else:
             raise NameError('mode must be sample or predict')
-        self.update_policy_transition()
         return action
     def update_policy_transition(self):
         if self.continuous:
