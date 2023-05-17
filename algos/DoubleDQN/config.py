@@ -1,6 +1,19 @@
-from config.config import DefaultConfig
+#!/usr/bin/env python
+# coding=utf-8
+'''
+@Author: John
+@Email: johnjim0816@gmail.com
+@Date: 2020-06-12 00:50:49
+@LastEditor: John
+LastEditTime: 2023-05-16 00:07:44
+@Discription: 
+@Environment: python 3.7.7
+'''
 
+from config.config import DefaultConfig
 class AlgoConfig(DefaultConfig):
+    ''' algorithm parameters
+    '''
     def __init__(self) -> None:
         # set epsilon_start=epsilon_end can obtain fixed epsilon=epsilon_end
         self.epsilon_start = 0.95  # epsilon start value
@@ -11,10 +24,8 @@ class AlgoConfig(DefaultConfig):
         self.buffer_size = 100000  # size of replay buffer
         self.batch_size = 64  # batch size
         self.target_update = 4  # target network update frequency
+        # value network layers config
         self.value_layers = [
-            {'layer_type': 'linear', 'layer_dim': ['n_states', 256],
-             'activation': 'relu'},
-            {'layer_type': 'linear', 'layer_dim': [256, 256],
-             'activation': 'relu'},
-            {'layer_type': 'linear', 'layer_dim': [256, 'n_actions'],
-             'activation': 'none'}]
+            {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
+            {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
+        ]

@@ -1,4 +1,0 @@
-2023-03-30 21:30:00 - r - INFO: - n_states: 4, n_actions: 2
-2023-03-30 21:30:01 - r - INFO: - Start training!
-2023-03-30 21:30:01 - r - INFO: - Env: CartPole-v1, Algorithm: DQN, Device: cpu
-2023-03-30 21:38:45 - r - INFO: - Finish training!

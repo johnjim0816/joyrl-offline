@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import random
 import math
 import numpy as np
-from common.layers import ValueNetwork
+from common.layers import QNetwork
 from common.memories import ReplayBuffer
 from common.optms import SharedAdam
 
@@ -28,9 +28,9 @@ class Agent:
         self.epsilon_decay = cfg.epsilon_decay
         self.batch_size = cfg.batch_size
         self.target_update = cfg.target_update
-        self.policy_net = ValueNetwork(cfg).to(self.device)
+        self.policy_net = QNetwork(cfg).to(self.device)
         # summary(self.policy_net, (1,4))
-        self.target_net = ValueNetwork(cfg).to(self.device)
+        self.target_net = QNetwork(cfg).to(self.device)
         ## copy parameters from policy net to target net
         # for target_param, param in zip(self.target_net.parameters(),self.policy_net.parameters()): 
         #     target_param.data.copy_(param.data)

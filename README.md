@@ -8,24 +8,19 @@ JoyRL是一套主要基于Torch的强化学习开源框架，旨在让读者仅�
 
 ## 安装说明
 
-目前支持Python 3.8和Gym 0.25.2版本。
+目前支持`Python=3.8`和`gymnasium==0.28.1`版本。
 
 下载代码：
+
 ```bash
 git clone https://github.com/johnjim0816/joyrl-offline
 ```
 
-创建Conda环境（需先安装Anaconda）
+创建Conda环境（需先安装Anaconda）：
 
 ```bash
-conda create -n joyrl-offline python=3.8
-conda activate joyrl-offline
-```
-
-安装Gym：
-
-```bash
-pip install gym==0.25.2
+conda create -n joyrl python=3.8
+conda activate joyrl
 ```
 
 安装Torch：
@@ -43,20 +38,6 @@ pip install torch==1.10.0+cu113 torchvision==0.11.0+cu113 torchaudio==0.10.0 --e
 
 ```bash
 pip install -r requirements.txt
-```
-
-## 安装多线程
-
-### Multiprocessing框架
-
-```bash
-pip install multiprocess
-```
-
-### Ray框架
-
-```bash
-pip install ray==2.3.0
 ```
 
 ## 使用说明

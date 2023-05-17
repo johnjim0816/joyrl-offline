@@ -26,7 +26,7 @@ import torch.optim as optim
 import random
 import math
 import numpy as np
-from common.layers import ValueNetwork
+from common.layers import QNetwork
 from common.memories import ReplayBuffer
 from common.optms import SharedAdam
 
