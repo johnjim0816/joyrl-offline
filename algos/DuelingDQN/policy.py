@@ -1,27 +1,52 @@
 #!/usr/bin/env python
 # coding=utf-8
 '''
-@Author: John
-@Email: johnjim0816@gmail.com
-@Date: 2020-06-12 00:50:49
-@LastEditor: John
-LastEditTime: 2023-05-16 13:22:36
-@Discription: 
-@Environment: python 3.7.7
+Author: JiangJi
+Email: johnjim0816@gmail.com
+Date: 2022-11-14 23:50:59
+LastEditor: JiangJi
+LastEditTime: 2023-05-17 22:37:37
+Discription: 
 '''
 import torch
 import torch.nn as nn
-import math, random
+import math,random
 import numpy as np
 from algos.base.policies import BasePolicy
 from algos.base.networks import QNetwork
+
+class DuelingQNetwork(nn.Module):
+    def __init__(self, n_states, n_actions,hidden_dim=128):
+        super(DuelingQNetwork, self).__init__()
+        # 隐藏层
+        self.hidden_layer = nn.Sequential(
+            nn.Linear(n_states, hidden_dim),
+            nn.ReLU()
+        )
+        #  优势层
+        self.advantage_layer = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, n_actions)
+        )
+        # 价值层
+        self.value_layer = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, 1)
+        )
+        
+    def forward(self, state):
+        x = self.hidden_layer(state)
+        advantage = self.advantage_layer(x)
+        value     = self.value_layer(x)
+        return value + advantage - advantage.mean() # Q(s,a) = V(s) + A(s,a) - mean(A(s,a))
+        
 class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
         super(Policy, self).__init__(cfg)
         self.cfg = cfg
-        self.obs_space = cfg.obs_space
-        self.action_space = cfg.action_space
-        self.device = torch.device(cfg.device)
+        self.device = torch.device(cfg.device) 
         self.gamma = cfg.gamma  
         # e-greedy parameters
         self.sample_count = None
@@ -30,6 +55,7 @@ class Policy(BasePolicy):
         self.epsilon_decay = cfg.epsilon_decay
         self.batch_size = cfg.batch_size
         self.target_update = cfg.target_update
+        self.dueling = cfg.dueling
         self.create_graph() # create graph and optimizer
         self.create_summary() # create summary
 
@@ -40,7 +66,7 @@ class Policy(BasePolicy):
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
         self.create_optimizer()
 
-    def sample_action(self, state, **kwargs):
+    def sample_action(self, state,  **kwargs):
         ''' sample action
         '''
         # epsilon must decay(linear,exponential and etc.) for balancing exploration and exploitation
@@ -52,42 +78,36 @@ class Policy(BasePolicy):
         else:
             action = self.action_space.sample()
         return action
-    
-    def predict_action(self,state,**kwargs):
+    def predict_action(self,state, **kwargs):
         ''' predict action
         '''
         with torch.no_grad():
             state = torch.tensor(np.array(state), device=self.device, dtype=torch.float32).unsqueeze(dim=0)
             q_values = self.policy_net(state)
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
-        return action
-
+        return action  
+    
     def update(self, **kwargs):
         ''' update policy
         '''
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
         update_step = kwargs.get('update_step')
-
         # convert numpy to tensor
         states = torch.tensor(states, device=self.device, dtype=torch.float32)
         actions = torch.tensor(actions, device=self.device, dtype=torch.int64).unsqueeze(dim=1)
         next_states = torch.tensor(next_states, device=self.device, dtype=torch.float32)
         rewards = torch.tensor(rewards, device=self.device, dtype=torch.float32).unsqueeze(dim=1)
         dones = torch.tensor(dones, device=self.device, dtype=torch.float32).unsqueeze(dim=1)
-
-        # compute current Q values Q(s_t, a_t)
-        q_values = self.policy_net(states).gather(dim=1, index=actions)  # shape(batchsize,1)
-        # compute next Q values Q(s_t+1, a)
-        next_q_values = self.policy_net(next_states)
-        # compute next target Q values Q'(s_t+1, a)，which is different from DQN
-        next_target_value_batch = self.target_net(next_states)
-        # compute Q'(s_t+1, a=argmax Q(s_t+1, a))
-        next_target_q_value_batch = next_target_value_batch.gather(1, torch.max(next_q_values, 1)[1].unsqueeze(
-            1))  # shape(batchsize,1)
-        expected_q_values = rewards + self.gamma * next_target_q_value_batch * (1 - dones)  
-        self.loss = nn.MSELoss()(q_values, expected_q_values)  
-        self.optimizer.zero_grad()  
-        self.loss.backward()  
+        # compute current Q values
+        q_values = self.policy_net(states).gather(1, actions)
+        # compute next max q value
+        next_q_values = self.target_net(next_states).max(1)[0].unsqueeze(dim=1)
+        # compute target Q values
+        target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
+        # compute loss
+        self.loss = nn.MSELoss()(q_values, target_q_values)
+        self.optimizer.zero_grad()
+        self.loss.backward()
         # clip to avoid gradient explosion
         for param in self.policy_net.parameters():
             param.grad.data.clamp_(-1, 1)
@@ -96,6 +116,4 @@ class Policy(BasePolicy):
         if update_step % self.target_update == 0: 
             self.target_net.load_state_dict(self.policy_net.state_dict())
         self.update_summary() # update summary
-
-
-
+ 
