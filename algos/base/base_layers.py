@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:15
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 00:05:03
+LastEditTime: 2023-05-17 11:25:45
 Discription: 
 '''
 import torch
@@ -52,6 +52,24 @@ def embedding_layer(input_size, layer_cfg: LayerConfig):
     layer = EmbeddingLayer(n_embeddings, embedding_dim)
     output_size = get_output_size_with_batch(layer, input_size=input_size, dtype=torch.long)
     return layer, output_size 
+
+class LowRankLinear(nn.Module):
+    ''' LoRA linear layer, rank must be smaller than both input_dim and output_dim
+    '''
+    def __init__(self, input_dim, output_dim, rank):
+        super(LowRankLinear, self).__init__()
+        ''' input_dim and output_dim are the dimensions of the original linear layer
+        '''
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.rank = rank
+
+        self.U = nn.Parameter(torch.randn(output_dim, rank))
+        self.V = nn.Parameter(torch.randn(rank, input_dim))
+
+    def forward(self, x):
+        weight = self.U @ self.V
+        return F.linear(x, weight)
 
 def linear_layer(input_size,layer_cfg: LayerConfig):
     """ 生成一个线性层

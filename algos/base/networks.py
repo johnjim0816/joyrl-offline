@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 00:48:25
+LastEditTime: 2023-05-17 10:11:56
 Discription: 
 '''
 import torch.nn as nn
@@ -60,7 +60,7 @@ class ValueNetwork(BaseNework):
     def __init__(self, cfg, state_size, action_space) -> None:
         super(ValueNetwork, self).__init__()
         self.cfg = cfg
-        self.continous = action_space.continous
+        self.continuous = action_space.continuous
         self.layers_cfg_dic = cfg.value_layers # load layers config
         self.layers = nn.ModuleList()
         output_size = state_size
@@ -73,7 +73,7 @@ class ValueNetwork(BaseNework):
             self.layers.append(layer) 
         value_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[1], activation='none')
         self.value_layer, layer_out_size = create_layer(output_size, value_layer_cfg)
-        if self.continous:
+        if self.continuous:
             self.action_layer = ContinousActionLayer(cfg, output_size, action_space)
         else:
             self.action_layer = DiscreteActionLayer(cfg, output_size, action_space)
@@ -81,7 +81,7 @@ class ValueNetwork(BaseNework):
         for layer in self.layers:
             x = layer(x)
         value = self.value_layer(x)
-        if self.continous:
+        if self.continuous:
             mu, sigma = self.action_layer(x)
             return value, mu, sigma
         else:
@@ -99,7 +99,7 @@ class ActorNetwork(BaseActorNetwork):
     def __init__(self, cfg, state_size, action_space) -> None:
         super().__init__()
         self.cfg = cfg
-        self.continous = action_space.continous
+        self.continuous = action_space.continuous
         self.layers_cfg_dic = cfg.actor_layers # load layers config
         self.layers = nn.ModuleList()
         output_size = state_size
@@ -110,14 +110,14 @@ class ActorNetwork(BaseActorNetwork):
             layer, layer_out_size = create_layer(output_size, layer_cfg)
             output_size = layer_out_size
             self.layers.append(layer) 
-        if self.continous:
+        if self.continuous:
             self.action_layer = ContinousActionLayer(cfg, output_size, action_space)
         else:
             self.action_layer = DiscreteActionLayer(cfg, output_size, action_space)
     def forward(self, x, legal_actions=None):
         for layer in self.layers:
             x = layer(x)
-        if self.continous:
+        if self.continuous:
             mu, sigma = self.action_layer(x)
             return mu, sigma
         else:

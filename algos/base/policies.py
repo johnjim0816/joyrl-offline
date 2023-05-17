@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-16 13:21:43
+LastEditTime: 2023-05-17 11:33:58
 Discription: 
 '''
 import torch
@@ -18,6 +18,7 @@ class BasePolicy(nn.Module):
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
         self.optimizer = None
+        self.policy_transition = {}
     def get_state_action_size(self):
         self.state_size = [None, self.obs_space.shape[0]]
         self.action_size = [self.action_space.n]
@@ -47,6 +48,10 @@ class BasePolicy(nn.Module):
         raise NotImplementedError
     def predict_action(self, state):
         raise NotImplementedError
+    def update_policy_transition(self):
+        self.policy_transition = {}
+    def get_policy_transition(self):
+        return self.policy_transition
     def create_summary(self):
         '''
         创建 tensorboard 数据

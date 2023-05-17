@@ -1,7 +1,7 @@
-import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 from torch.distributions import Categorical,Normal
 import torch.utils.data as Data
 import numpy as np
@@ -10,11 +10,11 @@ from algos.base.networks import ValueNetwork, CriticNetwork, ActorNetwork
 from algos.base.policies import BasePolicy
 from common.models import ActorSoftmax, ActorNormal, Critic
 from common.memories import PGReplay
-from common.optms import SharedAdam
 
 class Policy(BasePolicy):
     def __init__(self, cfg) -> None:
         self.independ_actor = cfg.independ_actor
+        self.share_optimizer = cfg.share_optimizer
         self.ppo_type = 'clip' # clip or kl
         if self.ppo_type == 'kl':
             self.kl_target = cfg.kl_target 
@@ -24,7 +24,6 @@ class Policy(BasePolicy):
         self.gamma = cfg.gamma
         self.device = torch.device(cfg.device)
         self.continuous = cfg.continuous # continuous action space
-        self.action_space = cfg.action_space
 
         if self.continuous:
             self.action_scale = torch.tensor((self.action_space.high - self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
@@ -52,8 +51,16 @@ class Policy(BasePolicy):
         else:
             self.actor = ActorNetwork(self.cfg, self.state_size, self.action_space)
             self.critic = CriticNetwork(self.cfg, self.state_size, self.action_space)
-            
+
+    def create_optimizer(self):
+        if self.share_optimizer:
+            self.optimizer = optim.Adam(self.parameters(), lr=self.cfg.lr) 
+        else:
+            self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=self.cfg.actor_lr)
+            self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=self.cfg.critic_lr)
+              
     def get_action(self, state, mode='sample', **kwargs):
+        
         if mode == 'sample':
             return self.sample_action(state, **kwargs)
         elif mode == 'predict':
@@ -101,7 +108,11 @@ class Policy(BasePolicy):
             return mu.detach().cpu().numpy()[0]
         else:
             return torch.argmax(probs).detach().cpu().numpy().item()
- 
+    def update(self, **kwargs):
+        states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
+
+
+
     def update(self, share_agent=None):
         # update policy every train_batch_size steps
         if self.sample_count % self.train_batch_size != 0:
