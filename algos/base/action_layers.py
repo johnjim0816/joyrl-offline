@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-16 16:12:07
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 13:15:54
+LastEditTime: 2023-05-17 13:19:43
 Discription: 
 '''
 import torch
@@ -38,9 +38,7 @@ class DiscreteActionLayer(BaseActionLayer):
             mask_logits_p = logits_p * legal_actions + (1 - legal_actions) * large_negative
             probs = F.softmax(mask_logits_p, dim=1)
         else:
-            print("probs==",logits_p)
             probs = F.softmax(logits_p - logits_p.max(dim=1, keepdim=True).values, dim=1) # avoid overflow
-            print("probs",probs)
             probs = (probs + self.min_policy) / (1.0 + self.min_policy * self.action_dim) # add a small probability to explore
         return probs
         

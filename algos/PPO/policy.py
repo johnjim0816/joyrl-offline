@@ -146,7 +146,6 @@ class Policy(BasePolicy):
                     new_log_probs = dist.log_prob(old_actions)
                 else:
                     new_probs = self.actor(old_states) # shape:[train_batch_size,n_actions]
-                    print(old_states,new_probs)
                     dist = Categorical(new_probs)
                     # get new action probabilities
                     new_log_probs = dist.log_prob(old_actions.squeeze(dim=1)) # shape:[train_batch_size]

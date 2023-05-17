@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 12:58:38
+LastEditTime: 2023-05-17 13:27:12
 Discription: 
 '''
 import torch.nn as nn
@@ -148,19 +148,31 @@ class CriticNetwork(BaseCriticNetwork):
         
 
 if __name__ == "__main__":
-    # 调试用：export PYTHONPATH=./:$PYTHONPATH
+    # test：export PYTHONPATH=./:$PYTHONPATH
     import torch
     from config.config import MergedConfig
+    import gymnasium as gym
     cfg = MergedConfig()
-    state_dim = [None]
+    state_size = [None,4]
     cfg.n_actions = 2
+    cfg.continuous = False
+    cfg.min_policy = 0
     cfg.value_layers = [
         {'layer_type': 'embed', 'n_embeddings': 10, 'embedding_dim': 32, 'activation': 'none'},
         {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
         {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
     ]
-    value_net = QNetwork(cfg, state_dim, cfg.n_actions)
-    print(value_net)
-    x = torch.tensor([36])
-    print(x.shape)
-    print(value_net(x))
+    cfg.actor_layers = [
+        {'layer_type': 'linear', 'layer_dim': [256], 'activation': 'ReLU'},
+        {'layer_type': 'linear', 'layer_dim': [256], 'activation': 'ReLU'},
+    ]
+    action_space = gym.spaces.Discrete(2)
+    actor = ActorNetwork(cfg, state_size, action_space)
+    x = torch.tensor([[ 0.0012,  0.0450, -0.0356,  0.0449]])
+    x = actor(x)
+    print(x)
+    # value_net = QNetwork(cfg, state_dim, cfg.n_actions)
+    # print(value_net)
+    # x = torch.tensor([36])
+    # print(x.shape)
+    # print(value_net(x))
