@@ -23,6 +23,8 @@ class Learner:
     def add_transition(self,transition):
         ''' add transition to data handler
         '''
+        policy_transition = self.policy.get_policy_transition()
+        transition.update(policy_transition)
         self.data_handler.add_transition(transition)
     def get_action(self,state,data_server = None):
         ''' get action from policy
@@ -30,6 +32,7 @@ class Learner:
         ray.get(data_server.increase_sample_count.remote())
         sample_count = ray.get(data_server.get_sample_count.remote())
         return self.policy.get_action(state,sample_count=sample_count)
+    
     def train(self,data_server = None, logger = None):
         ''' train policy
         '''

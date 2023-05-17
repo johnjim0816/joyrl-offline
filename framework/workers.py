@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 13:44:11
+LastEditTime: 2023-05-17 22:29:13
 Discription: 
 '''
 import ray
@@ -30,7 +30,8 @@ class Worker:
                 next_state, reward, terminated, truncated , info = self.env.step(action) # interact with env
                 self.ep_reward += reward
                 self.ep_step += 1
-                ray.get(learner.add_transition.remote((state, action, reward, next_state, terminated,info))) # add transition to learner
+                interact_transition = {'state':state,'action':action,'reward':reward,'next_state':next_state,'done':terminated,'info':info}
+                ray.get(learner.add_transition.remote(interact_transition)) # add transition to learner
                 self.update_step, self.model_summary = ray.get(learner.train.remote(data_server, logger = self.logger)) # train learner
                 self.add_model_summary(stats_recorder) # add model summary to stats_recorder
                 state = next_state # update state
