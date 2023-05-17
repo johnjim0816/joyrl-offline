@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:34:27
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 13:05:01
+LastEditTime: 2023-05-17 13:41:18
 Discription: 
 '''
 import random
@@ -41,13 +41,13 @@ class BufferCreator:
         elif self.buffer_type == BufferType.REPLAY_QUE:
             return ReplayBufferQue(self.cfg)
         elif self.buffer_type == BufferType.ONPOLICY_QUE:
-            return OnPolicyBufferQue()
+            return OnPolicyBufferQue(self.cfg)
         else:
             raise NotImplementedError
             
 class ReplayBuffer:
     def __init__(self, cfg: MergedConfig):
-        self.capacity = cfg.buffer_size
+        if hasattr(cfg, 'buffer_size'): self.capacity = cfg.buffer_size
         self.batch_size = cfg.batch_size
         self.buffer = [] 
         self.position = 0 # pointer of buffer
@@ -76,7 +76,7 @@ class ReplayBufferQue:
     ''' same as ReplayBuffer, but use deque to store the transitions
     '''
     def __init__(self, cfg: MergedConfig):
-        self.capacity = cfg.buffer_size 
+        if hasattr(cfg, 'buffer_size'): self.capacity = cfg.buffer_size
         self.batch_size = cfg.batch_size
         self.buffer = deque(maxlen=self.capacity)
 
@@ -113,11 +113,15 @@ class OnPolicyBufferQue(ReplayBufferQue):
     Args:
         ReplayBufferQue (_type_): _description_
     '''
-    def __init__(self):
+    def __init__(self,cfg: MergedConfig):
+        self.cfg = cfg
+        self.batch_size = cfg.batch_size
         self.buffer = deque()
     def sample(self):
         ''' sample all the transitions
         '''
+        if len(self.buffer) < self.batch_size:
+            return None
         batch = list(self.buffer)
         self.buffer.clear() # on policy buffer will clear the buffer after sampling
         return batch
