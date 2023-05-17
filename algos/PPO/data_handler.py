@@ -5,6 +5,10 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-17 01:08:36
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 01:08:36
+LastEditTime: 2023-05-17 11:42:37
 Discription: 
 '''
+from algos.base.data_handlers import BaseDataHandler
+class DataHandler(BaseDataHandler):
+    def __init__(self, cfg):
+        super().__init__(cfg)

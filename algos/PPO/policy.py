@@ -58,56 +58,51 @@ class Policy(BasePolicy):
         else:
             self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=self.cfg.actor_lr)
             self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=self.cfg.critic_lr)
-              
+    @torch.no_grad()              
     def get_action(self, state, mode='sample', **kwargs):
-        
-        if mode == 'sample':
-            return self.sample_action(state, **kwargs)
-        elif mode == 'predict':
-            return self.predict_action(state, **kwargs)
-        else:
-            raise NameError
-            
-    def sample_action(self,state,**kwargs):
-        # sample_count = kwargs.get('sample_count', 0)
         if self.independ_actor:
             if self.continuous:
-                value, mu , sigma = self.policy_net(state)
+                self.value, self.mu, self.sigma = self.policy_net(state)
             else:
-                probs = self.policy_net(state)
+                self.probs = self.policy_net(state)
         else:
-            value = self.critic(state)
+            self.value = self.critic(state)
             if self.continuous:
-                mu, sigma = self.actor(state)
+                self.mu, self.sigma = self.actor(state)
             else:
-                probs = self.actor(state)
+                self.probs = self.actor(state)
+        self.update_policy_transition()
+        if mode == 'sample':
+            return self.sample_action(**kwargs)
+        elif mode == 'predict':
+            return self.predict_action(**kwargs)
+        else:
+            raise NameError
+    def update_policy_transition(self):
         if self.continuous:
-            dist = Normal(mu, sigma)
+            self.policy_transition = {'value': self.value, 'mu': self.mu, 'sigma': self.sigma}
+        else:
+            self.policy_transition = {'value': self.value, 'probs': self.probs}
+        return self.policy_transition
+    @torch.no_grad()        
+    def sample_action(self,**kwargs):
+        # sample_count = kwargs.get('sample_count', 0)
+        if self.continuous:
+            dist = Normal(self.mu, self.sigma)
             action = dist.sample()
             action = torch.clamp(action, torch.tensor(self.action_space.low, device=self.device, dtype=torch.float32), torch.tensor(self.action_space.high, device=self.device, dtype=torch.float32))
             return action.detach().cpu().numpy()[0]
         else:
-            dist = Categorical(probs)
+            dist = Categorical(self.probs)
             action = dist.sample()
             return action.detach().cpu().numpy().item()
         
     @torch.no_grad()
-    def predict_action(self, state, **kwargs):
-        if self.independ_actor:
-            if self.continuous:
-                value, mu , sigma = self.policy_net(state)
-            else:
-                probs = self.policy_net(state)
-        else:
-            value = self.critic(state)
-            if self.continuous:
-                mu, sigma = self.actor(state)
-            else:
-                probs = self.actor(state)
+    def predict_action(self, **kwargs):
         if self.continuous:
-            return mu.detach().cpu().numpy()[0]
+            return self.mu.detach().cpu().numpy()[0]
         else:
-            return torch.argmax(probs).detach().cpu().numpy().item()
+            return torch.argmax(self.probs).detach().cpu().numpy().item()
     def update(self, **kwargs):
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
 
