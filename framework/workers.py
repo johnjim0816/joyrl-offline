@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 00:19:47
+LastEditTime: 2023-05-18 00:20:58
 Discription: 
 '''
 import ray
@@ -61,9 +61,10 @@ class Worker:
         #     ray.get(learner.set_model_params.remote(average_model_params))
         # broadcast model parameters
         # if self.learner_id == 0:
-        model_params = ray.get(learners[0].get_model_params.remote()) # 0 is the main learner
-        for learner in learners[1:]:
-            ray.get(learner.set_model_params.remote(model_params))
+        if self.cfg.n_learners > 1:
+            model_params = ray.get(learners[0].get_model_params.remote()) # 0 is the main learner
+            for learner in learners[1:]:
+                ray.get(learner.set_model_params.remote(model_params))
     def set_learner_id(self,learner_id):
         ''' Set learner id
         '''
