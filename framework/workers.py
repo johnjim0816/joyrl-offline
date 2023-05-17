@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 00:03:19
+LastEditTime: 2023-05-18 00:19:47
 Discription: 
 '''
 import ray
@@ -62,8 +62,8 @@ class Worker:
         # broadcast model parameters
         # if self.learner_id == 0:
         model_params = ray.get(learners[0].get_model_params.remote()) # 0 is the main learner
-        for i in range(1,len(learners)):
-            ray.get(learners[i].set_model_params.remote(model_params))
+        for learner in learners[1:]:
+            ray.get(learner.set_model_params.remote(model_params))
     def set_learner_id(self,learner_id):
         ''' Set learner id
         '''
