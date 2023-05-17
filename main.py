@@ -13,7 +13,6 @@ from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter  
 from config.config import GeneralConfig, MergedConfig
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
-from common.ray_utils import GlobalVarRecorder
 # from envs.register import register_env
 from framework.stats import StatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.dataserver import DataServer
@@ -200,7 +199,10 @@ class Main(object):
                 # store trajectories per step
                 if cfg.collect_traj: self.traj_collector.add_traj_cache(state, action, reward, next_state, terminated, info)
                 if cfg.mode.lower() == 'train': # train mode
-                    data_handler.add_transition((state, action, reward, next_state, terminated, info)) # store transition
+                    interact_transition = {'state':state,'action':action,'reward':reward,'next_state':next_state,'done':terminated,'info':info}
+                    policy_transition = policy.get_policy_transition() # get policy transition
+                    transition = {**interact_transition,**policy_transition}
+                    data_handler.add_transition(transition) # store transition
                     training_data = data_handler.sample_training_data() # get training data
                     if training_data is not None:
                         update_step += 1

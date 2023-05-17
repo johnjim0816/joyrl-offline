@@ -5,13 +5,19 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:15
 LastEditor: JiangJi
-LastEditTime: 2023-04-26 00:53:56
+LastEditTime: 2023-05-17 11:25:45
 Discription: 
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-activation_dics = {'relu': nn.ReLU, 'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid, 'softmax': nn.Softmax,'none': nn.Identity}  
+
+activation_dics = {'relu': nn.ReLU, 
+                   'tanh': nn.Tanh, 
+                   'sigmoid': nn.Sigmoid, 
+                   'softmax': nn.Softmax,
+                   'leakyrelu': nn.LeakyReLU,
+                   'none': nn.Identity}  
 
 class LayerConfig:
     ''' 层的配置类
@@ -46,6 +52,25 @@ def embedding_layer(input_size, layer_cfg: LayerConfig):
     layer = EmbeddingLayer(n_embeddings, embedding_dim)
     output_size = get_output_size_with_batch(layer, input_size=input_size, dtype=torch.long)
     return layer, output_size 
+
+class LowRankLinear(nn.Module):
+    ''' LoRA linear layer, rank must be smaller than both input_dim and output_dim
+    '''
+    def __init__(self, input_dim, output_dim, rank):
+        super(LowRankLinear, self).__init__()
+        ''' input_dim and output_dim are the dimensions of the original linear layer
+        '''
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.rank = rank
+
+        self.U = nn.Parameter(torch.randn(output_dim, rank))
+        self.V = nn.Parameter(torch.randn(rank, input_dim))
+
+    def forward(self, x):
+        weight = self.U @ self.V
+        return F.linear(x, weight)
+
 def linear_layer(input_size,layer_cfg: LayerConfig):
     """ 生成一个线性层
         layer_size: 线性层的输入输出维度
@@ -57,6 +82,7 @@ def linear_layer(input_size,layer_cfg: LayerConfig):
     out_dim = layer_size[0]
     layer = nn.Sequential(nn.Linear(in_dim,out_dim),activation_dics[act_name]())
     return layer, [None, out_dim]
+
 def dense_layer(in_dim,out_dim,act_name='relu'):
     """ 生成一个全连接层
         layer_size: 全连接层的输入输出维度
@@ -70,6 +96,7 @@ def conv2d_layer(in_channel, out_channel, kernel_size, stride, padding, act_name
     """
     padding = 'same' if stride == 1 else 'valid'
     return nn.Sequential(nn.Conv2d(in_channel,out_channel,kernel_size,stride,padding),activation_dics[act_name]() )
+
 def create_layer(input_size: list, layer_cfg: LayerConfig):
     """ 生成一个层
         layer_type: 层的类型

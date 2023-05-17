@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-16 11:40:32
+LastEditTime: 2023-05-17 13:44:11
 Discription: 
 '''
 import ray
@@ -70,7 +70,7 @@ class SimpleTester:
             state, info = self.env.reset(seed = self.cfg.seed)
             ep_reward, ep_step = 0, 0 # reward per episode, step per episode
             while True:
-                action = policy.predict_action(state)
+                action = policy.get_action(state, mode = 'predict')
                 next_state, reward, terminated, truncated, info = self.env.step(action)
                 state = next_state
                 ep_reward += reward
