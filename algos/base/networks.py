@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 10:11:56
+LastEditTime: 2023-05-17 12:58:38
 Discription: 
 '''
 import torch.nn as nn
@@ -90,7 +90,7 @@ class ValueNetwork(BaseNework):
         
 class BaseActorNetwork(nn.Module):
     def __init__(self) -> None:
-        pass
+        super().__init__()
 class BaseCriticNetwork(nn.Module):
     def __init__(self) -> None:
         super().__init__()
@@ -99,7 +99,7 @@ class ActorNetwork(BaseActorNetwork):
     def __init__(self, cfg, state_size, action_space) -> None:
         super().__init__()
         self.cfg = cfg
-        self.continuous = action_space.continuous
+        self.continuous = cfg.continuous
         self.layers_cfg_dic = cfg.actor_layers # load layers config
         self.layers = nn.ModuleList()
         output_size = state_size

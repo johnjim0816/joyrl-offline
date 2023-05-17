@@ -13,7 +13,6 @@ from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter  
 from config.config import GeneralConfig, MergedConfig
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
-from common.ray_utils import GlobalVarRecorder
 # from envs.register import register_env
 from framework.stats import StatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.dataserver import DataServer

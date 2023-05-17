@@ -1,4 +1,14 @@
-import gym
+#!/usr/bin/env python
+# coding=utf-8
+'''
+Author: JiangJi
+Email: johnjim0816@gmail.com
+Date: 2023-01-01 16:45:23
+LastEditor: JiangJi
+LastEditTime: 2023-05-17 12:51:49
+Discription: 
+'''
+import gymnasium as gym
 
 class TimeLimit(gym.Wrapper):
     def __init__(self, env, max_episode_steps=None):

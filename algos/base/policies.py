@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 11:33:58
+LastEditTime: 2023-05-17 12:57:40
 Discription: 
 '''
 import torch
@@ -19,6 +19,7 @@ class BasePolicy(nn.Module):
         self.action_space = cfg.action_space
         self.optimizer = None
         self.policy_transition = {}
+        self.get_state_action_size()
     def get_state_action_size(self):
         self.state_size = [None, self.obs_space.shape[0]]
         self.action_size = [self.action_space.n]

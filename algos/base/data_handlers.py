@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-17 11:29:47
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 11:38:49
+LastEditTime: 2023-05-17 13:04:31
 Discription: 
 '''
 import numpy as np
@@ -26,7 +26,7 @@ class BaseDataHandler:
     def sample_training_data(self):
         ''' sample training data from buffer
         '''
-        exps = self.buffer.sample(self.cfg.batch_size)
+        exps = self.buffer.sample()
         if exps is not None:
             return self.handle_exps_before_update(exps)
         else:
