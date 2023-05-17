@@ -244,12 +244,16 @@ class Main(object):
         stats_recorder = StatsRecorder.remote(cfg) # create stats recorder
         data_server = DataServer.remote(cfg) # create data server
         ray_logger = RayLogger.remote(cfg.log_dir) # create ray logger 
-        learner = Learner.remote(cfg, policy = policy,data_handler = data_handler, online_tester = self.online_tester) # create learner
+        learners = []
+        for i in range(cfg.n_learners):
+            learner = Learner.remote(cfg, learner_id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
+            learners.append(learner)
         workers = []
         for i in range(cfg.n_workers):
-            worker = Worker.remote(cfg,id = i,env = envs[i], logger = ray_logger)
+            worker = Worker.remote(cfg, worker_id = i,env = envs[i], logger = ray_logger)
+            worker.set_learner_id.remote(i%cfg.n_learners)
             workers.append(worker)
-        worker_tasks = [worker.run.remote(data_server = data_server,learner = learner,stats_recorder = stats_recorder) for worker in workers]
+        worker_tasks = [worker.run.remote(data_server = data_server,learners = learners,stats_recorder = stats_recorder) for worker in workers]
         ray.get(worker_tasks) # wait for all workers finish
         ray.shutdown() # shutdown ray
 

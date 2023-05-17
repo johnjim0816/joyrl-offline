@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 17:53:27
+LastEditTime: 2023-05-17 23:24:35
 Discription: 
 '''
 import torch
@@ -28,14 +28,14 @@ class BasePolicy(nn.Module):
         return self.state_size, self.action_size
     def create_optimizer(self):
         self.optimizer = optim.Adam(self.parameters(), lr=self.cfg.lr) 
-    def get_policy_params(self):
-        named_params_dict = dict(self.named_parameters())
-        return named_params_dict
-    def load_policy_params(self, params_dict):
-        self.load_state_dict(params_dict)
+    def get_model_params(self):
+        model_params = self.state_dict()
+        return model_params
+    def set_model_params(self, model_params):
+        self.load_state_dict(model_params)
     def get_optimizer_params(self):
         return self.optimizer.state_dict()
-    def load_optimizer_params(self, optim_params_dict):
+    def set_optimizer_params(self, optim_params_dict):
         self.optimizer.load_state_dict(optim_params_dict)
     def get_action(self,state, mode = 'sample',**kwargs):
         ''' get action
