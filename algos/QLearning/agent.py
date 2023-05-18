@@ -5,7 +5,7 @@ Author: John
 Email: johnjim0816@gmail.com
 Date: 2020-09-11 23:03:00
 LastEditor: John
-LastEditTime: 2022-11-28 16:04:26
+LastEditTime: 2023-05-19 00:47:44
 Discription: use defaultdict to define Q table
 Environment: 
 '''
@@ -22,8 +22,7 @@ class Agent(object):
         '''
         self.n_actions = cfg.n_actions 
         self.exploration_type = 'e-greedy' # 探索策略如 e-greedy ，boltzmann ，softmax， ucb 等
-        self.lr = cfg.lr 
-        self.gamma = cfg.gamma    
+           
         self.epsilon = cfg.epsilon_start
         self.sample_count = 0  
         self.epsilon_start = cfg.epsilon_start

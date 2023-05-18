@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 22:55:09
+LastEditTime: 2023-05-19 00:58:34
 Discription: 
 '''
 import torch
@@ -50,7 +50,7 @@ class BasePolicy(nn.Module):
         elif mode == 'predict':
             return self.predict_action(state, **kwargs)
         else:
-            raise NotImplementedError
+            raise NameError('mode must be sample or predict')
     def sample_action(self, state, **kwargs):
         ''' sample action
         '''
@@ -102,13 +102,48 @@ class ToyPolicy:
         self.cfg = cfg
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
+        self.get_state_action_size()
+        self.policy_transition = {}
+        self.data_after_train = {}
+    def get_state_action_size(self):
+        self.n_states = self.obs_space.n
+        self.n_actions = self.action_space.n
+    def create_summary(self):
+        ''' create policy summary
+        '''
+        self.summary = {
+            'scalar': {
+                'loss': 0.0,
+            },
+        }
+    def update_summary(self):
+        ''' update policy summary
+        '''
+        self.summary['scalar']['loss'] = self.loss.item()
     def get_action(self, state, mode = 'sample', **kwargs):
-        return self.action_space.sample()
+        if mode == 'sample':
+            return self.sample_action(state, **kwargs)
+        elif mode == 'predict':
+            return self.predict_action(state, **kwargs)
+        else:
+            raise NameError('mode must be sample or predict')
     def sample_action(self, state, **kwargs):
-        return self.action_space.sample()
+        raise NotImplementedError
     def predict_action(self, state, **kwargs):
-        return self.action_space.sample()
-    def update(self):
+        raise NotImplementedError
+    def update_policy_transition(self):
+        ''' update policy transition
+        '''
+        self.policy_transition = {}
+    def get_policy_transition(self):
+        return self.policy_transition
+    def update_data_after_train(self):
+        ''' update data after training
+        '''
+        self.data_after_train = {}
+    def train(self, **kwargs):
+        ''' train policy
+        '''
         raise NotImplementedError
     def save_model(self, fpath):
         raise NotImplementedError
