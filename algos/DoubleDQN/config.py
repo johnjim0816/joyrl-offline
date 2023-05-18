@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-05-17 22:36:55
+LastEditTime: 2023-05-18 13:14:15
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -26,6 +26,6 @@ class AlgoConfig(DefaultConfig):
         self.target_update = 4  # target network update frequency
         # value network layers config
         self.value_layers = [
-            {'layer_type': 'Linear', 'layer_dim': [256], 'activation': 'ReLU'},
-            {'layer_type': 'Linear', 'layer_dim': [256], 'activation': 'ReLU'},
+            {'layer_type': 'Linear', 'layer_size': [256], 'activation': 'ReLU'},
+            {'layer_type': 'Linear', 'layer_size': [256], 'activation': 'ReLU'},
         ]

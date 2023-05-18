@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 23:24:35
+LastEditTime: 2023-05-18 13:34:51
 Discription: 
 '''
 import torch
@@ -23,6 +23,10 @@ class BasePolicy(nn.Module):
         self.policy_transition = {}
         self.get_state_action_size()
     def get_state_action_size(self):
+        ''' get state and action size
+        '''
+        # state_size must be [[None, state_dim_1], [None, state_dim_2], ...]
+        # action_size must be [action_dim_1, action_dim_2, ...]
         self.state_size = [None, self.obs_space.shape[0]]
         self.action_size = [self.action_space.n]
         return self.state_size, self.action_size
@@ -72,7 +76,7 @@ class BasePolicy(nn.Module):
         ''' update policy summary
         '''
         self.summary['scalar']['loss'] = self.loss.item()
-    def update(self):
+    def update(self, **kwargs):
         ''' update policy
         '''
         raise NotImplementedError

@@ -19,10 +19,10 @@ general_cfg:
 algo_cfg:
   value_layers:
     - layer_type: linear
-      layer_dim: [256]
+      layer_size: [256]
       activation: relu
     - layer_type: linear
-      layer_dim: [256]
+      layer_size: [256]
       activation: relu
   batch_size: 64
   buffer_type: REPLAY_QUE

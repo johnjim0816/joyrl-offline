@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:55:26
 LastEditor: JiangJi
-LastEditTime: 2023-05-16 00:06:38
+LastEditTime: 2023-05-18 13:13:40
 Discription: 
 '''
 
@@ -26,6 +26,6 @@ class AlgoConfig(DefaultConfig):
         self.target_update = 4  # target network update frequency
         # value network layers config
         self.value_layers = [
-            {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
-            {'layer_type': 'Linear', 'layer_dim': [64], 'activation': 'ReLU'},
+            {'layer_type': 'Linear', 'layer_size': [64], 'activation': 'ReLU'},
+            {'layer_type': 'Linear', 'layer_size': [64], 'activation': 'ReLU'},
         ]

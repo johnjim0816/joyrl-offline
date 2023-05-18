@@ -3,18 +3,26 @@
 '''
 Author: JiangJi
 Email: johnjim0816@gmail.com
-Date: 2022-11-14 23:50:59
+Date: 2023-04-17 11:23:49
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 22:37:37
+LastEditTime: 2023-05-18 13:35:53
 Discription: 
 '''
 import torch
 import torch.nn as nn
-import math,random
+import torch.optim as optim
+import torch.nn.functional as F
 import numpy as np
+import math
+import random
+import ray
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
 from algos.base.policies import BasePolicy
 from algos.base.networks import QNetwork
-        
+
 class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
         super(Policy, self).__init__(cfg)
@@ -28,7 +36,6 @@ class Policy(BasePolicy):
         self.epsilon_decay = cfg.epsilon_decay
         self.batch_size = cfg.batch_size
         self.target_update = cfg.target_update
-        self.dueling = cfg.dueling
         self.create_graph() # create graph and optimizer
         self.create_summary() # create summary
 
@@ -37,6 +44,13 @@ class Policy(BasePolicy):
         self.policy_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
         self.target_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
+        # for noise parameters
+        if self.cfg.mode == 'train':
+            self.policy_net.train()
+            self.target_net.train()
+        elif self.cfg.mode == 'test':
+            self.policy_net.eval()
+            self.target_net.eval()
         self.create_optimizer()
 
     def sample_action(self, state,  **kwargs):
@@ -59,7 +73,7 @@ class Policy(BasePolicy):
             q_values = self.policy_net(state)
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
         return action  
-    
+
     def update(self, **kwargs):
         ''' update policy
         '''
@@ -88,5 +102,7 @@ class Policy(BasePolicy):
         # update target net every C steps
         if update_step % self.target_update == 0: 
             self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.policy_net.reset_noise()
+        self.target_net.reset_noise()
         self.update_summary() # update summary
  
