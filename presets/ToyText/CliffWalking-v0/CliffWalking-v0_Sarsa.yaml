@@ -1,5 +1,5 @@
 general_cfg:
-  algo_name: QLearning # algo name
+  algo_name: Sarsa # algo name
   env_name: gym # env name, differ from env_id in env_cfgs
   mode: train # run mode: train, test
   collect_traj: false # if collect trajectories or not
