@@ -8,24 +8,19 @@ JoyRL是一套主要基于Torch的强化学习开源框架，旨在让读者仅�
 
 ## 安装说明
 
-目前支持Python 3.8和Gym 0.25.2版本。
+目前支持`Python=3.8`和`gymnasium==0.28.1`版本。
 
 下载代码：
+
 ```bash
 git clone https://github.com/johnjim0816/joyrl-offline
 ```
 
-创建Conda环境（需先安装Anaconda）
+创建Conda环境（需先安装Anaconda）：
 
 ```bash
-conda create -n joyrl-offline python=3.8
-conda activate joyrl-offline
-```
-
-安装Gym：
-
-```bash
-pip install gym==0.25.2
+conda create -n joyrl python=3.8
+conda activate joyrl
 ```
 
 安装Torch：
@@ -43,20 +38,6 @@ pip install torch==1.10.0+cu113 torchvision==0.11.0+cu113 torchaudio==0.10.0 --e
 
 ```bash
 pip install -r requirements.txt
-```
-
-## 安装多线程
-
-### Multiprocessing框架
-
-```bash
-pip install multiprocess
-```
-
-### Ray框架
-
-```bash
-pip install ray==2.3.0
 ```
 
 ## 使用说明
@@ -143,15 +124,47 @@ python main.py --yaml config/custom_config_Train.yaml
 
 ## Benchmark开发
 
-|     环境名称     |                 作者                  |                 算法                 |
-| :--------------: | :-----------------------------------: | ---------------- |
-| [CartPole-v1](./envs/gym_info.md) | [johnjim0816](https://github.com/johnjim0816) | DQN, Double DQN, Dueling DQN, REINFORCE, A2C, A3C |
-|  | [wangzhongren](https://github.com/wangzhongren-code) | PER DQN |
-| [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) | PPO |
-| [LunarLanderContinuous-v2](./envs/gym_info.md) | [MekeyPan](https://github.com/pmy0721) | SAC |
-| [MountainCar-v0](./envs/gym_info.md) | [GeYuhong](https://github.com/GeYuhong) | DQN |
-| [BipedalWalker-v3](./envs/gym_info.md) | [scchy](https://github.com/scchy)   | DDPG   |
+|     环境分类     |     环境名称     |                 作者                  |                 算法                 |
+| :--------------: | :-----------------------------------: | ---------------- | ---------------- |
+| Toy Text | Blackjack-v1 |  |  |
+| Classic Control | Acrobot |  |  |
+|  | [CartPole-v1](./envs/gym_info.md) | [johnjim0816](https://github.com/johnjim0816) | DQN, Double DQN, Dueling DQN, REINFORCE, A2C, A3C |
+|  |  | [wangzhongren](https://github.com/wangzhongren-code) | PER DQN |
+|  | MountainCar-v0 | [GeYuhong](https://github.com/GeYuhong) | DQN |
+|  | MountainCarContinuous |  |  |
+|  | Pendulum |  |  |
+| Box2D | [BipedalWalker-v3](./envs/gym_info.md) | [scchy](https://github.com/scchy) | DDPG |
+|  | [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) | PPO |
+|  | [LunarLanderContinuous-v2](./envs/gym_info.md) | [MekeyPan](https://github.com/pmy0721) | SAC |
+|  |                   Car Racing                   |  |  |
+| MuJoCo |                     Ant-v4                     |  |  |
+|  |                 HalfCheetah-v4                 |  |  |
+|  |                   Hopper-v4                    |  |  |
+| Atari |                    Breakout                    |  |  |
+|  |                      Pong                      |  |  |
+|  |                     Tennis                     |  |  |
+| Multi-Agent Env |                                                |  |  |
+| External Env |                     Mario                      |                                                      |                                                   |
 
+## Benchmark对比
+
+为了证明JoyRL的可靠性，我们做了一些经典框架的对比
+
+### Mujoco
+
+| 算法 |                  | Ant  | HalfCheetah | Hopper |
+| :--: | :--------------: | :--: | :---------: | :----: |
+| DQN  |      JoyRL       |      |             |        |
+|      |     Dopamine     |      |             |        |
+|      | OpenAI Baselines |      |             |        |
+
+### Atari
+
+| 算法 |                  | Breakout | Pong | Enduro |
+| :--: | :--------------: | :------: | :--: | :----: |
+| DQN  |      JoyRL       |          |      |        |
+|      |     Dopamine     |          |      |        |
+|      | OpenAI Baselines |          |      |        |
 
 ## 如何贡献
 

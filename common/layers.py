@@ -19,9 +19,9 @@ def create_layer(layer_type, in_dim,out_dim, act_name='relu'):
     else:
         raise ValueError("layer_type must be linear")
 
-class ValueNetwork(nn.Module):
+class QNetwork(nn.Module):
     def __init__(self, cfg) -> None:
-        super(ValueNetwork, self).__init__()
+        super(QNetwork, self).__init__()
         self.layers_cfg = cfg.value_layers # load layers config
         self.layers = nn.ModuleList()
         for layer_cfg in self.layers_cfg:

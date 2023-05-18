@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 import numpy as np
 from common.models import R_Actor, R_Critic
-from common.utils import update_linear_schedule
-from common.utils import get_gard_norm, huber_loss, mse_loss
-from common.utils import ValueNorm
-from common.utils import check
+from utils.utils import update_linear_schedule
+from utils.utils import get_gard_norm, huber_loss, mse_loss
+from utils.utils import ValueNorm
+from utils.utils import check
 
 
 class Agent: # RMAPPOPolicy

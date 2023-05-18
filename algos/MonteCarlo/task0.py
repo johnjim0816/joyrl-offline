@@ -19,7 +19,7 @@ import datetime
 import gym
 from envs.wrappers import CliffWalkingWapper
 from envs.register import register_env
-from common.utils import merge_class_attrs,all_seed
+from utils.utils import merge_class_attrs,all_seed
 from common.launcher import Launcher
 from MonteCarlo.agent import FisrtVisitMC
 from MonteCarlo.config.config import GeneralConfigMC,AlgoConfigMC
