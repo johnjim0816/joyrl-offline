@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 13:34:51
+LastEditTime: 2023-05-18 22:55:09
 Discription: 
 '''
 import torch
@@ -21,6 +21,7 @@ class BasePolicy(nn.Module):
         self.action_space = cfg.action_space
         self.optimizer = None
         self.policy_transition = {}
+        self.data_after_train = {}
         self.get_state_action_size()
     def get_state_action_size(self):
         ''' get state and action size
@@ -76,10 +77,14 @@ class BasePolicy(nn.Module):
         ''' update policy summary
         '''
         self.summary['scalar']['loss'] = self.loss.item()
-    def update(self, **kwargs):
-        ''' update policy
+    def train(self, **kwargs):
+        ''' train policy
         '''
         raise NotImplementedError
+    def update_data_after_train(self):
+        ''' update data after training
+        '''
+        self.data_after_train = {}
     def save_model(self, fpath):
         ''' save model
         '''

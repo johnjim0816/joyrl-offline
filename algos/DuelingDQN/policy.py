@@ -60,8 +60,8 @@ class Policy(BasePolicy):
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
         return action  
     
-    def update(self, **kwargs):
-        ''' update policy
+    def train(self, **kwargs):
+        ''' train policy
         '''
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
         update_step = kwargs.get('update_step')

@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 11:23:49
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 17:34:02
+LastEditTime: 2023-05-18 22:55:52
 Discription: 
 '''
 import torch
@@ -74,8 +74,8 @@ class Policy(BasePolicy):
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
         return action  
 
-    def update(self, **kwargs):
-        ''' update policy
+    def train(self, **kwargs):
+        ''' train policy
         '''
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
         update_step = kwargs.get('update_step')
