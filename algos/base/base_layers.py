@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:15
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 13:26:32
+LastEditTime: 2023-05-18 17:25:29
 Discription: 
 '''
 import torch
@@ -92,7 +92,7 @@ def noisy_linear_layer(input_size,layer_cfg: LayerConfig):
     class NoisyLinear(nn.Module):
         ''' Noisy linear module for NoisyNet
         '''
-        def __init__(self, in_dim, out_dim, std_init=std_init):
+        def __init__(self, in_dim, out_dim, std_init=0.4):
             super(NoisyLinear, self).__init__()
             
             self.in_dim  = in_dim
@@ -134,7 +134,7 @@ def noisy_linear_layer(input_size,layer_cfg: LayerConfig):
             x = torch.randn(size)
             x = x.sign().mul(x.abs().sqrt())
             return x
-    layer = nn.Sequential(nn.Linear(in_dim,out_dim),activation_dics[act_name]())
+    layer = nn.Sequential(NoisyLinear(in_dim,out_dim,std_init=0.4),activation_dics[act_name]())
     return layer, [None, out_dim]
 
 def dense_layer(in_dim,out_dim,act_name='relu'):

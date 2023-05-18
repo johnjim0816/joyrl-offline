@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 00:20:58
+LastEditTime: 2023-05-18 17:32:24
 Discription: 
 '''
 import ray
@@ -109,7 +109,7 @@ class SimpleTester:
                     sum_eval_reward += ep_reward
                     break
         mean_eval_reward = sum_eval_reward / self.cfg.online_eval_episode
-        if mean_eval_reward > self.best_eval_reward:
+        if mean_eval_reward >= self.best_eval_reward:
             self.best_eval_reward = mean_eval_reward
             return True, mean_eval_reward
         return False, mean_eval_reward

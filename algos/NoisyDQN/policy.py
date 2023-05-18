@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 11:23:49
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 13:35:53
+LastEditTime: 2023-05-18 17:34:02
 Discription: 
 '''
 import torch
@@ -45,12 +45,12 @@ class Policy(BasePolicy):
         self.target_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
         # for noise parameters
-        if self.cfg.mode == 'train':
-            self.policy_net.train()
-            self.target_net.train()
-        elif self.cfg.mode == 'test':
-            self.policy_net.eval()
-            self.target_net.eval()
+        # if self.cfg.mode == 'train':
+        #     self.policy_net.train()
+        #     self.target_net.train()
+        # elif self.cfg.mode == 'test':
+        #     self.policy_net.eval()
+        #     self.target_net.eval()
         self.create_optimizer()
 
     def sample_action(self, state,  **kwargs):
