@@ -82,7 +82,7 @@ class Agent(object):
         action = np.argmax(self.Q_table[str(state)])
         return action
     def update(self, state, action, reward, next_state, done):
-        ''' 更新模型
+        ''' 更新Q(s,a)
         Args:
             state (array): 当前状态 
             action (int): 当前动作 

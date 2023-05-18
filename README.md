@@ -124,15 +124,47 @@ python main.py --yaml config/custom_config_Train.yaml
 
 ## Benchmark开发
 
-|     环境名称     |                 作者                  |                 算法                 |
-| :--------------: | :-----------------------------------: | ---------------- |
-| [CartPole-v1](./envs/gym_info.md) | [johnjim0816](https://github.com/johnjim0816) | DQN, Double DQN, Dueling DQN, REINFORCE, A2C, A3C |
-|  | [wangzhongren](https://github.com/wangzhongren-code) | PER DQN |
-| [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) | PPO |
-| [LunarLanderContinuous-v2](./envs/gym_info.md) | [MekeyPan](https://github.com/pmy0721) | SAC |
-| [MountainCar-v0](./envs/gym_info.md) | [GeYuhong](https://github.com/GeYuhong) | DQN |
-| [BipedalWalker-v3](./envs/gym_info.md) | [scchy](https://github.com/scchy)   | DDPG   |
+|     环境分类     |     环境名称     |                 作者                  |                 算法                 |
+| :--------------: | :-----------------------------------: | ---------------- | ---------------- |
+| Toy Text | Blackjack-v1 |  |  |
+| Classic Control | Acrobot |  |  |
+|  | [CartPole-v1](./envs/gym_info.md) | [johnjim0816](https://github.com/johnjim0816) | DQN, Double DQN, Dueling DQN, REINFORCE, A2C, A3C |
+|  |  | [wangzhongren](https://github.com/wangzhongren-code) | PER DQN |
+|  | MountainCar-v0 | [GeYuhong](https://github.com/GeYuhong) | DQN |
+|  | MountainCarContinuous |  |  |
+|  | Pendulum |  |  |
+| Box2D | [BipedalWalker-v3](./envs/gym_info.md) | [scchy](https://github.com/scchy) | DDPG |
+|  | [LunarLander-v2](./envs/gym_info.md) | [FinnJob](https://github.com/FinnJob) | PPO |
+|  | [LunarLanderContinuous-v2](./envs/gym_info.md) | [MekeyPan](https://github.com/pmy0721) | SAC |
+|  |                   Car Racing                   |  |  |
+| MuJoCo |                     Ant-v4                     |  |  |
+|  |                 HalfCheetah-v4                 |  |  |
+|  |                   Hopper-v4                    |  |  |
+| Atari |                    Breakout                    |  |  |
+|  |                      Pong                      |  |  |
+|  |                     Tennis                     |  |  |
+| Multi-Agent Env |                                                |  |  |
+| External Env |                     Mario                      |                                                      |                                                   |
 
+## Benchmark对比
+
+为了证明JoyRL的可靠性，我们做了一些经典框架的对比
+
+### Mujoco
+
+| 算法 |                  | Ant  | HalfCheetah | Hopper |
+| :--: | :--------------: | :--: | :---------: | :----: |
+| DQN  |      JoyRL       |      |             |        |
+|      |     Dopamine     |      |             |        |
+|      | OpenAI Baselines |      |             |        |
+
+### Atari
+
+| 算法 |                  | Breakout | Pong | Enduro |
+| :--: | :--------------: | :------: | :--: | :----: |
+| DQN  |      JoyRL       |          |      |        |
+|      |     Dopamine     |          |      |        |
+|      | OpenAI Baselines |          |      |        |
 
 ## 如何贡献
 

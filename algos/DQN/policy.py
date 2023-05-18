@@ -5,12 +5,11 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-05-16 13:22:55
+LastEditTime: 2023-05-17 22:37:47
 Discription: 
 '''
 import torch
 import torch.nn as nn
-
 import math,random
 import numpy as np
 from algos.base.policies import BasePolicy
@@ -33,25 +32,26 @@ class Policy(BasePolicy):
         self.create_summary() # create summary
         
     def create_graph(self):
+
         self.state_size, self.action_size = self.get_state_action_size()
         self.policy_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
         self.target_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
         self.create_optimizer()
 
-    def sample_action(self, state, sample_count=None):
+    def sample_action(self, state,  **kwargs):
         ''' sample action
         '''
         # epsilon must decay(linear,exponential and etc.) for balancing exploration and exploitation
-        self.sample_count = sample_count
+        self.sample_count = kwargs.get('sample_count')
         self.epsilon = self.epsilon_end + (self.epsilon_start - self.epsilon_end) * \
-            math.exp(-1. * sample_count / self.epsilon_decay) 
+            math.exp(-1. * self.sample_count / self.epsilon_decay) 
         if random.random() > self.epsilon:
             action = self.predict_action(state)
         else:
             action = self.action_space.sample()
         return action
-    def predict_action(self,state):
+    def predict_action(self,state, **kwargs):
         ''' predict action
         '''
         with torch.no_grad():
