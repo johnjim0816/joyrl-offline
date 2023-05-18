@@ -3,7 +3,7 @@ general_cfg:
   env_name: gym # env name, differ from env_id in env_cfgs
   mode: train # run mode: train, test
   collect_traj: false # if collect trajectories or not
-  load_checkpoint: false # if load checkpoint or not
+  load_checkpoint: true # if load checkpoint or not
   load_path: Train_single_CliffWalking-v0_QLearning_20230519-005837 # if load checkpoint, then config path in 'tasks' dir
   load_model_step: 12000 # load model step
   max_episode: 300 # max episodes, set -1 to keep running
