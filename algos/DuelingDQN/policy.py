@@ -3,9 +3,9 @@
 '''
 Author: JiangJi
 Email: johnjim0816@gmail.com
-Date: 2023-04-23 00:54:59
+Date: 2022-11-14 23:50:59
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 22:55:23
+LastEditTime: 2023-05-17 22:37:37
 Discription: 
 '''
 import torch
@@ -14,7 +14,7 @@ import math,random
 import numpy as np
 from algos.base.policies import BasePolicy
 from algos.base.networks import QNetwork
-
+        
 class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
         super(Policy, self).__init__(cfg)
@@ -28,11 +28,11 @@ class Policy(BasePolicy):
         self.epsilon_decay = cfg.epsilon_decay
         self.batch_size = cfg.batch_size
         self.target_update = cfg.target_update
+        self.dueling = cfg.dueling
         self.create_graph() # create graph and optimizer
         self.create_summary() # create summary
-        
-    def create_graph(self):
 
+    def create_graph(self):
         self.state_size, self.action_size = self.get_state_action_size()
         self.policy_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
         self.target_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
@@ -58,7 +58,8 @@ class Policy(BasePolicy):
             state = torch.tensor(np.array(state), device=self.device, dtype=torch.float32).unsqueeze(dim=0)
             q_values = self.policy_net(state)
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
-        return action
+        return action  
+    
     def train(self, **kwargs):
         ''' train policy
         '''

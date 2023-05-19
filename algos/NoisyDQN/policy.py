@@ -3,15 +3,23 @@
 '''
 Author: JiangJi
 Email: johnjim0816@gmail.com
-Date: 2023-04-23 00:54:59
+Date: 2023-04-17 11:23:49
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 22:55:23
+LastEditTime: 2023-05-18 22:55:52
 Discription: 
 '''
 import torch
 import torch.nn as nn
-import math,random
+import torch.optim as optim
+import torch.nn.functional as F
 import numpy as np
+import math
+import random
+import ray
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
 from algos.base.policies import BasePolicy
 from algos.base.networks import QNetwork
 
@@ -30,13 +38,19 @@ class Policy(BasePolicy):
         self.target_update = cfg.target_update
         self.create_graph() # create graph and optimizer
         self.create_summary() # create summary
-        
-    def create_graph(self):
 
+    def create_graph(self):
         self.state_size, self.action_size = self.get_state_action_size()
         self.policy_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
         self.target_net = QNetwork(self.cfg, self.state_size, self.action_size).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
+        # for noise parameters
+        # if self.cfg.mode == 'train':
+        #     self.policy_net.train()
+        #     self.target_net.train()
+        # elif self.cfg.mode == 'test':
+        #     self.policy_net.eval()
+        #     self.target_net.eval()
         self.create_optimizer()
 
     def sample_action(self, state,  **kwargs):
@@ -58,7 +72,8 @@ class Policy(BasePolicy):
             state = torch.tensor(np.array(state), device=self.device, dtype=torch.float32).unsqueeze(dim=0)
             q_values = self.policy_net(state)
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
-        return action
+        return action  
+
     def train(self, **kwargs):
         ''' train policy
         '''
@@ -87,5 +102,7 @@ class Policy(BasePolicy):
         # update target net every C steps
         if update_step % self.target_update == 0: 
             self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.policy_net.reset_noise()
+        self.target_net.reset_noise()
         self.update_summary() # update summary
  

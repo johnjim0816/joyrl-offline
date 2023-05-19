@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:34:27
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 13:41:18
+LastEditTime: 2023-05-18 23:14:04
 Discription: 
 '''
 import random
@@ -42,6 +42,8 @@ class BufferCreator:
             return ReplayBufferQue(self.cfg)
         elif self.buffer_type == BufferType.ONPOLICY_QUE:
             return OnPolicyBufferQue(self.cfg)
+        elif self.buffer_type == BufferType.PER_QUE:
+            return PrioritizedReplayBufferQue(self.cfg)
         else:
             raise NotImplementedError
             
@@ -113,7 +115,7 @@ class OnPolicyBufferQue(ReplayBufferQue):
     Args:
         ReplayBufferQue (_type_): _description_
     '''
-    def __init__(self,cfg: MergedConfig):
+    def __init__(self, cfg: MergedConfig):
         self.cfg = cfg
         self.batch_size = cfg.batch_size
         self.buffer = deque()
@@ -237,7 +239,7 @@ class PrioritizedReplayBuffer:
         return self.tree.count
 
 class PrioritizedReplayBufferQue:
-    def __init__(self, cfg):
+    def __init__(self, cfg: MergedConfig):
         self.capacity = cfg.buffer_size
         self.alpha = cfg.per_alpha # 优先级的指数参数，越大越重要，越小越不重要
         self.epsilon = cfg.per_epsilon # 优先级的最小值，防止优先级为0
@@ -247,18 +249,22 @@ class PrioritizedReplayBufferQue:
         self.priorities = deque(maxlen=self.capacity)
         self.count = 0 # 当前存储的样本数量
         self.max_priority = 1.0
+        self.batch_size = cfg.batch_size
     def push(self,exps):
-        self.buffer.append(exps)
-        self.priorities.append(max(self.priorities, default=self.max_priority))
-        self.count += 1
-    def sample(self, batch_size):
+        for exp in exps:
+            self.buffer.append(exp)
+            self.priorities.append(max(self.priorities, default=self.max_priority))
+            self.count += 1
+    def sample(self):
+        if self.count < self.batch_size:
+            return None, None, None
         priorities = np.array(self.priorities)
         probs = priorities/sum(priorities)
-        indices = np.random.choice(len(self.buffer), batch_size, p=probs)
+        indices = np.random.choice(len(self.buffer), self.batch_size, p=probs)
         weights = (self.count*probs[indices])**(-self.beta)
         weights /= weights.max()
         exps = [self.buffer[i] for i in indices]
-        return zip(*exps), indices, weights
+        return exps, indices, weights
     def update_priorities(self, indices, priorities):
         priorities = np.abs(priorities)
         priorities = (priorities + self.epsilon) ** self.alpha

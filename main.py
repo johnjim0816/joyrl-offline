@@ -1,23 +1,21 @@
-import sys, os
-os.environ[
-    "KMP_DUPLICATE_LIB_OK"] = "TRUE"  # avoid "OMP: Error #15: Initializing libiomp5md.dll, but found libiomp5md.dll already initialized."
-curr_path = os.path.dirname(os.path.abspath(__file__))  # current path
-parent_path = os.path.dirname(curr_path)  # parent path 
-sys.path.append(parent_path)  # add path to system path
-
+# import sys, os
+# os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"  # avoid "OMP: Error #15: Initializing libiomp5md.dll, but found libiomp5md.dll already initialized."
+# curr_path = os.path.dirname(os.path.abspath(__file__))  # current path
+# parent_path = os.path.dirname(curr_path)  # parent path 
+# sys.path.append(parent_path)  # add path to system path
+import sys,os
 import argparse,datetime,importlib,yaml,time 
 import gymnasium as gym
 import ray
 import torch.multiprocessing as mp
 from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter  
-from config.config import GeneralConfig, MergedConfig
-from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
-# from envs.register import register_env
+from config.config import GeneralConfig, MergedConfig, DefaultConfig
 from framework.stats import StatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.dataserver import DataServer
 from framework.workers import Worker, SimpleTester, RayTester   
 from framework.learners import Learner
+from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
 
 class Main(object):
     def __init__(self) -> None:
@@ -44,7 +42,7 @@ class Main(object):
         env_mod = importlib.import_module(f"envs.{self.env_name}.config") # import env config
         self.env_cfg = env_mod.EnvConfig()
     
-    def print_cfgs(self, cfg, name = ''):
+    def print_cfgs(self, cfg: DefaultConfig, name = ''):
         ''' print parameters
         '''
         cfg_dict = vars(cfg)
@@ -97,17 +95,18 @@ class Main(object):
         self.cfg = merge_class_attrs(self.cfg, self.env_cfg)
         self.save_cfgs = {'general_cfg': self.general_cfg, 'algo_cfg': self.algo_cfg, 'env_cfg': self.env_cfg}
 
-    def load_yaml_cfg(self,target_cfg,load_cfg,item):
+    def load_yaml_cfg(self,target_cfg: DefaultConfig,load_cfg,item):
         if load_cfg[item] is not None:
             for k, v in load_cfg[item].items():
                 setattr(target_cfg, k, v)
+
     def create_dirs(self):
         def config_dir(dir,name = None):
             Path(dir).mkdir(parents=True, exist_ok=True)
             setattr(self.cfg, name, dir)
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
         env_name = self.env_cfg.id if self.env_cfg.id is not None else self.general_cfg.env_name
-        task_dir = f"{curr_path}/tasks/{self.general_cfg.mode.capitalize()}_{self.general_cfg.mp_backend}_{env_name}_{self.general_cfg.algo_name}_{curr_time}"
+        task_dir = f"{os.getcwd()}/tasks/{self.general_cfg.mode.capitalize()}_{self.general_cfg.mp_backend}_{env_name}_{self.general_cfg.algo_name}_{curr_time}"
         dirs_dic = {
             'task_dir':task_dir,
             'model_dir':f"{task_dir}/models",
@@ -206,7 +205,8 @@ class Main(object):
                     training_data = data_handler.sample_training_data() # get training data
                     if training_data is not None:
                         update_step += 1
-                        policy.update(**training_data,update_step=update_step)
+                        policy.train(**training_data,update_step=update_step)
+                        data_handler.add_data_after_train(policy.data_after_train) # add data after train
                         # save model
                         if update_step % cfg.model_save_fre == 0:
                             policy.save_model(f"{cfg.model_dir}/{update_step}")
@@ -245,12 +245,16 @@ class Main(object):
         stats_recorder = StatsRecorder.remote(cfg) # create stats recorder
         data_server = DataServer.remote(cfg) # create data server
         ray_logger = RayLogger.remote(cfg.log_dir) # create ray logger 
-        learner = Learner.remote(cfg, policy = policy,data_handler = data_handler, online_tester = self.online_tester) # create learner
+        learners = []
+        for i in range(cfg.n_learners):
+            learner = Learner.remote(cfg, learner_id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
+            learners.append(learner)
         workers = []
         for i in range(cfg.n_workers):
-            worker = Worker.remote(cfg,id = i,env = envs[i], logger = ray_logger)
+            worker = Worker.remote(cfg, worker_id = i,env = envs[i], logger = ray_logger)
+            worker.set_learner_id.remote(i%cfg.n_learners)
             workers.append(worker)
-        worker_tasks = [worker.run.remote(data_server = data_server,learner = learner,stats_recorder = stats_recorder) for worker in workers]
+        worker_tasks = [worker.run.remote(data_server = data_server,learners = learners,stats_recorder = stats_recorder) for worker in workers]
         ray.get(worker_tasks) # wait for all workers finish
         ray.shutdown() # shutdown ray
 

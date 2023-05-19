@@ -40,20 +40,20 @@ class Policy(BasePolicy):
         self.target_net.load_state_dict(self.policy_net.state_dict()) # or use this to copy parameters
         self.create_optimizer()
 
-    def sample_action(self, state, sample_count=None):
+    def sample_action(self, state, **kwargs):
         ''' sample action
         '''
         # epsilon must decay(linear,exponential and etc.) for balancing exploration and exploitation
-        self.sample_count = sample_count
+        self.sample_count = kwargs.get('sample_count')
         self.epsilon = self.epsilon_end + (self.epsilon_start - self.epsilon_end) * \
-            math.exp(-1. * sample_count / self.epsilon_decay) 
+            math.exp(-1. * self.sample_count / self.epsilon_decay) 
         if random.random() > self.epsilon:
             action = self.predict_action(state)
         else:
             action = self.action_space.sample()
         return action
     
-    def predict_action(self,state):
+    def predict_action(self,state,**kwargs):
         ''' predict action
         '''
         with torch.no_grad():
@@ -62,8 +62,8 @@ class Policy(BasePolicy):
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
         return action
 
-    def update(self, **kwargs):
-        ''' update policy
+    def train(self, **kwargs):
+        ''' train policy
         '''
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
         update_step = kwargs.get('update_step')

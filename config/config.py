@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-21 20:32:12
 LastEditor: JiangJi
-LastEditTime: 2023-05-16 10:15:56
+LastEditTime: 2023-05-17 23:39:50
 Discription: 
 '''
 class DefaultConfig:
@@ -42,6 +42,8 @@ class GeneralConfig():
         # multiprocessing settings
         self.mp_backend = "single" # multiprocessing backend: "ray", default "single"
         self.n_workers = 1 # number of workers
+        self.n_learners = 1 # number of learners if using multi-processing, default 1
+        self.share_buffer = True # if all learners share the same buffer
         # online evaluation settings
         self.online_eval = False # online evaluation or not
         self.online_eval_episode = 10 # online eval episodes

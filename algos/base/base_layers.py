@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:15
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 11:25:45
+LastEditTime: 2023-05-18 17:37:43
 Discription: 
 '''
 import torch
@@ -72,15 +72,69 @@ class LowRankLinear(nn.Module):
         return F.linear(x, weight)
 
 def linear_layer(input_size,layer_cfg: LayerConfig):
-    """ 生成一个线性层
-        layer_size: 线性层的输入输出维度
-        activation: 激活函数
-    """
-    layer_size = layer_cfg.layer_dim
+    ''' linear layer
+    '''
+    layer_size = layer_cfg.layer_size
     act_name = layer_cfg.activation.lower()
     in_dim = input_size[-1]
     out_dim = layer_size[0]
     layer = nn.Sequential(nn.Linear(in_dim,out_dim),activation_dics[act_name]())
+    return layer, [None, out_dim]
+
+def noisy_linear_layer(input_size,layer_cfg: LayerConfig):
+    ''' noisy linear layer
+    '''
+    layer_size = layer_cfg.layer_size
+    act_name = layer_cfg.activation.lower()
+    std_init = layer_cfg.std_init if hasattr(layer_cfg,'std_init') else 0.4
+    in_dim = input_size[-1]
+    out_dim = layer_size[0]
+    class NoisyLinear(nn.Module):
+        ''' Noisy linear module for NoisyNet
+        '''
+        def __init__(self, in_dim, out_dim, std_init=0.4):
+            super(NoisyLinear, self).__init__()
+            
+            self.in_dim  = in_dim
+            self.out_dim = out_dim
+            self.std_init  = std_init # std for noise
+            self.weight_mu    = nn.Parameter(torch.empty(out_dim, in_dim))
+            self.weight_sigma = nn.Parameter(torch.empty(out_dim, in_dim))
+            # register tensor as buffer, not a parameter
+            self.register_buffer('weight_epsilon', torch.empty(out_dim, in_dim)) 
+            self.bias_mu    = nn.Parameter(torch.empty(out_dim))
+            self.bias_sigma = nn.Parameter(torch.empty(out_dim))
+            self.register_buffer('bias_epsilon', torch.empty(out_dim))
+            self.reset_parameters() # reset parameters
+            self.reset_noise()  # reset noise
+        
+        def forward(self, x):
+            if self.training: 
+                weight = self.weight_mu + self.weight_sigma * self.weight_epsilon
+                bias   = self.bias_mu + self.bias_sigma * self.bias_epsilon
+            else:
+                weight = self.weight_mu
+                bias   = self.bias_mu
+            return F.linear(x, weight, bias)
+        
+        def reset_parameters(self):
+            mu_range = 1 / self.in_dim ** 0.5
+            self.weight_mu.data.uniform_(-mu_range, mu_range)
+            self.weight_sigma.data.fill_(self.std_init / self.in_dim ** 0.5)
+            self.bias_mu.data.uniform_(-mu_range, mu_range)
+            self.bias_sigma.data.fill_(self.std_init / self.out_dim ** 0.5)
+        
+        def reset_noise(self):
+            epsilon_in  = self._scale_noise(self.in_dim)
+            epsilon_out = self._scale_noise(self.out_dim)
+            self.weight_epsilon.copy_(epsilon_out.ger(epsilon_in))
+            self.bias_epsilon.copy_(self._scale_noise(self.out_dim))
+        
+        def _scale_noise(self, size):
+            x = torch.randn(size)
+            x = x.sign().mul(x.abs().sqrt())
+            return x
+    layer = nn.Sequential(NoisyLinear(in_dim,out_dim,std_init=std_init),activation_dics[act_name]())
     return layer, [None, out_dim]
 
 def dense_layer(in_dim,out_dim,act_name='relu'):
@@ -106,6 +160,8 @@ def create_layer(input_size: list, layer_cfg: LayerConfig):
     layer_type = layer_cfg.layer_type.lower()
     if layer_type == "linear":
         return linear_layer(input_size, layer_cfg)
+    elif layer_type == "noisy_linear":
+        return noisy_linear_layer(input_size, layer_cfg)
     elif layer_type == "conv2d":
         return conv2d_layer(input_size, layer_cfg)
     elif layer_type == "embed":

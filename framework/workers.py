@@ -5,20 +5,20 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 13:44:11
+LastEditTime: 2023-05-18 17:32:24
 Discription: 
 '''
 import ray
-import time
+import numpy as np
 @ray.remote(num_cpus=1)
 class Worker:
-    def __init__(self, cfg, id = 0 , env = None, logger = None):
+    def __init__(self, cfg, worker_id = 0 , env = None, logger = None):
         self.cfg = cfg
-        self.id = id # Worker id
-        self.worker_seed = self.cfg.seed + self.id
+        self.worker_id = worker_id # Worker id
+        self.worker_seed = self.cfg.seed + self.worker_id
         self.env = env
         self.logger = logger
-    def run(self, data_server = None, learner = None, stats_recorder = None):
+    def run(self, data_server = None, learners = None, stats_recorder = None):
         ''' Run worker
         '''
         while not ray.get(data_server.check_episode_limit.remote()): # Check if episode limit is reached
@@ -26,19 +26,49 @@ class Worker:
             self.episode = ray.get(data_server.get_episode.remote())
             state, info = self.env.reset(seed = self.worker_seed)
             for _ in range(self.cfg.max_step):
-                action = ray.get(learner.get_action.remote(state, data_server=data_server)) # get action from learner
+                action = ray.get(learners[self.learner_id].get_action.remote(state, data_server=data_server)) # get action from learner
                 next_state, reward, terminated, truncated , info = self.env.step(action) # interact with env
                 self.ep_reward += reward
                 self.ep_step += 1
-                ray.get(learner.add_transition.remote((state, action, reward, next_state, terminated,info))) # add transition to learner
-                self.update_step, self.model_summary = ray.get(learner.train.remote(data_server, logger = self.logger)) # train learner
+                interact_transition = {'state':state,'action':action,'reward':reward,'next_state':next_state,'done':terminated,'info':info}
+                if self.cfg.share_buffer: # if all learners share the same buffer
+                    ray.get(learners[0].add_transition.remote(interact_transition)) # add transition to learner
+                    training_data = ray.get(learners[0].get_training_data.remote()) # get training data from learner
+                else:
+                    ray.get(learners[self.learner_id].add_transition.remote(interact_transition)) # add transition to data server
+                    training_data = ray.get(learners[self.learner_id].get_training_data.remote()) # get training data from data server
+                self.update_step, self.model_summary = ray.get(learners[self.learner_id].train.remote(training_data, data_server=data_server, logger = self.logger)) # train learner
+                self.broadcast_model_params(learners) # broadcast model parameters to data server
                 self.add_model_summary(stats_recorder) # add model summary to stats_recorder
                 state = next_state # update state
                 if terminated:
                     break
-            self.logger.info.remote(f"Worker {self.id} finished episode {self.episode} with reward {self.ep_reward} in {self.ep_step} steps")
+            self.logger.info.remote(f"Worker {self.worker_id} finished episode {self.episode} with reward {self.ep_reward} in {self.ep_step} steps")
             ray.get(data_server.increase_episode.remote()) # increase episode count
             self.add_interact_summary(stats_recorder)  # add interact summary to stats_recorder
+    def broadcast_model_params(self, learners = None):
+        ''' Broadcast model parameters to data server
+        '''
+        #  aggregation model parameters
+        # import torch
+        # all_model_params = []
+        # for learner in learners:
+        #     all_model_params.append(ray.get(learner.get_model_params.remote()))
+        # average_model_params = {}
+        # for key in all_model_params[0].keys():
+        #     average_model_params[key] = torch.mean(torch.stack([state_dict[key] for state_dict in all_model_params]), dim=0)
+        # for learner in learners:
+        #     ray.get(learner.set_model_params.remote(average_model_params))
+        # broadcast model parameters
+        # if self.learner_id == 0:
+        if self.cfg.n_learners > 1:
+            model_params = ray.get(learners[0].get_model_params.remote()) # 0 is the main learner
+            for learner in learners[1:]:
+                ray.get(learner.set_model_params.remote(model_params))
+    def set_learner_id(self,learner_id):
+        ''' Set learner id
+        '''
+        self.learner_id = learner_id
 
     def add_interact_summary(self,stats_recorder):
         ''' Add interact summary to stats_recorder
@@ -79,7 +109,7 @@ class SimpleTester:
                     sum_eval_reward += ep_reward
                     break
         mean_eval_reward = sum_eval_reward / self.cfg.online_eval_episode
-        if mean_eval_reward > self.best_eval_reward:
+        if mean_eval_reward >= self.best_eval_reward:
             self.best_eval_reward = mean_eval_reward
             return True, mean_eval_reward
         return False, mean_eval_reward
