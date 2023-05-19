@@ -205,7 +205,8 @@ class Main(object):
                     training_data = data_handler.sample_training_data() # get training data
                     if training_data is not None:
                         update_step += 1
-                        policy.update(**training_data,update_step=update_step)
+                        policy.train(**training_data,update_step=update_step)
+                        data_handler.add_data_after_train(policy.data_after_train) # add data after train
                         # save model
                         if update_step % cfg.model_save_fre == 0:
                             policy.save_model(f"{cfg.model_dir}/{update_step}")

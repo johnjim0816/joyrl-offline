@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 13:27:12
+LastEditTime: 2023-05-18 13:27:13
 Discription: 
 '''
 import torch.nn as nn
@@ -35,13 +35,13 @@ class QNetwork(BaseNework):
         action_dim = action_size[0]
         if self.dueling:
             # state value
-            state_value_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[1], activation='none')
+            state_value_layer_cfg = LayerConfig(layer_type='linear', layer_size=[1], activation='none')
             self.state_value_layer, layer_out_size = create_layer(output_size, state_value_layer_cfg)
             # action value
-            action_value_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[action_dim], activation='none')
+            action_value_layer_cfg = LayerConfig(layer_type='linear', layer_size=[action_dim], activation='none')
             self.action_value_layer, layer_out_size = create_layer(output_size, action_value_layer_cfg)
         else:
-            action_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[action_dim], activation='none')
+            action_layer_cfg = LayerConfig(layer_type='linear', layer_size=[action_dim], activation='none')
             self.action_value_layer, layer_out_size = create_layer(output_size, action_layer_cfg)
     def forward(self, x):
         for layer in self.layers:
@@ -53,6 +53,13 @@ class QNetwork(BaseNework):
         else:
             q_value = self.action_value_layer(x)
         return q_value
+    
+    def reset_noise(self):
+        ''' reset noise for noisy layers
+        '''
+        for layer in self.layers:
+            if hasattr(layer, "reset_noise"):
+                layer.reset_noise()
         
 class ValueNetwork(BaseNework):
     ''' Value network, for policy-based methods like DDPG, in which the actor and critic share the same network

@@ -3,9 +3,9 @@
 '''
 Author: JiangJi
 Email: johnjim0816@gmail.com
-Date: 2023-04-23 00:54:59
+Date: 2023-05-18 22:41:01
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 22:55:23
+LastEditTime: 2023-05-18 23:18:27
 Discription: 
 '''
 import torch
@@ -59,10 +59,14 @@ class Policy(BasePolicy):
             q_values = self.policy_net(state)
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
         return action
+    def update_data_after_train(self):
+        self.data_after_train = {'idxs':self.idxs,'td_errors':self.td_errors}
     def train(self, **kwargs):
-        ''' train policy
+        ''' update policy
         '''
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
+        self.idxs = kwargs.get('idxs')
+        weights = kwargs.get('weights')
         update_step = kwargs.get('update_step')
         # convert numpy to tensor
         states = torch.tensor(states, device=self.device, dtype=torch.float32)
@@ -70,6 +74,7 @@ class Policy(BasePolicy):
         next_states = torch.tensor(next_states, device=self.device, dtype=torch.float32)
         rewards = torch.tensor(rewards, device=self.device, dtype=torch.float32).unsqueeze(dim=1)
         dones = torch.tensor(dones, device=self.device, dtype=torch.float32).unsqueeze(dim=1)
+        weights = torch.tensor(weights, device=self.device, dtype=torch.float32).unsqueeze(dim=1)
         # compute current Q values
         q_values = self.policy_net(states).gather(1, actions)
         # compute next max q value
@@ -77,7 +82,8 @@ class Policy(BasePolicy):
         # compute target Q values
         target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
         # compute loss
-        self.loss = nn.MSELoss()(q_values, target_q_values)
+        self.loss = (weights * nn.MSELoss()(q_values, target_q_values)).mean()
+        self.td_errors = torch.abs(q_values - target_q_values).cpu().detach().numpy() # shape(batchsize,1)
         self.optimizer.zero_grad()
         self.loss.backward()
         # clip to avoid gradient explosion
@@ -87,5 +93,6 @@ class Policy(BasePolicy):
         # update target net every C steps
         if update_step % self.target_update == 0: 
             self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.update_data_after_train()
         self.update_summary() # update summary
  

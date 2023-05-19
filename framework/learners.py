@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:53
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 00:04:49
+LastEditTime: 2023-05-18 23:11:28
 Discription: 
 '''
 import ray
@@ -51,7 +51,8 @@ class Learner:
         if training_data is not None:
             data_server.increase_update_step.remote()
             self.update_step = ray.get(data_server.get_update_step.remote())
-            self.policy.update(**training_data,update_step=self.update_step)
+            self.policy.train(**training_data,update_step=self.update_step)
+            self.data_handler.add_data_after_train(self.policy.data_after_train)
             if self.update_step % self.cfg.model_save_fre == 0:
                 self.policy.save_model(f"{self.cfg.model_dir}/{self.update_step}")
                 if self.cfg.online_eval == True:

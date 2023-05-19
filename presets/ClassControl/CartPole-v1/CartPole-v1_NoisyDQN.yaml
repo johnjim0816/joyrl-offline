@@ -1,5 +1,5 @@
 general_cfg:
-  algo_name: DoubleDQN
+  algo_name: NoisyDQN
   env_name: gym
   device: cpu
   seed: 1
@@ -10,19 +10,21 @@ general_cfg:
   mp_backend: ray
   n_workers: 2
   load_checkpoint: false
-  load_path: Train_CartPole-v1_DQN_20221026-054757
+  load_path: Train_single_CartPole-v1_NoisyDQN_20230518-133737
   load_model_step: best
   online_eval: true 
   online_eval_episode: 10
   model_save_fre: 500
 algo_cfg:
   value_layers:
-    - layer_type: linear
+    - layer_type: noisy_linear
       layer_size: [256]
       activation: relu
-    - layer_type: linear
+      std_init: 0.4
+    - layer_type: noisy_linear
       layer_size: [256]
       activation: relu
+      std_init: 0.4
   batch_size: 64
   buffer_type: REPLAY_QUE
   buffer_size: 100000

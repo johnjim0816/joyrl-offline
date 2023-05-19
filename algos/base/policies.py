@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 23:24:35
+LastEditTime: 2023-05-19 00:58:34
 Discription: 
 '''
 import torch
@@ -21,8 +21,13 @@ class BasePolicy(nn.Module):
         self.action_space = cfg.action_space
         self.optimizer = None
         self.policy_transition = {}
+        self.data_after_train = {}
         self.get_state_action_size()
     def get_state_action_size(self):
+        ''' get state and action size
+        '''
+        # state_size must be [[None, state_dim_1], [None, state_dim_2], ...]
+        # action_size must be [action_dim_1, action_dim_2, ...]
         self.state_size = [None, self.obs_space.shape[0]]
         self.action_size = [self.action_space.n]
         return self.state_size, self.action_size
@@ -45,7 +50,7 @@ class BasePolicy(nn.Module):
         elif mode == 'predict':
             return self.predict_action(state, **kwargs)
         else:
-            raise NotImplementedError
+            raise NameError('mode must be sample or predict')
     def sample_action(self, state, **kwargs):
         ''' sample action
         '''
@@ -72,10 +77,14 @@ class BasePolicy(nn.Module):
         ''' update policy summary
         '''
         self.summary['scalar']['loss'] = self.loss.item()
-    def update(self):
-        ''' update policy
+    def train(self, **kwargs):
+        ''' train policy
         '''
         raise NotImplementedError
+    def update_data_after_train(self):
+        ''' update data after training
+        '''
+        self.data_after_train = {}
     def save_model(self, fpath):
         ''' save model
         '''
@@ -93,13 +102,48 @@ class ToyPolicy:
         self.cfg = cfg
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
+        self.get_state_action_size()
+        self.policy_transition = {}
+        self.data_after_train = {}
+    def get_state_action_size(self):
+        self.n_states = self.obs_space.n
+        self.n_actions = self.action_space.n
+    def create_summary(self):
+        ''' create policy summary
+        '''
+        self.summary = {
+            'scalar': {
+                'loss': 0.0,
+            },
+        }
+    def update_summary(self):
+        ''' update policy summary
+        '''
+        self.summary['scalar']['loss'] = self.loss.item()
     def get_action(self, state, mode = 'sample', **kwargs):
-        return self.action_space.sample()
+        if mode == 'sample':
+            return self.sample_action(state, **kwargs)
+        elif mode == 'predict':
+            return self.predict_action(state, **kwargs)
+        else:
+            raise NameError('mode must be sample or predict')
     def sample_action(self, state, **kwargs):
-        return self.action_space.sample()
+        raise NotImplementedError
     def predict_action(self, state, **kwargs):
-        return self.action_space.sample()
-    def update(self):
+        raise NotImplementedError
+    def update_policy_transition(self):
+        ''' update policy transition
+        '''
+        self.policy_transition = {}
+    def get_policy_transition(self):
+        return self.policy_transition
+    def update_data_after_train(self):
+        ''' update data after training
+        '''
+        self.data_after_train = {}
+    def train(self, **kwargs):
+        ''' train policy
+        '''
         raise NotImplementedError
     def save_model(self, fpath):
         raise NotImplementedError

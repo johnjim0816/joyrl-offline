@@ -14,33 +14,6 @@ import math,random
 import numpy as np
 from algos.base.policies import BasePolicy
 from algos.base.networks import QNetwork
-
-class DuelingQNetwork(nn.Module):
-    def __init__(self, n_states, n_actions,hidden_dim=128):
-        super(DuelingQNetwork, self).__init__()
-        # 隐藏层
-        self.hidden_layer = nn.Sequential(
-            nn.Linear(n_states, hidden_dim),
-            nn.ReLU()
-        )
-        #  优势层
-        self.advantage_layer = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, n_actions)
-        )
-        # 价值层
-        self.value_layer = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, 1)
-        )
-        
-    def forward(self, state):
-        x = self.hidden_layer(state)
-        advantage = self.advantage_layer(x)
-        value     = self.value_layer(x)
-        return value + advantage - advantage.mean() # Q(s,a) = V(s) + A(s,a) - mean(A(s,a))
         
 class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
@@ -87,8 +60,8 @@ class Policy(BasePolicy):
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
         return action  
     
-    def update(self, **kwargs):
-        ''' update policy
+    def train(self, **kwargs):
+        ''' train policy
         '''
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
         update_step = kwargs.get('update_step')

@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-16 16:12:07
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 13:19:43
+LastEditTime: 2023-05-18 13:27:26
 Discription: 
 '''
 import torch
@@ -26,7 +26,7 @@ class DiscreteActionLayer(BaseActionLayer):
         if kwargs: self.id = kwargs['id']
         self.action_dim = action_space.n
         output_size = input_size
-        action_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[self.action_dim], activation='leakyrelu')
+        action_layer_cfg = LayerConfig(layer_type='linear', layer_size=[self.action_dim], activation='leakyrelu')
         self.logits_p_layer, layer_out_size = create_layer(output_size, action_layer_cfg)
 
     def forward(self,x, legal_actions = None):
@@ -50,7 +50,7 @@ class ContinousActionLayer(BaseActionLayer):
         if kwargs: self.id = kwargs['id']
         self.action_dim = action_space.n
         output_size = input_size
-        mu_layer_cfg = LayerConfig(layer_type='linear', layer_dim=[self.action_dim], activation='tanh')
+        mu_layer_cfg = LayerConfig(layer_type='linear', layer_size=[self.action_dim], activation='tanh')
         self.mu_layer = create_layer(output_size, mu_layer_cfg)
         self.log_std = nn.Parameter(torch.zeros(1, self.action_dim))
 
