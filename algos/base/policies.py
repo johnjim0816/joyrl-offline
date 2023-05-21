@@ -28,7 +28,6 @@ class BasePolicy(nn.Module):
         '''
         # state_size must be [[None, state_dim_1], [None, state_dim_2], ...]
         # action_size must be [action_dim_1, action_dim_2, ...]
-        print(f'self.obs_space.shape:{self.obs_space.shape}')
         self.state_size = [None, self.obs_space.shape[0]]
         self.action_size = [self.action_space.n]
         return self.state_size, self.action_size

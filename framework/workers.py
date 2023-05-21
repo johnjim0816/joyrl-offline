@@ -10,7 +10,7 @@ Discription:
 '''
 import ray
 import numpy as np
-@ray.remote(num_cpus=10, num_gpus=0.6)
+@ray.remote(num_cpus=6, num_gpus=0.6)
 class Worker:
     def __init__(self, cfg, worker_id = 0 , env = None, logger = None):
         self.cfg = cfg
