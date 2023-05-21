@@ -24,7 +24,6 @@ class QNetwork(BaseNework):
         self.dueling = hasattr(cfg, 'dueling') and cfg.dueling
         self.layers_cfg_dic = cfg.value_layers # load layers config
         self.layers = nn.ModuleList()
-        print(f'state_size:{state_size}')
         output_size = state_size
         for layer_cfg_dic in self.layers_cfg_dic:
             if "layer_type" not in layer_cfg_dic:

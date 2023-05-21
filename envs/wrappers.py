@@ -1,4 +1,5 @@
 import gym
+import gymnasium
 # import gymnasium as gym
 import turtle
 import torch
@@ -551,7 +552,7 @@ class MarioWrappers(gym.Wrapper):
         # gym.Wrapper.__init__(self, env=env, new_step_api=True)
 
 
-import gymnasium
+
 class Wrapper(gymnasium.Wrapper):
     def __init__(self, env: Env, new_step_api: str):
         env = SkipFrame(env=env, skip=4)
