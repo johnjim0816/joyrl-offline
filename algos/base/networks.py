@@ -24,11 +24,13 @@ class QNetwork(BaseNework):
         self.dueling = hasattr(cfg, 'dueling') and cfg.dueling
         self.layers_cfg_dic = cfg.value_layers # load layers config
         self.layers = nn.ModuleList()
+        print(f'state_size:{state_size}')
         output_size = state_size
         for layer_cfg_dic in self.layers_cfg_dic:
             if "layer_type" not in layer_cfg_dic:
                 raise ValueError("layer_type must be specified in layer_cfg")
             layer_cfg = LayerConfig(**layer_cfg_dic)
+            # 这一层的输出维度就是下一层的输入维度
             layer, layer_out_size = create_layer(output_size, layer_cfg)
             output_size = layer_out_size
             self.layers.append(layer) 
