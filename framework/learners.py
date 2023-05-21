@@ -10,7 +10,7 @@ Discription:
 '''
 import ray
 from ray.util.queue import Queue, Empty, Full
-@ray.remote
+@ray.remote(num_cpus=2, num_gpus=0.1)
 class Learner:
     ''' learner
     '''

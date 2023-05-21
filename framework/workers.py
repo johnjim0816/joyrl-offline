@@ -10,7 +10,7 @@ Discription:
 '''
 import ray
 import numpy as np
-@ray.remote(num_cpus=1)
+@ray.remote(num_cpus=2, num_gpus=0.1)
 class Worker:
     def __init__(self, cfg, worker_id = 0 , env = None, logger = None):
         self.cfg = cfg
@@ -113,7 +113,7 @@ class SimpleTester:
             self.best_eval_reward = mean_eval_reward
             return True, mean_eval_reward
         return False, mean_eval_reward
-@ray.remote    
+@ray.remote(num_cpus=2, num_gpus=0.1)
 class RayTester(SimpleTester):
     ''' Ray online tester
     '''
