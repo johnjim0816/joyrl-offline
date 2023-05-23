@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2022-12-03 19:40:32
 LastEditor: JiangJi
-LastEditTime: 2023-01-11 13:28:58
+LastEditTime: 2023-05-14 20:36:40
 Discription: 
 '''
 import sys,os
@@ -16,7 +16,7 @@ p_parent_path = os.path.dirname(parent_path)
 sys.path.append(p_parent_path)  # add path to system path
 import torch.multiprocessing as mp
 import gym
-from common.utils import all_seed,check_n_workers,plot_rewards
+from utils.utils import all_seed,check_n_workers,plot_rewards
 from common.models import ActorSoftmax, Critic
 
 
