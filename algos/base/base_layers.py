@@ -20,17 +20,15 @@ activation_dics = {'relu': nn.ReLU,
                    'none': nn.Identity}  
 
 class LayerConfig:
-    ''' 层的配置类
+    ''' layer config class
     '''
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
 def get_output_size_with_batch(layers,input_size,dtype=torch.float):
-    """ 获取层的输出维度
-        layer: 层
-        in_dim: 层的输入维度
-    """
+    ''' get output size of a layer with batch size 
+    '''
     with torch.no_grad():
         x = torch.zeros(10, *input_size[1:], dtype=dtype)
         out = layers(x)

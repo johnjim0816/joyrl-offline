@@ -1,5 +1,5 @@
 general_cfg:
-  algo_name: PPO
+  algo_name: DDPG
   env_name: gym # env name, differ from env_id in env_cfgs
   device: cpu # device, cpu or cuda
   mode: train # run mode: train, test
@@ -9,17 +9,14 @@ general_cfg:
   load_checkpoint: false # if load checkpoint or not
   load_path: Train_single_CartPole-v1_DQN_20230515-211721 # if load checkpoint, then config path in 'tasks' dir
   load_model_step: best # load model step
-  max_episode: 200 # max episodes, set -1 to keep running
+  max_episode: 400 # max episodes, set -1 to keep running
   max_step: 200 # max steps per episode
-  seed: 1 # random seed, set 0 not to use seed
+  seed: 10 # random seed, set 0 not to use seed
   online_eval: true # if online eval or not
-  online_eval_episode: 10 # online eval episodes
-  model_save_fre: 10 # update step frequency of saving model
+  online_eval_episode: 20 # online eval episodes
+  model_save_fre: 2000 # update step frequency of saving model
 algo_cfg:
-  ppo_type: clip
-  action_type: discrete 
-  independ_actor: true
-  share_optimizer: false
+  action_type: dpg
   actor_layers:
     - layer_type: linear
       layer_size: [256]
@@ -34,16 +31,12 @@ algo_cfg:
     - layer_type: linear
       layer_size: [256]
       activation: relu
-  buffer_type: ONPOLICY_QUE
-  actor_lr: 0.0003
+  batch_size: 128
+  buffer_type: REPLAY_QUE
+  buffer_size: 8000
+  actor_lr: 0.0001
   critic_lr: 0.001
-  entropy_coef: 0.01
-  eps_clip: 0.2
   gamma: 0.99
-  k_epochs: 4
-  batch_size: 256
-  sgd_batch_size: 128
+  tau: 0.001
 env_cfg:
-  id: CartPole-v1
-  render_mode: null
-  
+  id: Pendulum-v1

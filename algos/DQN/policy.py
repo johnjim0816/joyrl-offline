@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-23 00:54:59
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 22:55:23
+LastEditTime: 2023-05-25 23:37:42
 Discription: 
 '''
 import torch
@@ -30,6 +30,7 @@ class Policy(BasePolicy):
         self.target_update = cfg.target_update
         self.create_graph() # create graph and optimizer
         self.create_summary() # create summary
+        self.to(self.device)
         
     def create_graph(self):
 

@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# coding=utf-8
+'''
+Author: JiangJi
+Email: johnjim0816@gmail.com
+Date: 2023-02-21 20:32:11
+LastEditor: JiangJi
+LastEditTime: 2023-05-25 23:39:27
+Discription: 
+'''
+import numpy as np
 class AlgoConfig:
     def __init__(self):
         self.gamma = 0.99  # 贴现因子，值越大，表示未来的收益占更大的比重
@@ -8,3 +19,5 @@ class AlgoConfig:
         self.tau = 0.001  # 软更新参数，值越小，表示在更新目标网络参数时，参数变化越小
         self.critic_hidden_dim = 256  # critic 网络的隐含层数
         self.actor_hidden_dim = 256  # actor 网络的隐含参数
+        self.value_min = -np.inf  # clip min critic value
+        self.value_max = np.inf  # clip max critic value
