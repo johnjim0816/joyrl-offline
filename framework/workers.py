@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 17:32:24
+LastEditTime: 2023-05-27 00:06:55
 Discription: 
 '''
 import ray
@@ -43,7 +43,7 @@ class Worker:
                 state = next_state # update state
                 if terminated:
                     break
-            self.logger.info.remote(f"Worker {self.worker_id} finished episode {self.episode} with reward {self.ep_reward} in {self.ep_step} steps")
+            self.logger.info.remote(f"Worker {self.worker_id} finished episode {self.episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
             ray.get(data_server.increase_episode.remote()) # increase episode count
             self.add_interact_summary(stats_recorder)  # add interact summary to stats_recorder
     def broadcast_model_params(self, learners = None):

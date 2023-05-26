@@ -1,15 +1,15 @@
 general_cfg:
   algo_name: DDPG
   env_name: gym # env name, differ from env_id in env_cfgs
-  device: cpu # device, cpu or cuda
+  device: cuda # device, cpu or cuda
   mode: train # run mode: train, test
   collect_traj: false # if collect trajectories or not
   mp_backend: single # multi-processing mode: single(default), ray
-  n_workers: 2 # number of workers if using multi-processing, default 1
+  n_workers: 4 # number of workers if using multi-processing, default 1
   load_checkpoint: false # if load checkpoint or not
   load_path: Train_single_CartPole-v1_DQN_20230515-211721 # if load checkpoint, then config path in 'tasks' dir
   load_model_step: best # load model step
-  max_episode: 400 # max episodes, set -1 to keep running
+  max_episode: 200 # max episodes, set -1 to keep running
   max_step: 200 # max steps per episode
   seed: 10 # random seed, set 0 not to use seed
   online_eval: true # if online eval or not
@@ -36,7 +36,9 @@ algo_cfg:
   buffer_size: 8000
   actor_lr: 0.0001
   critic_lr: 0.001
+  policy_loss_weight: 0.002
   gamma: 0.99
   tau: 0.001
 env_cfg:
   id: Pendulum-v1
+  render_mode: null # null, rgb_array, human

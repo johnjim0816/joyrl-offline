@@ -178,11 +178,10 @@ class Policy(BasePolicy):
                     self.tot_loss.backward()
                 else:
                     self.actor_optimizer.zero_grad()
-                    self.critic_optimizer.zero_grad()  
                     self.actor_loss.backward()
-                    self.critic_loss.backward()
-                    # tot_loss.backward()
                     self.actor_optimizer.step()
+                    self.critic_optimizer.zero_grad()  
+                    self.critic_loss.backward()
                     self.critic_optimizer.step()
         self.update_summary()
 

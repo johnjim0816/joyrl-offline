@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-09 20:25:52
 @LastEditor: John
-LastEditTime: 2023-05-26 00:22:21
+LastEditTime: 2023-05-26 23:58:45
 @Discription:
 @Environment: python 3.7.7
 '''
@@ -154,7 +154,7 @@ class Policy(BasePolicy):
         dones = torch.tensor(dones, device=self.device, dtype=torch.float32).unsqueeze(dim=1)
         # calculate policy loss
         state_actions = torch.cat([states, self.actor(states)], dim=1)
-        self.policy_loss = -self.critic(state_actions).mean()
+        self.policy_loss = -self.critic(state_actions).mean() * self.cfg.policy_loss_weight
         # calculate value loss
         next_actions = self.target_actor(next_states).detach()
         next_state_actions = torch.cat([next_states, next_actions], dim=1)
@@ -164,16 +164,18 @@ class Policy(BasePolicy):
         values = self.critic(torch.cat([states, actions], dim=1))
         self.value_loss = F.mse_loss(values, expected_values.detach())
         self.tot_loss = self.policy_loss + self.value_loss
+        # actor and critic update, the order is important
         self.actor_optimizer.zero_grad()
-        self.critic_optimizer.zero_grad()
         self.policy_loss.backward()
-        self.value_loss.backward()
         self.actor_optimizer.step()
+        self.critic_optimizer.zero_grad()
+        self.value_loss.backward()
         self.critic_optimizer.step()
         # soft update target network
         self.soft_update(self.actor, self.target_actor, self.tau)
         self.soft_update(self.critic, self.target_critic, self.tau)
         self.update_summary() # update summary
+        
     def soft_update(self, curr_model, target_model, tau):
         ''' soft update model parameters
         θ_target = τ*θ_local + (1 - τ)*θ_target

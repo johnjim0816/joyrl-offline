@@ -122,9 +122,11 @@ class Main(object):
         ''' create logger
         '''
         self.logger = SimpleLogger(self.cfg.log_dir)
+        self.traj_collector = SimpleTrajCollector(self.cfg.res_dir)
+        if self.cfg.mp_backend == 'ray': return
         self.interact_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/interact")
         self.policy_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/model")
-        self.traj_collector = SimpleTrajCollector(self.cfg.res_dir)
+        
 
     def create_single_env(self):
         ''' create single env
@@ -222,7 +224,7 @@ class Main(object):
                 state = next_state
                 if terminated or (0<= cfg.max_step <= ep_step):
                     self.logger.info(f"episode: {i_ep}, ep_reward: {ep_reward:.3f}, ep_step: {ep_step:d}")
-                    interact_summary = {'ep_reward': ep_reward, 'ep_step': ep_step}
+                    interact_summary = {'reward': ep_reward, 'step': ep_step}
                     for key, value in interact_summary.items():
                         self.interact_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep)
                     i_ep += 1
