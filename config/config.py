@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-21 20:32:12
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 23:39:50
+LastEditTime: 2023-05-27 12:08:17
 Discription: 
 '''
 class DefaultConfig:
@@ -36,8 +36,8 @@ class GeneralConfig():
         self.mode = "train" # train, test
         self.device = "cpu" # device to use
         self.seed = 0 # random seed
-        self.max_episode = 100 # number of episodes for training
-        self.max_step = 200 # number of episodes for testing
+        self.max_episode = 100 # number of episodes for training, set -1 to keep running
+        self.max_step = 200 # number of episodes for testing, set -1 means unlimited steps
         self.collect_traj = False # if collect trajectory or not
         # multiprocessing settings
         self.mp_backend = "single" # multiprocessing backend: "ray", default "single"

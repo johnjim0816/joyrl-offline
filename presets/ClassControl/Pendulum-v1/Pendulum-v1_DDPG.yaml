@@ -6,11 +6,11 @@ general_cfg:
   collect_traj: false # if collect trajectories or not
   mp_backend: single # multi-processing mode: single(default), ray
   n_workers: 4 # number of workers if using multi-processing, default 1
-  load_checkpoint: false # if load checkpoint or not
-  load_path: Train_single_CartPole-v1_DQN_20230515-211721 # if load checkpoint, then config path in 'tasks' dir
+  load_checkpoint: true # if load checkpoint or not
+  load_path: Train_ray_Pendulum-v1_DDPG_20230527-001715 # if load checkpoint, then config path in 'tasks' dir
   load_model_step: best # load model step
-  max_episode: 200 # max episodes, set -1 to keep running
-  max_step: 200 # max steps per episode
+  max_episode: 400 # max episodes, set -1 to keep running
+  max_step: 200 # max steps per episode, set -1 means unlimited steps
   seed: 10 # random seed, set 0 not to use seed
   online_eval: true # if online eval or not
   online_eval_episode: 20 # online eval episodes
