@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-02-20 21:53:39
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 13:37:59
+LastEditTime: 2023-05-25 22:19:00
 Discription: 
 '''
 class AlgoConfig:
@@ -20,7 +20,7 @@ class AlgoConfig:
         self.kl_lambda = 0.5 # lambda for KL penalty, 0.5 is the default value in the paper
         self.kl_beta = 1.5 # beta for KL penalty, 1.5 is the default value in the paper
         self.kl_alpha = 2 # alpha for KL penalty, 2 is the default value in the paper
-        self.continuous = False # continuous action space
+        self.action_type = "continuous" # continuous action space
         self.gamma = 0.99 # discount factor
         self.k_epochs = 4 # update policy for K epochs
         self.lr = 0.0001 # for shared optimizer

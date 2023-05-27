@@ -5,14 +5,23 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-16 16:12:07
 LastEditor: JiangJi
-LastEditTime: 2023-05-18 13:27:26
+LastEditTime: 2023-05-25 23:36:50
 Discription: 
 '''
+from enum import Enum
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from algos.base.base_layers import LayerConfig
 from algos.base.base_layers import create_layer
+
+class ActionLayerType(Enum):
+    ''' Action layer type
+    '''
+    DISCRETE = 1
+    CONTINUOUS = 2
+    DPG = 3
+    
 class BaseActionLayer(nn.Module):
     def __init__(self):
         super(BaseActionLayer, self).__init__()
@@ -42,9 +51,9 @@ class DiscreteActionLayer(BaseActionLayer):
             probs = (probs + self.min_policy) / (1.0 + self.min_policy * self.action_dim) # add a small probability to explore
         return probs
         
-class ContinousActionLayer(BaseActionLayer):
+class ContinuousActionLayer(BaseActionLayer):
     def __init__(self, cfg, input_size, action_space, **kwargs):
-        super(ContinousActionLayer, self).__init__()
+        super(ContinuousActionLayer, self).__init__()
         self.cfg = cfg
         self.min_policy = cfg.min_policy
         if kwargs: self.id = kwargs['id']
@@ -61,5 +70,17 @@ class ContinousActionLayer(BaseActionLayer):
         # sigma = F.softplus(self.fc4(x)) + 0.001 # std of normal distribution, add a small value to avoid 0
         # sigma = torch.clamp(sigma, min=-0.25, max=0.25) # clamp the std between 0.001 and 1
         return mu, sigma
-        
+class DPGActionLayer(BaseActionLayer):
+    def __init__(self, cfg, input_size, action_space, **kwargs):
+        super(DPGActionLayer, self).__init__()
+        self.cfg = cfg
+        if kwargs: self.id = kwargs['id']
+        self.action_dim = action_space.shape[0]
+        self.output_size = input_size
+        action_layer_cfg = LayerConfig(layer_type='linear', layer_size=[self.action_dim], activation='tanh')
+        self.action_layer, layer_out_size = create_layer(self.output_size, action_layer_cfg)
+        self.output_size = layer_out_size
+    def forward(self,x):
+        mu = self.action_layer(x)
+        return mu
         

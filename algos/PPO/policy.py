@@ -23,9 +23,9 @@ class Policy(BasePolicy):
             self.kl_alpha = cfg.kl_alpha
         self.gamma = cfg.gamma
         self.device = torch.device(cfg.device)
-        self.continuous = cfg.continuous # continuous action space
+        self.action_type = cfg.action_type
 
-        if self.continuous:
+        if self.action_type.lower() == 'continuous': # continuous action space
             self.action_scale = torch.tensor((self.action_space.high - self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
             self.action_bias = torch.tensor((self.action_space.high + self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
         self.critic_loss_coef = cfg.critic_loss_coef
@@ -73,13 +73,13 @@ class Policy(BasePolicy):
     def get_action(self, state, mode='sample', **kwargs):
         state = torch.tensor(np.array(state), device=self.device, dtype=torch.float32).unsqueeze(dim=0)
         if not self.independ_actor:
-            if self.continuous:
+            if self.action_type.lower() == 'continuous':
                 self.value, self.mu, self.sigma = self.policy_net(state)
             else:
                 self.probs = self.policy_net(state)
         else:
             self.value = self.critic(state)
-            if self.continuous:
+            if self.action_type.lower() == 'continuous':
                 self.mu, self.sigma = self.actor(state)
             else:
                 self.probs = self.actor(state)
@@ -92,13 +92,13 @@ class Policy(BasePolicy):
             raise NameError('mode must be sample or predict')
         return action
     def update_policy_transition(self):
-        if self.continuous:
+        if self.action_type.lower() == 'continuous':
             self.policy_transition = {'value': self.value, 'mu': self.mu, 'sigma': self.sigma}
         else:
             self.policy_transition = {'value': self.value, 'probs': self.probs, 'log_probs': self.log_probs}   
     def sample_action(self,**kwargs):
         # sample_count = kwargs.get('sample_count', 0)
-        if self.continuous:
+        if self.action_type.lower() == 'continuous':
             mean = self.mu * self.action_scale + self.action_bias
             std = self.sigma
             dist = Normal(mean,std)
@@ -112,7 +112,7 @@ class Policy(BasePolicy):
             self.log_probs = dist.log_prob(action).detach()
             return action.detach().cpu().numpy().item()
     def predict_action(self, **kwargs):
-        if self.continuous:
+        if self.action_type.lower() == 'continuous':
             return self.mu.detach().cpu().numpy()[0]
         else:
             return torch.argmax(self.probs).detach().cpu().numpy().item()
@@ -137,7 +137,7 @@ class Policy(BasePolicy):
                 values = self.critic(old_states) # detach to avoid backprop through the critic
                 advantages = returns - values.detach() # shape:[batch_size,1]
                 # get action probabilities
-                if self.continuous:
+                if self.action_type.lower() == 'continuous':
                     mu, sigma = self.actor(old_states)
                     mean = mu * self.action_scale + self.action_bias
                     std = sigma
@@ -178,11 +178,10 @@ class Policy(BasePolicy):
                     self.tot_loss.backward()
                 else:
                     self.actor_optimizer.zero_grad()
-                    self.critic_optimizer.zero_grad()  
                     self.actor_loss.backward()
-                    self.critic_loss.backward()
-                    # tot_loss.backward()
                     self.actor_optimizer.step()
+                    self.critic_optimizer.zero_grad()  
+                    self.critic_loss.backward()
                     self.critic_optimizer.step()
         self.update_summary()
 

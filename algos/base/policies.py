@@ -5,12 +5,13 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-19 00:58:34
+LastEditTime: 2023-05-25 23:23:43
 Discription: 
 '''
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from gymnasium.spaces import Box, Discrete
 class BasePolicy(nn.Module):
     ''' base policy for DRL
     '''
@@ -28,8 +29,18 @@ class BasePolicy(nn.Module):
         '''
         # state_size must be [[None, state_dim_1], [None, state_dim_2], ...]
         # action_size must be [action_dim_1, action_dim_2, ...]
-        self.state_size = [None, self.obs_space.shape[0]]
-        self.action_size = [self.action_space.n]
+        if isinstance(self.obs_space, Box):
+            self.state_size = [None, self.obs_space.shape[0]]
+        elif isinstance(self.obs_space, Discrete):
+            self.state_size = [None, self.obs_space.n]
+        else:
+            raise ValueError('obs_space type error')
+        if isinstance(self.action_space, Box):
+            self.action_size = [self.action_space.shape[0]]
+        elif isinstance(self.action_space, Discrete):
+            self.action_size = [self.action_space.n]
+        else:
+            raise ValueError('action_space type error')
         return self.state_size, self.action_size
     def create_optimizer(self):
         self.optimizer = optim.Adam(self.parameters(), lr=self.cfg.lr) 
