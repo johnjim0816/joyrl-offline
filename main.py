@@ -25,9 +25,7 @@ class Main(object):
         self.create_dirs()  # create dirs
         self.create_loggers()  # create loggers
         # print all configs
-        self.print_cfgs(self.general_cfg,name = 'General Configs')  
-        self.print_cfgs(self.algo_cfg,name = 'Algo Configs')
-        self.print_cfgs(self.env_cfg,name = 'Env Configs') 
+        self.print_cfgs()
         all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
         self.check_n_workers(self.general_cfg)  # check n_workers
 
@@ -42,25 +40,29 @@ class Main(object):
         env_mod = importlib.import_module(f"envs.{self.env_name}.config") # import env config
         self.env_cfg = env_mod.EnvConfig()
     
-    def print_cfgs(self, cfg: DefaultConfig, name = ''):
+    def print_cfgs(self):
         ''' print parameters
         '''
-        cfg_dict = vars(cfg)
-        self.logger.info(f"{name}:")
-        self.logger.info(''.join(['='] * 80))
-        tplt = "{:^20}\t{:^20}\t{:^20}"
-        self.logger.info(tplt.format("Name", "Value", "Type"))
-        for k, v in cfg_dict.items():
-            if v.__class__.__name__ == 'list': # convert list to str
-                v = str(v)
-            if k in ['model_dir','tb_writter']:
-                continue
-            if v is None: # avoid NoneType
-                v = 'None'
-            if "support" in k: # avoid ndarray
-                v = str(v[0])
-            self.logger.info(tplt.format(k, v, str(type(v))))
-        self.logger.info(''.join(['='] * 80))
+        def print_cfg(cfg: DefaultConfig, name = ''):
+            cfg_dict = vars(cfg)
+            self.logger.info(f"{name}:")
+            self.logger.info(''.join(['='] * 80))
+            tplt = "{:^20}\t{:^20}\t{:^20}"
+            self.logger.info(tplt.format("Name", "Value", "Type"))
+            for k, v in cfg_dict.items():
+                if v.__class__.__name__ == 'list': # convert list to str
+                    v = str(v)
+                if k in ['model_dir','tb_writter']:
+                    continue
+                if v is None: # avoid NoneType
+                    v = 'None'
+                if "support" in k: # avoid ndarray
+                    v = str(v[0])
+                self.logger.info(tplt.format(k, v, str(type(v))))
+            self.logger.info(''.join(['='] * 80))
+        print_cfg(self.general_cfg,name = 'General Configs')
+        print_cfg(self.algo_cfg,name = 'Algo Configs')
+        print_cfg(self.env_cfg,name = 'Env Configs')
 
     def process_yaml_cfg(self):
         ''' load yaml config
@@ -127,7 +129,6 @@ class Main(object):
         self.interact_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/interact")
         self.policy_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/model")
         
-
     def create_single_env(self):
         ''' create single env
         '''
@@ -141,7 +142,7 @@ class Main(object):
             wrapper_class_path = self.env_cfg.wrapper.split('.')[:-1]
             wrapper_class_name = self.env_cfg.wrapper.split('.')[-1]
             env_wapper = __import__('.'.join(wrapper_class_path), fromlist=[wrapper_class_name])
-            env = getattr(env_wapper, wrapper_class_name)(env, new_step_api=self.env_cfg.new_step_api)
+            env = getattr(env_wapper, wrapper_class_name)(env)
         return env
     def envs_config(self):
         ''' configure environment
