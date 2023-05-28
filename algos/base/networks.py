@@ -109,7 +109,7 @@ class ActorNetwork(BaseActorNetwork):
         self.action_type = ActionLayerType[cfg.action_type.upper()]
         self.layers_cfg_dic = cfg.actor_layers # load layers config
         self.layers = nn.ModuleList()
-        output_size = state_size
+        output_size = [state_size]
         for layer_cfg_dic in self.layers_cfg_dic:
             if "layer_type" not in layer_cfg_dic:
                 raise ValueError("layer_type must be specified in layer_cfg")
@@ -144,7 +144,7 @@ class CriticNetwork(BaseCriticNetwork):
         self.cfg = cfg
         self.layers_cfg_dic = cfg.critic_layers # load layers config
         self.layers = nn.ModuleList()
-        output_size = state_size
+        output_size = [state_size]
         for layer_cfg_dic in self.layers_cfg_dic:
             if "layer_type" not in layer_cfg_dic:
                 raise ValueError("layer_type must be specified in layer_cfg")

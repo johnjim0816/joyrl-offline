@@ -16,6 +16,7 @@ from framework.dataserver import DataServer
 from framework.workers import Worker, SimpleTester, RayTester   
 from framework.learners import Learner
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
+import json
 
 class Main(object):
     def __init__(self) -> None:
@@ -58,7 +59,7 @@ class Main(object):
                     v = 'None'
                 if "support" in k: # avoid ndarray
                     v = str(v[0])
-                self.logger.info(tplt.format(k, v, str(type(v))))
+                self.logger.info(tplt.format(k, str(v), str(type(v))))
             self.logger.info(''.join(['='] * 80))
         print_cfg(self.general_cfg,name = 'General Configs')
         print_cfg(self.algo_cfg,name = 'Algo Configs')
@@ -151,6 +152,12 @@ class Main(object):
             envs.append(env)
         setattr(self.cfg, 'obs_space', envs[0].observation_space)
         setattr(self.cfg, 'action_space', envs[0].action_space)
+        if not hasattr(self.cfg, 'n_actions'):
+            setattr(self.cfg, 'n_actions', envs[0].action_space.shape[0])
+            self.logger.info(f"set cfg n_actions={envs[0].action_space.shape[0]}")
+        if not hasattr(self.cfg, 'n_states'):
+            setattr(self.cfg, 'n_states', envs[0].observation_space.shape[0])
+            self.logger.info(f"set cfg n_states={envs[0].observation_space.shape[0]}")
         self.logger.info(f"obs_space: {envs[0].observation_space}, n_actions: {envs[0].action_space}")  # print info
         return envs
     def policy_config(self,cfg):
@@ -185,13 +192,16 @@ class Main(object):
         policy, data_handler = self.policy_config(cfg)
         i_ep , update_step, sample_count = 0, 0, 1
         self.logger.info(f"Start {cfg.mode}ing!") # print info
+        best_ep_reward = -float('inf')
         while True:
+            ep_eval = False
             ep_reward, ep_step = 0, 0 # reward per episode, step per episode
             ep_frames = [] # frames per episode
             state, info = env.reset(seed = cfg.seed) # reset env
             if cfg.collect_traj: self.traj_collector.init_traj_cache() # init traj cache
             while True:
-                if cfg.render_mode == 'rgb_array': ep_frames.append(env.render()) # render env
+                if cfg.render_mode == 'rgb_array': 
+                    ep_frames.append(env.render()) # render env
                 get_action_mode = "sample" if cfg.mode.lower() == 'train' else "predict"
                 action = policy.get_action(state,sample_count = sample_count,mode = get_action_mode) # sample action
                 next_state, reward, terminated, truncated , info = env.step(action) # update env
@@ -211,7 +221,11 @@ class Main(object):
                         policy.train(**training_data,update_step=update_step)
                         data_handler.add_data_after_train(policy.data_after_train) # add data after train
                         # save model
-                        if update_step % cfg.model_save_fre == 0:
+                        best_check_point_do = (update_step >= cfg.model_save_fre) and update_step % cfg.model_save_fre == 0
+                        if hasattr(cfg, "model_save_ep_fre"):
+                            best_check_point_do = (not ep_eval) and (i_ep >= cfg.model_save_ep_fre) and i_ep % cfg.model_save_ep_fre == 0
+                            ep_eval = True
+                        if best_check_point_do:
                             policy.save_model(f"{cfg.model_dir}/{update_step}")
                             if cfg.online_eval == True:
                                 best_flag, online_eval_reward = self.online_tester.eval(policy)
@@ -231,11 +245,15 @@ class Main(object):
                     i_ep += 1
                     break
             task_end_flag = (i_ep >= cfg.max_episode)
-            if cfg.collect_traj: self.traj_collector.store_traj(task_end_flag = task_end_flag)
-            if i_ep == 1 and cfg.render_mode == 'rgb_array': save_frames_as_gif(ep_frames, cfg.video_dir) # only save the first episode
+            if cfg.collect_traj: 
+                self.traj_collector.store_traj(task_end_flag = task_end_flag)
+            if ep_reward > best_ep_reward and cfg.render_mode == 'rgb_array': 
+                save_frames_as_gif(ep_frames, cfg.video_dir) # only save the first episode
+                best_ep_reward = ep_reward
+                self.logger.info(f"Save the video of agent's best performance [ reward={best_ep_reward} ]")
             if task_end_flag:
                 break
-        
+
     def ray_run(self,cfg):
         ''' ray run
         '''
