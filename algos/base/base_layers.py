@@ -72,7 +72,6 @@ class LowRankLinear(nn.Module):
 def linear_layer(input_size,layer_cfg: LayerConfig):
     ''' linear layer
     '''
-    print(f'layer_cfg.__dict__:{layer_cfg.__dict__}')
     layer_size = layer_cfg.layer_size
     act_name = layer_cfg.activation.lower()
     in_dim = input_size[-1]
