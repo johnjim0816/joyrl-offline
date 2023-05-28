@@ -14,7 +14,7 @@ from pathlib import Path
 import pickle
 import logging
 from torch.utils.tensorboard import SummaryWriter  
-@ray.remote(num_cpus=2, num_gpus=0.1)
+@ray.remote
 class StatsRecorder:
     ''' statistics recorder
     '''
@@ -71,7 +71,7 @@ class SimpleLogger(BaseLogger):
         ch.setFormatter(self.formatter)
         self.logger.addHandler(ch)
 
-@ray.remote(num_cpus=2, num_gpus=0.1)
+@ray.remote
 class RayLogger(BaseLogger):
     ''' Ray logger for print log to console
     '''

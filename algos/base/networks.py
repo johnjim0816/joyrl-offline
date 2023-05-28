@@ -32,7 +32,7 @@ class QNetwork(BaseNework):
             # 这一层的输出维度就是下一层的输入维度
             layer, layer_out_size = create_layer(output_size, layer_cfg)
             output_size = layer_out_size
-            self.layers.append(layer) 
+            self.layers.append(layer)
         action_dim = action_size[0]
         if self.dueling:
             # state value
@@ -68,7 +68,7 @@ class ValueNetwork(BaseNework):
     def __init__(self, cfg, state_size, action_space) -> None:
         super(ValueNetwork, self).__init__()
         self.cfg = cfg
-        self.continuous = action_space.continuous
+        self.continuous = cfg.continuous
         self.layers_cfg_dic = cfg.value_layers # load layers config
         self.layers = nn.ModuleList()
         output_size = state_size

@@ -19,7 +19,7 @@ class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
         super(Policy, self).__init__(cfg)
         self.cfg = cfg
-        self.device = torch.device(cfg.device) 
+        self.device = torch.device(cfg.device)
         self.gamma = cfg.gamma  
         # e-greedy parameters
         self.sample_count = None

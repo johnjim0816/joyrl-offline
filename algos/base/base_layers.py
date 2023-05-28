@@ -72,6 +72,7 @@ class LowRankLinear(nn.Module):
 def linear_layer(input_size,layer_cfg: LayerConfig):
     ''' linear layer
     '''
+    print(f'layer_cfg.__dict__:{layer_cfg.__dict__}')
     layer_size = layer_cfg.layer_size
     act_name = layer_cfg.activation.lower()
     in_dim = input_size[-1]
@@ -146,24 +147,16 @@ def conv2d_layer(input_size, layer_cfg: LayerConfig):
         layer_size: 卷积层的输入输出维度
         activation: 激活函数
     """
-    # print(f'input_size:{input_size}')
     in_channel = layer_cfg.in_channel
     out_channel = layer_cfg.out_channel
-    # kernel_size = layer_cfg.kernel_size
     kernel_size = layer_cfg.kernel_size if hasattr(layer_cfg,'kernel_size') else 4
-    # stride = layer_cfg.stride
     stride = layer_cfg.stride if hasattr(layer_cfg,'stride') else 4
-    # padding = layer_cfg.padding if hasattr(layer_cfg,'padding') else 'valid'
     padding = 'same' if stride == 1 else 'valid'
     act_name = layer_cfg.activation.lower()
-    # 卷积层和全连接层的输入维度为3136
-    # print(f'channels * height * width:{out_channel * out_channel * out_channel}')
     out_dim = 5184
     layer = nn.Sequential(nn.Conv2d(in_channel,out_channel,kernel_size,stride,padding), activation_dics[act_name]())
-    # 判断是否为最后一个卷积层，如果是会接一个nn.Flatten()
     if layer_cfg.flatten:
         layer = nn.Sequential(nn.Conv2d(in_channel,out_channel,kernel_size,stride,padding), activation_dics[act_name](), nn.Flatten())
-        # print(f'layer.shape:{layer.shape}')
     return layer, [None, out_dim]
 
 def create_layer(input_size: list, layer_cfg: LayerConfig):

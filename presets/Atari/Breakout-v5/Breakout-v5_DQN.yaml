@@ -9,8 +9,8 @@ general_cfg:
   load_checkpoint: false # if load checkpoint or not
   load_path: Train_single_CartPole-v1_DQN_20230515-211721 # if load checkpoint, then config path in 'tasks' dir
   load_model_step: best # load model step
-  max_episode: 200 # max episodes, set -1 to keep running
-  max_step: 200 # max steps per episode
+  max_episode: 300 # max episodes, set -1 to keep running
+  max_step: 500 # max steps per episode
   seed: 1 # random seed, set 0 not to use seed
   online_eval: true # if online eval or not
   online_eval_episode: 10 # online eval episodes

@@ -11,7 +11,7 @@ Discription:
 import ray
 from ray.util.queue import Queue, Empty, Full
 
-@ray.remote(num_cpus=2, num_gpus=0.1)
+@ray.remote
 class DataServer:
     def __init__(self, cfg) -> None:
         self.curr_episode = 0 # current episode
