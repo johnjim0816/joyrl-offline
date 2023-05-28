@@ -33,7 +33,6 @@ class DiscreteActionLayer(BaseActionLayer):
         self.cfg = cfg
         self.min_policy = cfg.min_policy
         if kwargs: self.id = kwargs['id']
-        print(f"action_space:{action_space}")
         self.action_dim = action_space.n
         output_size = input_size
         action_layer_cfg = LayerConfig(layer_type='linear', layer_size=[self.action_dim], activation='leakyrelu')

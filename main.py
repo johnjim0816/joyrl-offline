@@ -135,8 +135,6 @@ class Main(object):
         env_cfg_dic = self.env_cfg.__dict__
         kwargs = {k: v for k, v in env_cfg_dic.items() if k not in env_cfg_dic['ignore_params']}
         id = env_cfg_dic['id']
-        # 查看环境是否存在
-        # print(f'gym.envs.registration.registry.keys():{gym.envs.registration.registry.keys()}')
         env = gym.make(id)
         if self.env_cfg.wrapper is not None:
             wrapper_class_path = self.env_cfg.wrapper.split('.')[:-1]

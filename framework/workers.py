@@ -27,16 +27,13 @@ class Worker:
             state, info = self.env.reset(seed = self.worker_seed)
             for _ in range(self.cfg.max_step):
                 action = ray.get(learners[self.learner_id].get_action.remote(state, data_server=data_server)) # get action from learner
-                # print(f"action:{action}")
                 next_state, reward, terminated, truncated , info = self.env.step(action) # interact with env
                 self.ep_reward += reward
                 self.ep_step += 1
                 interact_transition = {'state':state,'action':action,'reward':reward,'next_state':next_state,'done':terminated,'info':info}
-                # print(f"interact_transition:{interact_transition}")
                 if self.cfg.share_buffer: # if all learners share the same buffer
                     ray.get(learners[0].add_transition.remote(interact_transition)) # add transition to learner
                     training_data = ray.get(learners[0].get_training_data.remote()) # get training data from learner
-                    # print(f"training_data:{training_data}")
                 else:
                     ray.get(learners[self.learner_id].add_transition.remote(interact_transition)) # add transition to data server
                     training_data = ray.get(learners[self.learner_id].get_training_data.remote()) # get training data from data server

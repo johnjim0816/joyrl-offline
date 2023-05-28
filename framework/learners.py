@@ -25,10 +25,7 @@ class Learner:
         ''' add transition to data handler
         '''
         policy_transition = self.policy.get_policy_transition()
-        # print(f"policy_transition:{policy_transition}")
-        # print(f"transition:{transition}")
         transition.update(policy_transition)
-        # print(f"transition:{transition}")
         self.data_handler.add_transition(transition)
     def get_action(self,state,data_server = None):
         ''' get action from policy
@@ -43,8 +40,6 @@ class Learner:
     def get_training_data(self):
         ''' get training data
         '''
-        # print(f"self.data_handler.sample_training_data():{self.data_handler.sample_training_data()}")
-        # print(f"self.data_handler:{self.data_handler}")
         return self.data_handler.sample_training_data()
     def set_model_params(self,model_params):
         ''' set model parameters

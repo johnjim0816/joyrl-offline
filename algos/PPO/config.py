@@ -29,7 +29,7 @@ class AlgoConfig:
         self.critic_loss_coef = 0.5 # critic loss coefficient
         self.entropy_coef = 0.01 # entropy coefficient
         self.batch_size = 256 # ppo train batch size
-        self.sgd_batch_size = 128 # sgd batch size   32
+        self.sgd_batch_size = 128 # sgd batch size
         self.actor_hidden_dim = 256 # hidden dimension for actor
         self.critic_hidden_dim = 256 # hidden dimension for critic
         self.min_policy = 0 # min value for policy (for discrete action space)

@@ -23,9 +23,9 @@ def register_env(env_name):
         )
     elif env_name == 'Mario':
         register(
-            id='Mario', # 调用该环境的名称
-            entry_point='envs.mario.smb_env:SuperMarioBrosEnv', #envs.mario.smb_env是定义环境的路径，SuperMarioBrosEnv该环境的类名
-            kwargs={}, # 可选参数
+            id='Mario',
+            entry_point='envs.mario.smb_env:SuperMarioBrosEnv', 
+            kwargs={}, 
         )
     else:
         print("The env name must be wrong or the environment donot need to register!")
