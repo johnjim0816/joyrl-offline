@@ -12,31 +12,25 @@ general_cfg:
   model_save_fre: 70000
   online_eval: true
   n_workers: 1
-  render: false
-  render_mode: rgb_array
 algo_cfg:
   action_type: DPG
   buffer_type: REPLAY_QUE
   actor_layers: 
     - layer_type: linear
-      layer_size: 
-        - 200
+      layer_size: [200]
       activation: relu  
     - layer_type: linear
-      layer_size: 
-        - 200
+      layer_size: [200]
       activation: relu
   actor_lr: 1.0e-4
   batch_size: 256 
   buffer_size: 60000
   critic_layers: 
     - layer_type: linear
-      layer_size: 
-        - 200
+      layer_size: [200]
       activation: relu
     - layer_type: linear
-      layer_size: 
-        - 200
+      layer_size: [200]
       activation: relu
   critic_lr: 1.2e-4
   expl_noise: 0.25
@@ -48,4 +42,3 @@ algo_cfg:
   tau: 0.005
 env_cfg:
   id:  BipedalWalkerHardcore-v3
-  # new_step_api: true
