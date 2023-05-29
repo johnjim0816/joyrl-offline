@@ -35,12 +35,6 @@ class Policy(BasePolicy):
         self.sample_count = 0
         self.explore_steps = cfg.explore_steps # exploration steps before training
         self.device = torch.device(cfg.device)
-        self.n_actions = cfg.n_actions
-        self.action_space = cfg.action_space
-        self.actor_input_dim = cfg.n_states
-        self.actor_output_dim = cfg.n_actions
-        self.critic_input_dim = cfg.n_states + cfg.n_actions
-        self.critic_output_dim = 1
         self.action_scale = torch.tensor((self.action_space.high - self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
         self.action_bias = torch.tensor((self.action_space.high + self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
         self.create_graph() # create graph and optimizer
@@ -58,15 +52,18 @@ class Policy(BasePolicy):
             self.critic_2_optimizer.share_memory()
     
     def create_graph(self):
+        self.state_size, self.action_size = self.get_state_action_size()
+        self.n_actions = self.action_size[-1]
+        self.input_head_size = [None, self.state_size[-1]+self.action_size[-1]]
         # Actor
-        self.actor = ActorNetwork(self.cfg, self.actor_input_dim, self.actor_output_dim).to(self.device)
-        self.actor_target = ActorNetwork(self.cfg, self.actor_input_dim, self.actor_output_dim).to(self.device)
+        self.actor = ActorNetwork(self.cfg, self.state_size, self.action_space).to(self.device)
+        self.actor_target = ActorNetwork(self.cfg, self.state_size, self.action_space).to(self.device)
         self.actor_target.load_state_dict(self.actor.state_dict())
         # critice - 2Q
-        self.critic_1 = CriticNetwork(self.cfg, self.critic_input_dim).to(self.device)
-        self.critic_2 = CriticNetwork(self.cfg, self.critic_input_dim).to(self.device)
-        self.critic_1_target = CriticNetwork(self.cfg, self.critic_input_dim).to(self.device)
-        self.critic_2_target = CriticNetwork(self.cfg, self.critic_input_dim).to(self.device)
+        self.critic_1 = CriticNetwork(self.cfg, self.input_head_size).to(self.device)
+        self.critic_2 = CriticNetwork(self.cfg, self.input_head_size).to(self.device)
+        self.critic_1_target = CriticNetwork(self.cfg, self.input_head_size).to(self.device)
+        self.critic_2_target = CriticNetwork(self.cfg, self.input_head_size).to(self.device)
         self.critic_1_target.load_state_dict(self.critic_1.state_dict())
         self.critic_2_target.load_state_dict(self.critic_2.state_dict())
         self.create_optimizer() 
@@ -102,7 +99,7 @@ class Policy(BasePolicy):
         self.summary['scalar']['value_loss2'] = self.value_loss2.item()
 
     def sample_action(self, state,  **kwargs):
-        self.sample_count += 1
+        self.sample_count = kwargs.get('sample_count')
         if self.sample_count < self.explore_steps:
             return self.action_space.sample()
         else:

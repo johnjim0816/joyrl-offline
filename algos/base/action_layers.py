@@ -75,7 +75,7 @@ class DPGActionLayer(BaseActionLayer):
         super(DPGActionLayer, self).__init__()
         self.cfg = cfg
         if kwargs: self.id = kwargs['id']
-        self.action_dim = action_space if isinstance(action_space, int) else action_space.shape[0] 
+        self.action_dim = action_space.shape[0] 
         self.output_size = input_size
         action_layer_cfg = LayerConfig(layer_type='linear', layer_size=[self.action_dim], activation='tanh')
         self.action_layer, layer_out_size = create_layer(self.output_size, action_layer_cfg)

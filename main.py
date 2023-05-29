@@ -16,7 +16,7 @@ from framework.dataserver import DataServer
 from framework.workers import Worker, SimpleTester, RayTester   
 from framework.learners import Learner
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
-import json
+
 
 class Main(object):
     def __init__(self) -> None:
@@ -152,12 +152,6 @@ class Main(object):
             envs.append(env)
         setattr(self.cfg, 'obs_space', envs[0].observation_space)
         setattr(self.cfg, 'action_space', envs[0].action_space)
-        if not hasattr(self.cfg, 'n_actions'):
-            setattr(self.cfg, 'n_actions', envs[0].action_space.shape[0])
-            self.logger.info(f"set cfg n_actions={envs[0].action_space.shape[0]}")
-        if not hasattr(self.cfg, 'n_states'):
-            setattr(self.cfg, 'n_states', envs[0].observation_space.shape[0])
-            self.logger.info(f"set cfg n_states={envs[0].observation_space.shape[0]}")
         self.logger.info(f"obs_space: {envs[0].observation_space}, n_actions: {envs[0].action_space}")  # print info
         return envs
     def policy_config(self,cfg):
@@ -200,8 +194,7 @@ class Main(object):
             state, info = env.reset(seed = cfg.seed) # reset env
             if cfg.collect_traj: self.traj_collector.init_traj_cache() # init traj cache
             while True:
-                if cfg.render_mode == 'rgb_array': 
-                    ep_frames.append(env.render()) # render env
+                if cfg.render_mode == 'rgb_array': ep_frames.append(env.render()) # render env
                 get_action_mode = "sample" if cfg.mode.lower() == 'train' else "predict"
                 action = policy.get_action(state,sample_count = sample_count,mode = get_action_mode) # sample action
                 next_state, reward, terminated, truncated , info = env.step(action) # update env
