@@ -5,12 +5,12 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-16 22:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-22 11:31:08
+LastEditTime: 2023-05-25 23:35:46
 Discription: 
 '''
 import torch.nn as nn
 from algos.base.base_layers import create_layer, LayerConfig
-from algos.base.action_layers import DiscreteActionLayer, ContinousActionLayer
+from algos.base.action_layers import ActionLayerType, DiscreteActionLayer, ContinuousActionLayer, DPGActionLayer
 class BaseNework(nn.Module):
     def __init__(self) -> None:
         super().__init__()
@@ -81,7 +81,7 @@ class ValueNetwork(BaseNework):
         value_layer_cfg = LayerConfig(layer_type='linear', layer_size=[1], activation='none')
         self.value_layer, layer_out_size = create_layer(output_size, value_layer_cfg)
         if self.continuous:
-            self.action_layer = ContinousActionLayer(cfg, output_size, action_space)
+            self.action_layer = ContinuousActionLayer(cfg, output_size, action_space)
         else:
             self.action_layer = DiscreteActionLayer(cfg, output_size, action_space)
     def forward(self, x, legal_actions=None):
@@ -106,7 +106,7 @@ class ActorNetwork(BaseActorNetwork):
     def __init__(self, cfg, state_size, action_space) -> None:
         super().__init__()
         self.cfg = cfg
-        self.continuous = cfg.continuous
+        self.action_type = ActionLayerType[cfg.action_type.upper()]
         self.layers_cfg_dic = cfg.actor_layers # load layers config
         self.layers = nn.ModuleList()
         output_size = state_size
@@ -117,19 +117,26 @@ class ActorNetwork(BaseActorNetwork):
             layer, layer_out_size = create_layer(output_size, layer_cfg)
             output_size = layer_out_size
             self.layers.append(layer) 
-        if self.continuous:
-            self.action_layer = ContinousActionLayer(cfg, output_size, action_space)
-        else:
+        if self.action_type == ActionLayerType.DISCRETE:
             self.action_layer = DiscreteActionLayer(cfg, output_size, action_space)
+        elif self.action_type == ActionLayerType.CONTINUOUS:
+            self.action_layer = ContinuousActionLayer(cfg, output_size, action_space)
+        elif self.action_type == ActionLayerType.DPG:
+            self.action_layer = DPGActionLayer(cfg, output_size, action_space)
+        else:
+            raise ValueError("action_type must be specified in discrete, continuous or dpg")
     def forward(self, x, legal_actions=None):
         for layer in self.layers:
             x = layer(x)
-        if self.continuous:
-            mu, sigma = self.action_layer(x)
-            return mu, sigma
-        else:
+        if self.action_type == ActionLayerType.DISCRETE:
             probs = self.action_layer(x, legal_actions)
             return probs
+        elif self.action_type == ActionLayerType.CONTINUOUS:
+            mu, sigma = self.action_layer(x)
+            return mu, sigma
+        elif self.action_type == ActionLayerType.DPG:
+            mu = self.action_layer(x)
+            return mu
 
 class CriticNetwork(BaseCriticNetwork):
     def __init__(self, cfg, state_size):
