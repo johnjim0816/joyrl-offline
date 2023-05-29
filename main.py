@@ -186,9 +186,7 @@ class Main(object):
         policy, data_handler = self.policy_config(cfg)
         i_ep , update_step, sample_count = 0, 0, 1
         self.logger.info(f"Start {cfg.mode}ing!") # print info
-        best_ep_reward = -float('inf')
         while True:
-            ep_eval = False
             ep_reward, ep_step = 0, 0 # reward per episode, step per episode
             ep_frames = [] # frames per episode
             state, info = env.reset(seed = cfg.seed) # reset env
@@ -214,11 +212,7 @@ class Main(object):
                         policy.train(**training_data,update_step=update_step)
                         data_handler.add_data_after_train(policy.data_after_train) # add data after train
                         # save model
-                        best_check_point_do = (update_step >= cfg.model_save_fre) and update_step % cfg.model_save_fre == 0
-                        if hasattr(cfg, "model_save_ep_fre"):
-                            best_check_point_do = (not ep_eval) and (i_ep >= cfg.model_save_ep_fre) and i_ep % cfg.model_save_ep_fre == 0
-                            ep_eval = True
-                        if best_check_point_do:
+                        if update_step % cfg.model_save_fre == 0:
                             policy.save_model(f"{cfg.model_dir}/{update_step}")
                             if cfg.online_eval == True:
                                 best_flag, online_eval_reward = self.online_tester.eval(policy)
@@ -240,10 +234,7 @@ class Main(object):
             task_end_flag = (i_ep >= cfg.max_episode)
             if cfg.collect_traj: 
                 self.traj_collector.store_traj(task_end_flag = task_end_flag)
-            if ep_reward > best_ep_reward and cfg.render_mode == 'rgb_array': 
-                save_frames_as_gif(ep_frames, cfg.video_dir) # only save the first episode
-                best_ep_reward = ep_reward
-                self.logger.info(f"Save the video of agent's best performance [ reward={best_ep_reward} ]")
+            if i_ep == 1 and cfg.render_mode == 'rgb_array': save_frames_as_gif(ep_frames, cfg.video_dir) # only save the first episode
             if task_end_flag:
                 break
 

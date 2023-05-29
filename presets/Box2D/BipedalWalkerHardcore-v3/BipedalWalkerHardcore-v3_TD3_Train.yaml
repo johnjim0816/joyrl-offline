@@ -9,7 +9,7 @@ general_cfg:
   max_episode: 10000
   max_step: 700
   seed: 2023 
-  model_save_ep_fre: 100
+  model_save_fre: 70000
   online_eval: true
   n_workers: 1
   render: false
