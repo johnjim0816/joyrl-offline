@@ -24,7 +24,6 @@ class AlgoConfig:
         self.batch_size = 100 # batch size for both actor and critic
         self.buffer_size = 1000000 # replay buffer size
 
-        self.global_best_reward = -1800
         self.actor_layers = [
             {'layer_type': 'Linear', 'layer_size': [200], 'activation': 'ReLU'},
             {'layer_type': 'Linear', 'layer_size': [200], 'activation': 'ReLU'},

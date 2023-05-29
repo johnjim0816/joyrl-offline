@@ -20,7 +20,7 @@ from algos.base.optms import SharedAdam
 
 
 class Policy(BasePolicy):
-    def __init__(self, cfg, is_share_agent=False):
+    def __init__(self, cfg):
         super(Policy, self).__init__(cfg)
         self.cfg = cfg
         self.gamma = cfg.gamma
@@ -30,7 +30,6 @@ class Policy(BasePolicy):
         self.noise_clip = cfg.noise_clip # range to clip target policy noise
         self.expl_noise = cfg.expl_noise # std of Gaussian exploration noise
         self.policy_freq = cfg.policy_freq # policy update frequency
-        self.batch_size =  cfg.batch_size 
         self.tau = cfg.tau
         self.sample_count = 0
         self.explore_steps = cfg.explore_steps # exploration steps before training
@@ -39,17 +38,6 @@ class Policy(BasePolicy):
         self.action_bias = torch.tensor((self.action_space.high + self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
         self.create_graph() # create graph and optimizer
         self.create_summary() # create summary
-
-        if is_share_agent:
-            self.actor.share_memory()
-            self.actor_optimizer = SharedAdam(self.actor.parameters(), lr=cfg.actor_lr)
-            self.actor_optimizer.share_memory()
-            self.critic_1.share_memory()
-            self.critic_1_optimizer = SharedAdam(self.critic_1.parameters(), lr=cfg.critic_lr)
-            self.critic_1_optimizer.share_memory()
-            self.critic_2.share_memory()
-            self.critic_2_optimizer = SharedAdam(self.critic_2.parameters(), lr=cfg.critic_lr)
-            self.critic_2_optimizer.share_memory()
     
     def create_graph(self):
         self.state_size, self.action_size = self.get_state_action_size()
@@ -119,7 +107,7 @@ class Policy(BasePolicy):
         action = self.action_scale * action + self.action_bias
         return action.detach().cpu().numpy()[0]
 
-    def train(self, share_agent=None, **kwargs):
+    def train(self, **kwargs):
         # if len(self.memory) < self.explore_steps:
         #     return
         if kwargs.get('update_step') < self.explore_steps:
@@ -148,84 +136,30 @@ class Policy(BasePolicy):
         critic_2_loss = F.mse_loss(current_q2, target_q)
         self.value_loss1, self.value_loss2 = critic_1_loss, critic_2_loss
 
-        if share_agent is not None:
-            share_agent.critic_1_optimizer.zero_grad()
-            share_agent.critic_2_optimizer.zero_grad()
-            
-            self.critic_1_optimizer.zero_grad()  		
-            self.critic_2_optimizer.zero_grad()  
-
-            critic_1_loss.backward()
-            critic_2_loss.backward()
-
-            for param, share_param in zip(self.critic_1.parameters(), share_agent.critic_1.parameters()):
-                share_param._grad = param.grad   			
-            for param, share_param in zip(self.critic_2.parameters(), share_agent.critic_2.parameters()):
-                share_param._grad = param.grad 
-
-            share_agent.critic_1_optimizer.step()   	
-            share_agent.critic_2_optimizer.step()   
-
-            self.critic_1.load_state_dict(share_agent.critic_1.state_dict())
-            self.critic_2.load_state_dict(share_agent.critic_2.state_dict())    
-
-            # if self.sample_count % self.policy_freq == 0 or self.sample_count % self.policy_freq == 1:
-                # print ("self.sample_count = ", self.sample_count)
+        self.critic_1_optimizer.zero_grad()
+        critic_1_loss.backward()
+        self.critic_1_optimizer.step()
+        self.critic_2_optimizer.zero_grad()
+        critic_2_loss.backward()
+        self.critic_2_optimizer.step()
+        # Delayed policy updates
+        if self.sample_count % self.policy_freq == 0:
             # compute actor loss
-            share_agent.actor_optimizer.zero_grad()
             actor_loss = -self.critic_1(torch.cat([state, self.actor(state)], 1)).mean()
             self.policy_loss = actor_loss
             self.tot_loss = self.policy_loss + self.value_loss1 + self.value_loss2
             self.actor_optimizer.zero_grad()
             actor_loss.backward()
-            for param, share_param in zip(self.actor.parameters(), share_agent.actor.parameters()):
-                share_param._grad = param.grad   
-            share_agent.actor_optimizer.step()     
-            self.actor.load_state_dict(share_agent.actor.state_dict())
+            self.actor_optimizer.step()
+            self.soft_update(self.actor, self.actor_target, self.tau)
+            self.soft_update(self.critic_1, self.critic_1_target, self.tau)
+            self.soft_update(self.critic_2, self.critic_2_target, self.tau)
 
-            for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
-                target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
-            for param, target_param in zip(self.critic_1.parameters(), self.critic_1_target.parameters()):
-                target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
-            for param, target_param in zip(self.critic_2.parameters(), self.critic_2_target.parameters()):
-                target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)				  
-        else :
-            self.critic_1_optimizer.zero_grad()
-            critic_1_loss.backward()
-            self.critic_1_optimizer.step()
-            self.critic_2_optimizer.zero_grad()
-            critic_2_loss.backward()
-            self.critic_2_optimizer.step()
-            # Delayed policy updates
-            if self.sample_count % self.policy_freq == 0:
-                # compute actor loss
-                actor_loss = -self.critic_1(torch.cat([state, self.actor(state)], 1)).mean()
-                self.policy_loss = actor_loss
-                self.tot_loss = self.policy_loss + self.value_loss1 + self.value_loss2
-                self.actor_optimizer.zero_grad()
-                actor_loss.backward()
-                self.actor_optimizer.step()
-                for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
-                    target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
-                for param, target_param in zip(self.critic_1.parameters(), self.critic_1_target.parameters()):
-                    target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
-                for param, target_param in zip(self.critic_2.parameters(), self.critic_2_target.parameters()):
-                    target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
         self.update_summary()
 
-    def save_model(self, fpath):
-        from pathlib import Path
-        # create path
-        Path(fpath).mkdir(parents=True, exist_ok=True)
-        torch.save(self.critic_1.state_dict(), f"{fpath}/critic_1.pth")
-        torch.save(self.critic_2.state_dict(), f"{fpath}/critic_2.pth")
-        torch.save(self.actor.state_dict(), f"{fpath}/actor.pth")
-
-    def load_model(self, fpath):
-        critic_1_ckpt = torch.load(f"{fpath}/critic_1.pth", map_location=self.device)
-        critic_2_ckpt = torch.load(f"{fpath}/critic_2.pth", map_location=self.device)
-        actor_ckpt = torch.load(f"{fpath}/actor.pth", map_location=self.device)
-        self.critic_1.load_state_dict(critic_1_ckpt)
-        self.critic_2.load_state_dict(critic_2_ckpt)
-        self.actor.load_state_dict(actor_ckpt)
-        
+    def soft_update(self, curr_model, target_model, tau):
+        ''' soft update model parameters
+        θ_target = τ*θ_local + (1 - τ)*θ_target
+        '''
+        for target_param, curr_param in zip(target_model.parameters(), curr_model.parameters()):
+            target_param.data.copy_(tau*curr_param.data + (1.0-tau)*target_param.data)
