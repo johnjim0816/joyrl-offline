@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2022-11-14 23:50:59
 LastEditor: JiangJi
-LastEditTime: 2023-05-17 22:37:37
+LastEditTime: 2023-05-30 12:46:03
 Discription: 
 '''
 import torch
@@ -19,14 +19,12 @@ class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
         super(Policy, self).__init__(cfg)
         self.cfg = cfg
-        self.device = torch.device(cfg.device) 
         self.gamma = cfg.gamma  
         # e-greedy parameters
         self.sample_count = None
         self.epsilon_start = cfg.epsilon_start
         self.epsilon_end = cfg.epsilon_end
         self.epsilon_decay = cfg.epsilon_decay
-        self.batch_size = cfg.batch_size
         self.target_update = cfg.target_update
         self.dueling = cfg.dueling
         self.create_graph() # create graph and optimizer

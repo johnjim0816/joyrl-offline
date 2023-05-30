@@ -22,9 +22,7 @@ class Policy(BasePolicy):
             self.kl_beta = cfg.kl_beta
             self.kl_alpha = cfg.kl_alpha
         self.gamma = cfg.gamma
-        self.device = torch.device(cfg.device)
         self.action_type = cfg.action_type
-
         if self.action_type.lower() == 'continuous': # continuous action space
             self.action_scale = torch.tensor((self.action_space.high - self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)
             self.action_bias = torch.tensor((self.action_space.high + self.action_space.low)/2, device=self.device, dtype=torch.float32).unsqueeze(dim=0)

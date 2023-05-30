@@ -5,12 +5,12 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-27 00:06:55
+LastEditTime: 2023-05-30 12:46:43
 Discription: 
 '''
 import ray
 import numpy as np
-@ray.remote(num_cpus=1)
+@ray.remote
 class Worker:
     def __init__(self, cfg, worker_id = 0 , env = None, logger = None):
         self.cfg = cfg

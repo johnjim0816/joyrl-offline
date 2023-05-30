@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-12 00:50:49
 @LastEditor: John
-LastEditTime: 2023-05-16 13:22:36
+LastEditTime: 2023-05-30 12:46:33
 @Discription: 
 @Environment: python 3.7.7
 '''
@@ -21,14 +21,12 @@ class Policy(BasePolicy):
         self.cfg = cfg
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
-        self.device = torch.device(cfg.device)
         self.gamma = cfg.gamma  
         # e-greedy parameters
         self.sample_count = None
         self.epsilon_start = cfg.epsilon_start
         self.epsilon_end = cfg.epsilon_end
         self.epsilon_decay = cfg.epsilon_decay
-        self.batch_size = cfg.batch_size
         self.target_update = cfg.target_update
         self.create_graph() # create graph and optimizer
         self.create_summary() # create summary
