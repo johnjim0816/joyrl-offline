@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-25 23:23:43
+LastEditTime: 2023-05-30 12:45:37
 Discription: 
 '''
 import gymnasium
@@ -19,6 +19,7 @@ class BasePolicy(nn.Module):
     def __init__(self,cfg) -> None:
         super().__init__()
         self.cfg = cfg
+        self.device = torch.device(cfg.device) 
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
         self.optimizer = None
