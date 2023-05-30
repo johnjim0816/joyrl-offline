@@ -5,7 +5,7 @@
 @Email: johnjim0816@gmail.com
 @Date: 2020-06-09 20:25:52
 @LastEditor: John
-LastEditTime: 2023-05-26 23:58:45
+LastEditTime: 2023-05-29 10:36:06
 @Discription:
 @Environment: python 3.7.7
 '''
@@ -18,58 +18,6 @@ import torch.optim as optim
 from algos.base.policies import BasePolicy
 from algos.base.networks import CriticNetwork, ActorNetwork
 from algos.base.noises import OUNoise
-
-class Actor(nn.Module):
-    def __init__(self, n_states, n_actions, hidden_dim, init_w=3e-3):
-        '''
-        actor 模型的结构定义
-        Args:
-            n_states (int): 输入状态的维度
-            n_actions (int): 可执行动作的数量
-            hidden_dim (int): 隐含层数量
-            init_w (float, optional): 均匀分布初始化权重的范围
-        '''
-        super(Actor, self).__init__()
-        self.linear1 = nn.Linear(n_states, hidden_dim)
-        self.linear2 = nn.Linear(hidden_dim, hidden_dim)
-        self.linear3 = nn.Linear(hidden_dim, n_actions)
-
-        self.linear3.weight.data.uniform_(-init_w, init_w)
-        self.linear3.bias.data.uniform_(-init_w, init_w)
-
-    def forward(self, x):
-        x = F.relu(self.linear1(x))
-        x = F.relu(self.linear2(x))
-        x = torch.tanh(self.linear3(x))
-        return x
-
-
-class Critic(nn.Module):
-    def __init__(self, n_states, n_actions, hidden_dim, init_w=3e-3):
-        '''
-        critic 模型的结构定义
-        Args:
-            n_states (int): 输入状态的维度
-            n_actions (int): 可执行动作的数量
-            hidden_dim (int): 隐含层数量
-            init_w (float, optional): 均匀分布初始化权重的范围
-        '''
-        super(Critic, self).__init__()
-
-        self.linear1 = nn.Linear(n_states + n_actions, hidden_dim)
-        self.linear2 = nn.Linear(hidden_dim, hidden_dim)
-        self.linear3 = nn.Linear(hidden_dim, 1)
-        # 随机初始化为较小的值
-        self.linear3.weight.data.uniform_(-init_w, init_w)
-        self.linear3.bias.data.uniform_(-init_w, init_w)
-
-    def forward(self, state, action):
-        # 按维数1拼接
-        x = torch.cat([state, action], 1)
-        x = F.relu(self.linear1(x))
-        x = F.relu(self.linear2(x))
-        x = self.linear3(x)
-        return x
 
 class Policy(BasePolicy):
     def __init__(self,cfg) -> None:

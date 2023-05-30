@@ -31,6 +31,8 @@ algo_cfg:
       layer_size: [256]
       activation: relu
   batch_size: 256
+  sgd_batch_size: 128
+  k_epochs: 8
   buffer_type: ONPOLICY_QUE
   buffer_size: 100000
   epsilon_decay: 500
@@ -42,4 +44,3 @@ algo_cfg:
 env_cfg:
   id: Ant-v4
   render_mode: null
-  new_step_api: true

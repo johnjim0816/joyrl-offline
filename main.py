@@ -134,8 +134,7 @@ class Main(object):
         '''
         env_cfg_dic = self.env_cfg.__dict__
         kwargs = {k: v for k, v in env_cfg_dic.items() if k not in env_cfg_dic['ignore_params']}
-        id = env_cfg_dic['id']
-        env = gym.make(id)
+        env = gym.make(**kwargs)
         if self.env_cfg.wrapper is not None:
             wrapper_class_path = self.env_cfg.wrapper.split('.')[:-1]
             wrapper_class_name = self.env_cfg.wrapper.split('.')[-1]

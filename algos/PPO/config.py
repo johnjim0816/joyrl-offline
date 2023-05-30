@@ -22,14 +22,14 @@ class AlgoConfig:
         self.kl_alpha = 2 # alpha for KL penalty, 2 is the default value in the paper
         self.action_type = "continuous" # continuous action space
         self.gamma = 0.99 # discount factor
-        self.k_epochs = 8 # update policy for K epochs
+        self.k_epochs = 4 # update policy for K epochs
         self.lr = 0.0001 # for shared optimizer
         self.actor_lr = 0.0003 # learning rate for actor, must be specified if share_optimizer is False
         self.critic_lr = 0.001 # learning rate for critic, must be specified if share_optimizer is False
         self.critic_loss_coef = 0.5 # critic loss coefficient
         self.entropy_coef = 0.01 # entropy coefficient
         self.batch_size = 256 # ppo train batch size
-        self.sgd_batch_size = 128 # sgd batch size
+        self.sgd_batch_size = 32 # sgd batch size
         self.actor_hidden_dim = 256 # hidden dimension for actor
         self.critic_hidden_dim = 256 # hidden dimension for critic
         self.min_policy = 0 # min value for policy (for discrete action space)

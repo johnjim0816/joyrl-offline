@@ -4,7 +4,7 @@ general_cfg:
   device: cuda # device, cpu or cuda
   mode: train # run mode: train, test
   collect_traj: false # if collect trajectories or not
-  mp_backend: ray # multi-processing mode: single(default), ray
+  mp_backend: single # multi-processing mode: single(default), ray
   n_workers: 2 # number of workers if using multi-processing, default 1
   load_checkpoint: false # if load checkpoint or not
   load_path: Train_single_CartPole-v1_DQN_20230515-211721 # if load checkpoint, then config path in 'tasks' dir
@@ -23,27 +23,22 @@ algo_cfg:
       kernel_size: 8
       stride: 4
       activation: relu
-      flatten: false # if flatten output or not
     - layer_type: conv2d
       in_channel: 32
       out_channel: 64
       kernel_size: 4
       stride: 2
       activation: relu
-      flatten: false
     - layer_type: conv2d
       in_channel: 64
       out_channel: 64
       kernel_size: 3
       stride: 1
       activation: relu
-      flatten: true
+    - layer_type: flatten
     - layer_type: linear
       layer_size: [512] 
       activation: relu
-    # - layer_type: linear
-    #   layer_dim: [512]
-    #   activation: relu
   batch_size: 256
   buffer_type: REPLAY_QUE
   buffer_size: 100000
@@ -55,6 +50,4 @@ algo_cfg:
   target_update: 4
 env_cfg:
   id: ALE/Enduro-v5
-  wrapper: envs.wrappers.Wrapper
-  render_mode: null
-  new_step_api: true
+  wrapper: envs.wrappers.AtariWrapper
