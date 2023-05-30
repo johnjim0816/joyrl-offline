@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-30 12:46:43
+LastEditTime: 2023-05-30 23:30:08
 Discription: 
 '''
 import ray
@@ -120,3 +120,10 @@ class RayTester(SimpleTester):
     def __init__(self,cfg,env=None) -> None:
         super().__init__(cfg,env)
     
+def get_ray_tester(n_gpus = 0, *args, **kwargs):
+    ''' Get ray online tester
+    '''
+    if n_gpus > 0:
+        return RayTester.options(num_gpus=n_gpus).remote(*args, **kwargs)
+    else:
+        return RayTester.remote(*args, **kwargs)

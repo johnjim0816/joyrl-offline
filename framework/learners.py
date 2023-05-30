@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:53
 LastEditor: JiangJi
-LastEditTime: 2023-05-30 12:43:50
+LastEditTime: 2023-05-30 23:29:45
 Discription: 
 '''
 import ray
@@ -64,8 +64,8 @@ class Learner:
             return self.update_step, self.policy.summary
         return None , None
 
-def get_ray_learner(*args, **kwargs):
-    @ray.remote(num_cpus=1, num_gpus=1)
+def get_ray_learner(n_gpus = 0,*args, **kwargs):
+    @ray.remote(num_gpus=n_gpus)
     class RayLearner(Learner):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
