@@ -113,7 +113,7 @@ class SimpleTester:
             self.best_eval_reward = mean_eval_reward
             return True, mean_eval_reward
         return False, mean_eval_reward
-@ray.remote    
+@ray.remote
 class RayTester(SimpleTester):
     ''' Ray online tester
     '''

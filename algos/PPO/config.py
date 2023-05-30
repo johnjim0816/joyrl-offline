@@ -10,9 +10,9 @@ Discription:
 '''
 class AlgoConfig:
     def __init__(self):
-        self.independ_actor = False # whether to use independent actor
+        self.independ_actor = True # whether to use independent actor
         # whether actor and critic share the same optimizer
-        self.share_optimizer = True # if True, lr for actor and critic will be the same
+        self.share_optimizer = False # if True, lr for actor and critic will be the same
         self.ppo_type = 'clip' # clip or kl
         self.eps_clip = 0.2 # clip parameter for PPO
         # for kl penalty version of PPO

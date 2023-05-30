@@ -57,10 +57,10 @@ class ContinuousActionLayer(BaseActionLayer):
         self.cfg = cfg
         self.min_policy = cfg.min_policy
         if kwargs: self.id = kwargs['id']
-        self.action_dim = action_space.n
+        self.action_dim = action_space.shape[0]
         output_size = input_size
         mu_layer_cfg = LayerConfig(layer_type='linear', layer_size=[self.action_dim], activation='tanh')
-        self.mu_layer = create_layer(output_size, mu_layer_cfg)
+        self.mu_layer, layer_out_size = create_layer(output_size, mu_layer_cfg)
         self.log_std = nn.Parameter(torch.zeros(1, self.action_dim))
 
     def forward(self,x):
