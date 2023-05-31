@@ -71,7 +71,7 @@ class SimpleLogger(BaseLogger):
         ch.setFormatter(self.formatter)
         self.logger.addHandler(ch)
 
-@ray.remote(num_cpus=0)
+@ray.remote
 class RayLogger(BaseLogger):
     ''' Ray logger for print log to console
     '''

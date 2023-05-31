@@ -30,11 +30,11 @@ def get_output_size_with_batch(layers,input_size,dtype=torch.float):
     ''' get output size of a layer with batch size 
     '''
     with torch.no_grad():
-        x = torch.zeros(10, *input_size[1:], dtype=dtype)
+        x = torch.zeros([10] + list(input_size[1:]), dtype=dtype)
         out = layers(x)
     output_size = [None] + list(out.size())[1:]
-    return output_size      
-  
+    return output_size 
+         
 def embedding_layer(input_size, layer_cfg: LayerConfig):
     n_embeddings = layer_cfg.n_embeddings
     embedding_dim = layer_cfg.embedding_dim
@@ -156,7 +156,7 @@ def conv2d_layer(input_size, layer_cfg: LayerConfig):
         def forward(self,x):
             return self.conv(x)
     layer = Conv2dLayer(in_channel,out_channel,kernel_size,stride,padding)
-    output_size = get_output_size_with_batch(input_size,layer)
+    output_size = get_output_size_with_batch(layer, input_size)
     return layer, output_size
 
 def flatten_layer(input_size, layer_cfg: LayerConfig):
@@ -168,7 +168,7 @@ def flatten_layer(input_size, layer_cfg: LayerConfig):
     #     def forward(self,x):
     #         return x.view(x.size(0),-1)
     layer = nn.Sequential(nn.Flatten())
-    output_size = get_output_size_with_batch(input_size,layer)
+    output_size = get_output_size_with_batch(layer, input_size)
     return layer, output_size
 
 def create_layer(input_size: list, layer_cfg: LayerConfig):

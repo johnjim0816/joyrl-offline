@@ -5,9 +5,10 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-04-17 22:40:10
 LastEditor: JiangJi
-LastEditTime: 2023-05-25 23:23:43
+LastEditTime: 2023-05-30 12:45:37
 Discription: 
 '''
+import gymnasium
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -18,6 +19,7 @@ class BasePolicy(nn.Module):
     def __init__(self,cfg) -> None:
         super().__init__()
         self.cfg = cfg
+        self.device = torch.device(cfg.device) 
         self.obs_space = cfg.obs_space
         self.action_space = cfg.action_space
         self.optimizer = None
@@ -30,7 +32,10 @@ class BasePolicy(nn.Module):
         # state_size must be [[None, state_dim_1], [None, state_dim_2], ...]
         # action_size must be [action_dim_1, action_dim_2, ...]
         if isinstance(self.obs_space, Box):
-            self.state_size = [None, self.obs_space.shape[0]]
+            if len(self.obs_space.shape) == 3:
+                self.state_size = [None, self.obs_space.shape[0], self.obs_space.shape[1], self.obs_space.shape[2]]
+            else:
+                self.state_size = [None, self.obs_space.shape[0]]
         elif isinstance(self.obs_space, Discrete):
             self.state_size = [None, self.obs_space.n]
         else:

@@ -5,12 +5,12 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-27 00:06:55
+LastEditTime: 2023-05-30 23:30:08
 Discription: 
 '''
 import ray
 import numpy as np
-@ray.remote(num_cpus=1)
+@ray.remote
 class Worker:
     def __init__(self, cfg, worker_id = 0 , env = None, logger = None):
         self.cfg = cfg
@@ -113,10 +113,17 @@ class SimpleTester:
             self.best_eval_reward = mean_eval_reward
             return True, mean_eval_reward
         return False, mean_eval_reward
-@ray.remote    
+@ray.remote
 class RayTester(SimpleTester):
     ''' Ray online tester
     '''
     def __init__(self,cfg,env=None) -> None:
         super().__init__(cfg,env)
     
+def get_ray_tester(n_gpus = 0, *args, **kwargs):
+    ''' Get ray online tester
+    '''
+    if n_gpus > 0:
+        return RayTester.options(num_gpus=n_gpus).remote(*args, **kwargs)
+    else:
+        return RayTester.remote(*args, **kwargs)

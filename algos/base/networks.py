@@ -31,7 +31,7 @@ class QNetwork(BaseNework):
             layer_cfg = LayerConfig(**layer_cfg_dic)
             layer, layer_out_size = create_layer(output_size, layer_cfg)
             output_size = layer_out_size
-            self.layers.append(layer) 
+            self.layers.append(layer)
         action_dim = action_size[0]
         if self.dueling:
             # state value

@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import turtle
 import torch
 from typing import Union
@@ -548,3 +548,15 @@ class MarioWrappers(gym.Wrapper):
         env = FrameStack(env=env, num_stack=4, new_step_api=True)
         super().__init__(env=env, new_step_api=True)
         # gym.Wrapper.__init__(self, env=env, new_step_api=True)
+
+
+
+class AtariWrapper(gym.Wrapper):
+    def __init__(self, env: Env):
+        env = gym.wrappers.ResizeObservation(env=env, shape=84)
+        # print(f'env.observation_space:{env.observation_space}')
+        env = gym.wrappers.GrayScaleObservation(env=env)
+        # print(f'env.observation_space:{env.observation_space}')
+        env = gym.wrappers.FrameStack(env, 4)
+        # print(f'env.observation_space:{env.observation_space}')
+        super().__init__(env=env)
