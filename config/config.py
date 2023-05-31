@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-02-21 20:32:12
-LastEditor: JiangJi
-LastEditTime: 2023-05-27 12:08:17
-Discription: 
-'''
 class DefaultConfig:
     ''' Default parameters for running
     '''

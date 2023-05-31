@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-04-16 22:34:27
-LastEditor: JiangJi
-LastEditTime: 2023-05-31 14:03:53
-Discription: 
-'''
 import random
 import torch
 import numpy as np
