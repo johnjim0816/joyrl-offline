@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-05-16 16:12:07
-LastEditor: JiangJi
-LastEditTime: 2023-05-25 23:36:50
-Discription: 
-'''
 from enum import Enum
 import torch
 import torch.nn as nn

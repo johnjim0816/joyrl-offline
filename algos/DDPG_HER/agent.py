@@ -1,14 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-@Author: John
-@Email: johnjim0816@gmail.com
-@Date: 2020-06-09 20:25:52
-@LastEditor: John
-LastEditTime: 2023-04-17 16:59:45
-@Discription:
-@Environment: python 3.7.7
-'''
 import numpy as np
 import torch
 import torch.nn as nn

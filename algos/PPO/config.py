@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-02-20 21:53:39
-LastEditor: JiangJi
-LastEditTime: 2023-05-25 22:19:00
-Discription: 
-'''
 class AlgoConfig:
     def __init__(self):
         self.independ_actor = True # whether to use independent actor

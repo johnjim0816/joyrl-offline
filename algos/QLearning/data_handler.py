@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-05-19 00:22:50
-LastEditor: JiangJi
-LastEditTime: 2023-05-19 00:55:08
-Discription: 
-'''
 import numpy as np
 from algos.base.data_handlers import BaseDataHandler
 from algos.base.exps import Exp

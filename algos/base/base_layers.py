@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-04-16 22:30:15
-LastEditor: JiangJi
-LastEditTime: 2023-05-29 10:53:03
-Discription: 
-'''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

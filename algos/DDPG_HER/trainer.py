@@ -1,15 +1,3 @@
-
-'''
-Author: Ariel_cr chenruibh@outlook.com
-Date: 2023-04-16 11:31:59
-LastEditors: Ariel_cr chenruibh@outlook.com
-LastEditTime: 2023-04-18 20:17:21
-FilePath: \joyrl-offline\algos\DDPG\trainer.py
-Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
-'''
-#!/usr/bin/env python
-# coding=utf-8
-
 import random
 import numpy as np
 

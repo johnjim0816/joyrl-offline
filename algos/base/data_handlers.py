@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-05-17 11:29:47
-LastEditor: JiangJi
-LastEditTime: 2023-05-18 23:17:47
-Discription: 
-'''
 import numpy as np
 from algos.base.buffers import BufferCreator
 from algos.base.exps import Exp
