@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:53
 LastEditor: JiangJi
-LastEditTime: 2023-05-30 23:29:45
+LastEditTime: 2023-05-31 14:08:11
 Discription: 
 '''
 import ray
@@ -37,10 +37,20 @@ class Learner:
         ''' get model parameters
         '''
         return self.policy.get_model_params()
-    def get_training_data(self):
+    def get_training_data(self,i_ep = 0):
         ''' get training data
         '''
-        return self.data_handler.sample_training_data()
+        if self.cfg.onpolicy_flag: # on policy
+            training_data = None
+            if self.cfg.batch_size_flag:
+                if len(self.data_handler.buffer)>=self.cfg.batch_size:
+                    training_data = self.data_handler.sample_training_data()
+            elif self.cfg.batch_episode_flag:
+                if (i_ep+1)%self.cfg.batch_episode == 0:
+                    training_data = self.data_handler.sample_training_data()
+        else:
+            training_data = self.data_handler.sample_training_data()
+        return training_data
     def set_model_params(self,model_params):
         ''' set model parameters
         '''

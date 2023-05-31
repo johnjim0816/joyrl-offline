@@ -181,7 +181,30 @@ class Main(object):
         else:
             self.n_gpus_tester = 0
             self.n_gpus_learner = 0
-        
+    def check_onpolicy_sample_length(self,cfg):
+        ''' check onpolicy sample length
+        '''
+        onpolicy_flag = False
+        batch_size_flag = False
+        batch_episode_flag = False
+        if not hasattr(cfg, 'batch_size'):
+            setattr(self.cfg, 'batch_size', -1)
+        if not hasattr(cfg, 'batch_episode'):
+            setattr(self.cfg, 'batch_episode', -1)
+        if cfg.buffer_type.lower().startswith('onpolicy'): # on policy
+            onpolicy_flag = True
+            if cfg.batch_size > 0 and cfg.batch_episode > 0:
+                batch_episode_flag = True
+            elif cfg.batch_size > 0:
+                batch_size_flag = True
+            elif cfg.batch_episode > 0:
+                batch_episode_flag = True
+            else:
+                raise ValueError("the parameter 'batch_size' or 'batch_episode' must >0 when using onpolicy buffer!")
+        setattr(self.cfg, 'onpolicy_flag', onpolicy_flag)
+        setattr(self.cfg, 'batch_size_flag', batch_size_flag)
+        setattr(self.cfg, 'batch_episode_flag', batch_episode_flag)
+            
     def single_run(self,cfg):
         ''' single process run
         '''
@@ -212,7 +235,16 @@ class Main(object):
                     policy_transition = policy.get_policy_transition() # get policy transition
                     transition = {**interact_transition,**policy_transition}
                     data_handler.add_transition(transition) # store transition
-                    training_data = data_handler.sample_training_data() # get training data
+                    if cfg.onpolicy_flag: # on policy
+                        training_data = None
+                        if cfg.batch_size_flag:
+                            if len(data_handler.buffer)>=cfg.batch_size:
+                                training_data = data_handler.sample_training_data()
+                        elif cfg.batch_episode_flag:
+                            if (i_ep+1)%cfg.batch_episode == 0:
+                                training_data = data_handler.sample_training_data()
+                    else: # off policy
+                        training_data = data_handler.sample_training_data() # get training data
                     if training_data is not None:
                         update_step += 1
                         policy.train(**training_data,update_step=update_step)

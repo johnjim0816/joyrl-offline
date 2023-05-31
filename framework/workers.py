@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:46
 LastEditor: JiangJi
-LastEditTime: 2023-05-30 23:30:08
+LastEditTime: 2023-05-31 14:07:46
 Discription: 
 '''
 import ray
@@ -24,6 +24,7 @@ class Worker:
         while not ray.get(data_server.check_episode_limit.remote()): # Check if episode limit is reached
             self.ep_reward, self.ep_step = 0, 0
             self.episode = ray.get(data_server.get_episode.remote())
+            ray.get(data_server.increase_episode.remote()) # increase episode count
             state, info = self.env.reset(seed = self.worker_seed)
             for _ in range(self.cfg.max_step):
                 action = ray.get(learners[self.learner_id].get_action.remote(state, data_server=data_server)) # get action from learner
@@ -33,10 +34,10 @@ class Worker:
                 interact_transition = {'state':state,'action':action,'reward':reward,'next_state':next_state,'done':terminated,'info':info}
                 if self.cfg.share_buffer: # if all learners share the same buffer
                     ray.get(learners[0].add_transition.remote(interact_transition)) # add transition to learner
-                    training_data = ray.get(learners[0].get_training_data.remote()) # get training data from learner
+                    training_data = ray.get(learners[0].get_training_data.remote(i_ep = self.episode)) # get training data from learner
                 else:
                     ray.get(learners[self.learner_id].add_transition.remote(interact_transition)) # add transition to data server
-                    training_data = ray.get(learners[self.learner_id].get_training_data.remote()) # get training data from data server
+                    training_data = ray.get(learners[self.learner_id].get_training_data.remote(i_ep = self.episode)) # get training data from data server
                 self.update_step, self.model_summary = ray.get(learners[self.learner_id].train.remote(training_data, data_server=data_server, logger = self.logger)) # train learner
                 self.broadcast_model_params(learners) # broadcast model parameters to data server
                 self.add_model_summary(stats_recorder) # add model summary to stats_recorder
@@ -44,7 +45,6 @@ class Worker:
                 if terminated:
                     break
             self.logger.info.remote(f"Worker {self.worker_id} finished episode {self.episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
-            ray.get(data_server.increase_episode.remote()) # increase episode count
             self.add_interact_summary(stats_recorder)  # add interact summary to stats_recorder
     def broadcast_model_params(self, learners = None):
         ''' Broadcast model parameters to data server
