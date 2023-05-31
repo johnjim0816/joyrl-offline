@@ -114,7 +114,7 @@ class Policy(BasePolicy):
             return self.mu.detach().cpu().numpy()[0]
         else:
             return torch.argmax(self.probs).detach().cpu().numpy().item()
-    def train(self, **kwargs): 
+    def learn(self, **kwargs): 
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
         if self.action_type.lower() == 'continuous':      
             mus, sigmas = kwargs.get('mu'), kwargs.get('sigma')
@@ -127,12 +127,12 @@ class Policy(BasePolicy):
             old_probs = torch.exp(old_log_probs)
         else:
             old_probs, old_log_probs  = kwargs.get('probs'), kwargs.get('log_probs')
-            old_probs = torch.cat(old_probs).to(self.device) # shape:[batch_size,n_actions]
-            old_log_probs = torch.tensor(old_log_probs, device=self.device, dtype=torch.float32).unsqueeze(dim=1) # shape:[batch_size,1]
+            old_probs = torch.cat(old_probs,dim=0).to(self.device) # shape:[batch_size,n_actions]
+            old_log_probs = torch.cat(old_log_probs,dim=0).to(self.device).unsqueeze(dim=1) # shape:[batch_size,1]
         # convert to tensor
         states = torch.tensor(np.array(states), device=self.device, dtype=torch.float32) # shape:[batch_size,n_states]
         # actions = torch.tensor(np.array(actions), device=self.device, dtype=torch.float32).unsqueeze(dim=1) # shape:[batch_size,1]
-        actions = torch.tensor(np.array(actions), device=self.device, dtype=torch.float32) # shape:[batch_size,1]
+        actions = torch.tensor(np.array(actions), device=self.device, dtype=torch.float32).unsqueeze(dim=1) # shape:[batch_size,1]
         next_states = torch.tensor(np.array(next_states), device=self.device, dtype=torch.float32) # shape:[batch_size,n_states]
         rewards = torch.tensor(np.array(rewards), device=self.device, dtype=torch.float32) # shape:[batch_size,1]
         dones = torch.tensor(np.array(dones), device=self.device, dtype=torch.float32) # shape:[batch_size,1]
@@ -155,7 +155,7 @@ class Policy(BasePolicy):
                     new_probs = self.actor(old_states) # shape:[batch_size,n_actions]
                     dist = Categorical(new_probs)
                     # get new action probabilities
-                    new_log_probs = dist.log_prob(old_actions.squeeze(dim=1)) # shape:[batch_size]
+                    new_log_probs = dist.log_prob(old_actions.squeeze(dim=1)).unsqueeze(dim=1) # shape:[batch_size,1]
                 # compute ratio (pi_theta / pi_theta__old):
                 ratio = torch.exp(new_log_probs - old_log_probs) # shape: [batch_size, 1]
                 # compute surrogate loss

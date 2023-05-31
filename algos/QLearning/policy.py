@@ -31,7 +31,7 @@ class Policy(ToyPolicy):
     def predict_action(self, state, **kwargs):
         action = np.argmax(self.Q_table[str(state)])
         return action
-    def train(self, **kwargs):
+    def learn(self, **kwargs):
         state, action, reward, next_state, done = kwargs.get('state'), kwargs.get('action'), kwargs.get('reward'), kwargs.get('next_state'), kwargs.get('done')
         Q_predict = self.Q_table[str(state)][action] 
         if done: 

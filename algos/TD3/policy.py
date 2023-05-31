@@ -93,7 +93,7 @@ class Policy(BasePolicy):
         action = self.action_scale * action + self.action_bias
         return action.detach().cpu().numpy()[0]
 
-    def train(self, **kwargs):
+    def learn(self, **kwargs):
         # if len(self.memory) < self.explore_steps:
         #     return
         if kwargs.get('update_step') < self.explore_steps:

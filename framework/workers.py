@@ -38,7 +38,7 @@ class Worker:
                 else:
                     ray.get(learners[self.learner_id].add_transition.remote(interact_transition)) # add transition to data server
                     training_data = ray.get(learners[self.learner_id].get_training_data.remote(i_ep = self.episode)) # get training data from data server
-                self.update_step, self.model_summary = ray.get(learners[self.learner_id].train.remote(training_data, data_server=data_server, logger = self.logger)) # train learner
+                self.update_step, self.model_summary = ray.get(learners[self.learner_id].learn.remote(training_data, data_server=data_server, logger = self.logger)) # train learner
                 self.broadcast_model_params(learners) # broadcast model parameters to data server
                 self.add_model_summary(stats_recorder) # add model summary to stats_recorder
                 state = next_state # update state

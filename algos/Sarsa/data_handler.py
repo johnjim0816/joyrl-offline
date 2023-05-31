@@ -21,7 +21,7 @@ class DataHandler(BaseDataHandler):
         '''
         exp = self._create_exp(transition)
         self.buffer.append(exp)
-    def add_data_after_train(self, data):
+    def add_data_after_learn(self, data):
         ''' add update data
         '''
         self.data_after_train = data

@@ -5,7 +5,7 @@ Author: JiangJi
 Email: johnjim0816@gmail.com
 Date: 2023-05-07 18:30:53
 LastEditor: JiangJi
-LastEditTime: 2023-05-31 14:08:11
+LastEditTime: 2023-05-31 21:17:56
 Discription: 
 '''
 import ray
@@ -43,7 +43,7 @@ class Learner:
         if self.cfg.onpolicy_flag: # on policy
             training_data = None
             if self.cfg.batch_size_flag:
-                if len(self.data_handler.buffer)>=self.cfg.batch_size:
+                if len(self.data_handler.buffer) >= self.cfg.batch_size: 
                     training_data = self.data_handler.sample_training_data()
             elif self.cfg.batch_episode_flag:
                 if (i_ep+1)%self.cfg.batch_episode == 0:
@@ -55,14 +55,14 @@ class Learner:
         ''' set model parameters
         '''
         self.policy.set_model_params(model_params)
-    def train(self,training_data, data_server = None, logger = None):
-        ''' train policy
+    def learn(self,training_data, data_server = None, logger = None):
+        ''' learn policy
         '''
         if training_data is not None:
             data_server.increase_update_step.remote()
             self.update_step = ray.get(data_server.get_update_step.remote())
-            self.policy.train(**training_data,update_step=self.update_step)
-            self.data_handler.add_data_after_train(self.policy.data_after_train)
+            self.policy.learn(**training_data,update_step=self.update_step)
+            self.data_handler.add_data_after_learn(self.policy.data_after_train)
             if self.update_step % self.cfg.model_save_fre == 0:
                 self.policy.save_model(f"{self.cfg.model_dir}/{self.update_step}")
                 if self.cfg.online_eval == True:
@@ -72,7 +72,7 @@ class Learner:
                         logger.info.remote(f"learner {self.learner_id} for current update step obtain a better online_eval_reward: {online_eval_reward:.3f}, save the best model!")
                         self.policy.save_model(f"{self.cfg.model_dir}/best")
             return self.update_step, self.policy.summary
-        return None , None
+        return None, None
 
 def get_ray_learner(n_gpus = 0,*args, **kwargs):
     @ray.remote(num_gpus=n_gpus)
