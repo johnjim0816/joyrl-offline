@@ -75,17 +75,14 @@ class Policy(BasePolicy):
                 probs = self.policy_net(states)
         else:
             values = self.critic(states)
-            if self.action_type.lower() == 'continuous':
-                mu, sigma = self.actor(states)
-                
-            else:
-                probs = self.actor(states)
-                
+            output = self.actor(states)
         if self.action_type.lower() == 'continuous':
+            mu , sigma = output['mu'], output['sigma']
             mean = mu * self.action_scale + self.action_bias
             std = sigma
             dist = Normal(mean, std)
         else:
+            probs = output['probs']
             dist = Categorical(probs)
         log_probs = dist.log_prob(actions.squeeze(dim=1))
         entropies = dist.entropy()
@@ -101,10 +98,11 @@ class Policy(BasePolicy):
                 self.probs = self.policy_net(state)
         else:
             self.value = self.critic(state)
+            output = self.actor(state) 
             if self.action_type.lower() == 'continuous':
-                self.mu, self.sigma = self.actor(state)
+                self.mu, self.sigma = output['mu'], output['sigma']
             else:
-                self.probs = self.actor(state)
+                self.probs = output['probs']
         if mode == 'sample':
             action = self.sample_action(**kwargs)
             self.update_policy_transition()

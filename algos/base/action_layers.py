@@ -39,7 +39,8 @@ class DiscreteActionLayer(BaseActionLayer):
         else:
             probs = F.softmax(logits_p - logits_p.max(dim=1, keepdim=True).values, dim=1) # avoid overflow
             probs = (probs + self.min_policy) / (1.0 + self.min_policy * self.action_dim) # add a small probability to explore
-        return probs
+        output = {"probs": probs}
+        return output
         
 class ContinuousActionLayer(BaseActionLayer):
     def __init__(self, cfg, input_size, action_space, **kwargs):
@@ -59,7 +60,8 @@ class ContinuousActionLayer(BaseActionLayer):
         # log_prob = -0.5 * (sigma.log() + ((mu - x) / sigma).pow(2) + math.log(2 * math.pi))
         # sigma = F.softplus(self.fc4(x)) + 0.001 # std of normal distribution, add a small value to avoid 0
         # sigma = torch.clamp(sigma, min=-0.25, max=0.25) # clamp the std between 0.001 and 1
-        return mu, sigma
+        output = {"mu": mu, "sigma": sigma}
+        return output
 class DPGActionLayer(BaseActionLayer):
     def __init__(self, cfg, input_size, action_space, **kwargs):
         super(DPGActionLayer, self).__init__()
