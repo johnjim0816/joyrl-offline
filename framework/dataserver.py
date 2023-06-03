@@ -30,10 +30,10 @@ class DataServer:
         ''' get current episode
         '''
         return self.curr_episode
-    def increase_sample_count(self):
+    def increase_sample_count(self, i = 1):
         ''' increase sample count
         '''
-        self.sample_count += 1
+        self.sample_count += i
     def get_sample_count(self):
         ''' get sample count
         '''

@@ -11,10 +11,12 @@ import torch.multiprocessing as mp
 from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter  
 from config.config import GeneralConfig, MergedConfig, DefaultConfig
-from framework.stats import StatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.dataserver import DataServer
-from framework.workers import Worker, SimpleTester, RayTester   
+from framework.interactors import Interactor
 from framework.learners import Learner
+from framework.stats import StatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
+from framework.workers import Worker, SimpleTester, RayTester   
+
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
 
 class Main(object):
@@ -212,7 +214,8 @@ class Main(object):
         envs = self.envs_config()  # configure environment
         env = envs[0] # single env
         test_env = self.create_single_env() # create single env
-        self.online_tester = SimpleTester(cfg,test_env) # create online tester
+        online_tester = SimpleTester(cfg,test_env) # create online tester
+        interactor = Interactor(cfg,env) # create interactor
         policy, data_handler = self.policy_config(cfg)
         i_ep , update_step, sample_count = 0, 0, 1
         self.logger.info(f"Start {cfg.mode}ing!") # print info
@@ -254,7 +257,7 @@ class Main(object):
                         if update_step % cfg.model_save_fre == 0:
                             policy.save_model(f"{cfg.model_dir}/{update_step}")
                             if cfg.online_eval == True:
-                                best_flag, online_eval_reward = self.online_tester.eval(policy)
+                                best_flag, online_eval_reward = online_tester.eval(policy)
                                 self.logger.info(f"update_step: {update_step}, online_eval_reward: {online_eval_reward:.3f}")
                                 if best_flag:
                                     self.logger.info(f"current update step obtain a better online_eval_reward: {online_eval_reward:.3f}, save the best model!")
@@ -294,7 +297,7 @@ class Main(object):
             learners.append(learner)
         workers = []
         for i in range(cfg.n_workers):
-            worker = Worker.remote(cfg, worker_id = i,env = envs[i], logger = ray_logger)
+            worker = Worker.remote(cfg, id = i,env = envs[i], logger = ray_logger)
             worker.set_learner_id.remote(i%cfg.n_learners)
             workers.append(worker)
         worker_tasks = [worker.run.remote(data_server = data_server,learners = learners,stats_recorder = stats_recorder) for worker in workers]

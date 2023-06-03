@@ -14,6 +14,9 @@ class BaseDataHandler:
         '''
         exp = self._create_exp(transition)
         self.buffer.push(exp)
+
+    def add_exps(self, exps):
+        self.buffer.push(exps)
     def add_data_after_learn(self, data):
         ''' add update data
         '''

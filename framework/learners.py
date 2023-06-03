@@ -21,6 +21,10 @@ class Learner:
         self.data_handler = data_handler
         self.online_tester = online_tester
         self.model_params_que = Queue(maxsize=128)
+    def add_exps(self,exps):
+        ''' add exps to data handler
+        '''
+        self.data_handler.add_exps(exps)
     def add_transition(self,transition):
         ''' add transition to data handler
         '''
@@ -37,19 +41,21 @@ class Learner:
         ''' get model parameters
         '''
         return self.policy.get_model_params()
+    def get_policy(self):
+        return self.policy
     def get_training_data(self,i_ep = 0):
         ''' get training data
         '''
-        if self.cfg.onpolicy_flag: # on policy
-            training_data = None
-            if self.cfg.batch_size_flag:
-                if len(self.data_handler.buffer) >= self.cfg.batch_size: 
-                    training_data = self.data_handler.sample_training_data()
-            elif self.cfg.batch_episode_flag:
-                if (i_ep+1)%self.cfg.batch_episode == 0:
-                    training_data = self.data_handler.sample_training_data()
-        else:
-            training_data = self.data_handler.sample_training_data()
+        # if self.cfg.onpolicy_flag: # on policy
+        #     training_data = None
+        #     if self.cfg.batch_size_flag:
+        #         if len(self.data_handler.buffer) >= self.cfg.batch_size: 
+        #             training_data = self.data_handler.sample_training_data()
+        #     elif self.cfg.batch_episode_flag:
+        #         if (i_ep+1)%self.cfg.batch_episode == 0:
+        #             training_data = self.data_handler.sample_training_data()
+        # else:
+        training_data = self.data_handler.sample_training_data()
         return training_data
     def set_model_params(self,model_params):
         ''' set model parameters
