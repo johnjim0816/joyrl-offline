@@ -107,12 +107,16 @@ class OnPolicyBufferQue(ReplayBufferQue):
     '''
     def __init__(self, cfg: MergedConfig):
         self.cfg = cfg
-        self.buffer = deque()
+        self.buffer = deque(maxlen=128)
+    def push(self, exps: list):
+        self.buffer.append(exps)
     def sample(self):
         ''' sample all the transitions
         '''
-        batch = list(self.buffer)
-        self.buffer.clear() # on policy buffer will clear the buffer after sampling
+        if len(self.buffer) == 0: return None
+        batch = self.buffer.popleft()
+        # batch = list(self.buffer)
+        # self.buffer.clear() # on policy buffer will clear the buffer after sampling
         return batch
     
 class SumTree:

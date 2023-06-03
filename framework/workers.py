@@ -16,7 +16,11 @@ class Worker:
         while not ray.get(data_server.check_episode_limit.remote()): # Check if episode limit is reached
             policy = ray.get(learners[self.learner_id].get_policy.remote()) # get policy from learner
             run_sample_count = ray.get(data_server.get_sample_count.remote()) # get sample count from data server
-            output = self.interactor.run(policy,sample_count = run_sample_count, n_steps=1)
+            if self.cfg.onpolicy_flag: # on policy
+                if self.cfg.batch_size_flag: output = self.interactor.run(policy,sample_count = run_sample_count, n_steps=self.cfg.batch_size)
+                if self.cfg.batch_episode_flag: output = self.interactor.run(policy,sample_count = run_sample_count, n_episodes=self.cfg.batch_episode)
+            else: # off policy
+                output = self.interactor.run(policy,sample_count = run_sample_count, n_steps = 1)
             ray.get(data_server.increase_sample_count.remote()) # increase sample count
             self.add_interact_summary(output['interact_summary'], data_server, stats_recorder)
             if self.cfg.share_buffer: # if all learners share the same buffer
