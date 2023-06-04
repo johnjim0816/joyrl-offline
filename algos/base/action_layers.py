@@ -30,7 +30,6 @@ class DiscreteActionLayer(BaseActionLayer):
 
     def forward(self,x, legal_actions = None):
         logits_p = self.logits_p_layer(x)
-
         if legal_actions is not None:
             legal_actions = logits_p.type(logits_p.dtype)
             large_negative = torch.finfo(torch.float16).min if logits_p.dtype == torch.float16 else -1e9

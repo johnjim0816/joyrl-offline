@@ -52,7 +52,7 @@ class QNetwork(BaseNework):
                 layer.reset_noise()
         
 class ValueNetwork(BaseNework):
-    ''' Value network, for policy-based methods like DDPG, in which the actor and critic share the same network
+    ''' Value network, for policy-based methods,  in which the actor and critic share the same network
     '''
     def __init__(self, cfg, state_size, action_space) -> None:
         super(ValueNetwork, self).__init__()
