@@ -14,6 +14,26 @@ from pathlib import Path
 import pickle
 import logging
 from torch.utils.tensorboard import SummaryWriter  
+
+class BaseStatsRecorder:
+    def __init__(self, cfg) -> None:
+        self.cfg = cfg
+        self.init_writter()
+    def init_writter(self):
+        self.writters = {}
+        self.writter_types = ['interact','model']
+        for writter_type in self.writter_types:
+            self.writters[writter_type] = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/{writter_type}")
+    def add_summary(self, summary_data, writter_type = None):
+        step, summary = summary_data
+        for key, value in summary.items():
+            self.writters[writter_type].add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = step)
+
+class SimpleStatsRecorder(BaseStatsRecorder):
+    def __init__(self, cfg) -> None:
+        super().__init__(cfg)
+
+
 @ray.remote
 class StatsRecorder:
     ''' statistics recorder
@@ -71,7 +91,7 @@ class SimpleLogger(BaseLogger):
         ch.setFormatter(self.formatter)
         self.logger.addHandler(ch)
 
-@ray.remote(num_cpus=0)
+@ray.remote
 class RayLogger(BaseLogger):
     ''' Ray logger for print log to console
     '''

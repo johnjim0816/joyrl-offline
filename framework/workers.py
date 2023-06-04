@@ -1,51 +1,35 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-05-07 18:30:46
-LastEditor: JiangJi
-LastEditTime: 2023-05-18 17:32:24
-Discription: 
-'''
+
 import ray
 import numpy as np
-@ray.remote(num_cpus=1)
+from framework.interactors import RayInteractor
+
+@ray.remote
 class Worker:
-    def __init__(self, cfg, worker_id = 0 , env = None, logger = None):
+    ''' worker for asynchronous training
+    '''
+    def __init__(self, cfg, id = 0 , env = None, logger = None):
         self.cfg = cfg
-        self.worker_id = worker_id # Worker id
-        self.worker_seed = self.cfg.seed + self.worker_id
-        self.env = env
+        self.id = id
+        self.interactor = RayInteractor(cfg, env, id = self.id) # Interactor
         self.logger = logger
     def run(self, data_server = None, learners = None, stats_recorder = None):
         ''' Run worker
         '''
         while not ray.get(data_server.check_episode_limit.remote()): # Check if episode limit is reached
-            self.ep_reward, self.ep_step = 0, 0
-            self.episode = ray.get(data_server.get_episode.remote())
-            state, info = self.env.reset(seed = self.worker_seed)
-            for _ in range(self.cfg.max_step):
-                action = ray.get(learners[self.learner_id].get_action.remote(state, data_server=data_server)) # get action from learner
-                next_state, reward, terminated, truncated , info = self.env.step(action) # interact with env
-                self.ep_reward += reward
-                self.ep_step += 1
-                interact_transition = {'state':state,'action':action,'reward':reward,'next_state':next_state,'done':terminated,'info':info}
-                if self.cfg.share_buffer: # if all learners share the same buffer
-                    ray.get(learners[0].add_transition.remote(interact_transition)) # add transition to learner
-                    training_data = ray.get(learners[0].get_training_data.remote()) # get training data from learner
-                else:
-                    ray.get(learners[self.learner_id].add_transition.remote(interact_transition)) # add transition to data server
-                    training_data = ray.get(learners[self.learner_id].get_training_data.remote()) # get training data from data server
-                self.update_step, self.model_summary = ray.get(learners[self.learner_id].train.remote(training_data, data_server=data_server, logger = self.logger)) # train learner
-                self.broadcast_model_params(learners) # broadcast model parameters to data server
-                self.add_model_summary(stats_recorder) # add model summary to stats_recorder
-                state = next_state # update state
-                if terminated:
-                    break
-            self.logger.info.remote(f"Worker {self.worker_id} finished episode {self.episode} with reward {self.ep_reward} in {self.ep_step} steps")
-            ray.get(data_server.increase_episode.remote()) # increase episode count
-            self.add_interact_summary(stats_recorder)  # add interact summary to stats_recorder
+            policy = ray.get(learners[self.learner_id].get_policy.remote()) # get policy from learner
+            run_sample_count = ray.get(data_server.get_sample_count.remote()) # get sample count from data server
+            interactor_output = self.interactor.run(policy,sample_count = run_sample_count, n_steps = self.cfg.batch_size if self.cfg.onpolicy_batch_size_flag else 1, n_episodes = self.cfg.batch_episode if self.cfg.onpolicy_batch_episode_flag else -1) # run interactor
+            ray.get(data_server.increase_sample_count.remote()) # increase sample count
+            self.add_interact_summary(interactor_output['interact_summary'], data_server, stats_recorder)
+            if self.cfg.share_buffer: # if all learners share the same buffer
+                ray.get(learners[0].add_exps.remote(interactor_output['exps'])) # add transition to learner
+                training_data = ray.get(learners[0].get_training_data.remote()) # get training data from learner
+            else:
+                ray.get(learners[self.learner_id].add_exps.remote(interactor_output['exps'])) # add transition to data server
+                training_data = ray.get(learners[self.learner_id].get_training_data.remote()) # get training data from data 
+            self.update_step, self.model_summary = ray.get(learners[self.learner_id].learn.remote(training_data, data_server=data_server, logger = self.logger)) # train learner
+            self.broadcast_model_params(learners) # broadcast model parameters to data server
+            self.add_model_summary(stats_recorder) # add model summary to stats_recorder
     def broadcast_model_params(self, learners = None):
         ''' Broadcast model parameters to data server
         '''
@@ -69,15 +53,19 @@ class Worker:
         ''' Set learner id
         '''
         self.learner_id = learner_id
-
-    def add_interact_summary(self,stats_recorder):
+    
+    def add_interact_summary(self, interact_summary, data_server, stats_recorder):
         ''' Add interact summary to stats_recorder
         '''
-        summary = {
-            'reward': self.ep_reward,
-            'step': self.ep_step
-        }
-        ray.get(stats_recorder.add_interact_summary.remote((self.episode,summary)))
+        if len(interact_summary['reward']) == 0: return 
+        curr_episode = ray.get(data_server.get_episode.remote()) # get current episode
+        for i in range(len(interact_summary['reward'])):
+            curr_episode += 1
+            reward, step = interact_summary['reward'][i], interact_summary['step'][i]
+            summary = {'reward': reward, 'step': step}
+            ray.get(stats_recorder.add_interact_summary.remote((curr_episode,summary)))
+            ray.get(data_server.increase_episode.remote())
+            self.logger.info.remote(f"Worker {self.id} finished episode {curr_episode} with reward {reward:.3f} in {step} steps")
 
     def add_model_summary(self, stats_recorder):
         ''' Add model summary to stats_recorder
@@ -113,10 +101,17 @@ class SimpleTester:
             self.best_eval_reward = mean_eval_reward
             return True, mean_eval_reward
         return False, mean_eval_reward
-@ray.remote    
+@ray.remote
 class RayTester(SimpleTester):
     ''' Ray online tester
     '''
     def __init__(self,cfg,env=None) -> None:
         super().__init__(cfg,env)
     
+def get_ray_tester(n_gpus = 0, *args, **kwargs):
+    ''' Get ray online tester
+    '''
+    if n_gpus > 0:
+        return RayTester.options(num_gpus=n_gpus).remote(*args, **kwargs)
+    else:
+        return RayTester.remote(*args, **kwargs)

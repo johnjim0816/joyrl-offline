@@ -59,7 +59,7 @@ class Policy(BasePolicy):
             q_values = self.policy_net(state)
             action = q_values.max(1)[1].item() # choose action corresponding to the maximum q value
         return action
-    def update_data_after_train(self):
+    def update_data_after_learn(self):
         self.data_after_train = {'idxs':self.idxs,'td_errors':self.td_errors}
     def train(self, **kwargs):
         ''' update policy
@@ -93,6 +93,6 @@ class Policy(BasePolicy):
         # update target net every C steps
         if update_step % self.target_update == 0: 
             self.target_net.load_state_dict(self.policy_net.state_dict())
-        self.update_data_after_train()
+        self.update_data_after_learn()
         self.update_summary() # update summary
  

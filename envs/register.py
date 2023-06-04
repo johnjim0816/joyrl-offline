@@ -24,8 +24,8 @@ def register_env(env_name):
     elif env_name == 'Mario':
         register(
             id='Mario',
-            entry_point='envs.mario.smb_env:SuperMarioBrosEnv',
-            kwargs={},
+            entry_point='envs.mario.smb_env:SuperMarioBrosEnv', 
+            kwargs={}, 
         )
     else:
         print("The env name must be wrong or the environment donot need to register!")
