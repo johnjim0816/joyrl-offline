@@ -12,24 +12,23 @@ class Worker:
         self.id = id
         self.interactor = RayInteractor(cfg, env, id = self.id) # Interactor
         self.logger = logger
-    def run(self, data_server = None, learners = None, stats_recorder = None):
+    def run(self, collector = None, data_server = None, learners = None, stats_recorder = None):
         ''' Run worker
         '''
         while not ray.get(data_server.check_episode_limit.remote()): # Check if episode limit is reached
             policy = ray.get(learners[self.learner_id].get_policy.remote()) # get policy from learner
-            run_sample_count = ray.get(data_server.get_sample_count.remote()) # get sample count from data server
-            interactor_output = self.interactor.run(policy,sample_count = run_sample_count, n_steps = self.cfg.batch_size if self.cfg.onpolicy_batch_size_flag else 1, n_episodes = self.cfg.batch_episode if self.cfg.onpolicy_batch_episode_flag else -1) # run interactor
-            ray.get(data_server.increase_sample_count.remote()) # increase sample count
-            self.add_interact_summary(interactor_output['interact_summary'], data_server, stats_recorder)
-            if self.cfg.share_buffer: # if all learners share the same buffer
-                ray.get(learners[0].add_exps.remote(interactor_output['exps'])) # add transition to learner
-                training_data = ray.get(learners[0].get_training_data.remote()) # get training data from learner
-            else:
-                ray.get(learners[self.learner_id].add_exps.remote(interactor_output['exps'])) # add transition to data server
-                training_data = ray.get(learners[self.learner_id].get_training_data.remote()) # get training data from data 
-            self.update_step, self.model_summary = ray.get(learners[self.learner_id].learn.remote(training_data, data_server=data_server, logger = self.logger)) # train learner
-            self.broadcast_model_params(learners) # broadcast model parameters to data server
-            self.add_model_summary(stats_recorder) # add model summary to stats_recorder
+            interact_output = self.interactor.run(policy, collector = collector, data_server = data_server, logger = self.logger, stats_recorder = stats_recorder) # run interactor
+            training_data = ray.get(collector.handle_exps_after_interact.remote(interact_output)) # handle exps after interact
+            learners[self.learner_id].run.remote(training_data, data_server = data_server, logger = self.logger, stats_recorder = stats_recorder) # run learner
+            # if self.cfg.share_buffer: # if all learners share the same buffer
+            #     ray.get(learners[0].add_exps.remote(interactor_output['exps'])) # add transition to learner
+            #     training_data = ray.get(learners[0].get_training_data.remote()) # get training data from learner
+            # else:
+            #     ray.get(learners[self.learner_id].add_exps.remote(interactor_output['exps'])) # add transition to data server
+            #     training_data = ray.get(learners[self.learner_id].get_training_data.remote()) # get training data from data 
+
+            # self.broadcast_model_params(learners) # broadcast model parameters to data server
+           
     def broadcast_model_params(self, learners = None):
         ''' Broadcast model parameters to data server
         '''

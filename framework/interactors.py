@@ -1,3 +1,4 @@
+import ray
 from algos.base.exps import Exp
 from utils.utils import save_frames_as_gif
 
@@ -65,7 +66,7 @@ class SimpleInteractor(BaseInteractor):
             return True
         else:
             return False
-    def run(self, policy, n_steps = float("inf"), n_episodes = float("inf"), stats_recorder = None, logger = None, *args, **kwargs):
+    def run(self, policy, stats_recorder = None, logger = None, *args, **kwargs):
         exps = []
         run_step , run_epsiode = 0, 0 # local run step, local run episode
         while True:
@@ -91,10 +92,10 @@ class SimpleInteractor(BaseInteractor):
                     stats_recorder.add_summary((self.episode, interact_summary), writter_type = 'interact')
                 self.reset_ep_params()
                 self.curr_state, self.info = self.env.reset(seed = self.seed) # reset environment
-                if run_epsiode >= n_episodes:
+                if run_epsiode >= self.cfg.n_sample_episodes:
                     break
             run_step += 1
-            if run_step >= n_steps:
+            if run_step >= self.cfg.n_sample_steps:
                 break
         output = {"exps": exps,  "run_step": run_step, "run_epsiode": run_epsiode}
         return output
@@ -102,4 +103,34 @@ class SimpleInteractor(BaseInteractor):
 class RayInteractor(BaseInteractor):
     def __init__(self, cfg, env, id = 0, *args, **kwargs) -> None:
         super().__init__(cfg, env, id, *args, **kwargs)
-        self.sample_count = 0
+    def run(self, policy, data_server = None, logger = None, stats_recorder = None, *args, **kwargs):
+        exps = []
+        run_step , run_epsiode = 0, 0 # local run step, local run episode
+        while True:
+            ray.get(data_server.increase_sample_count.remote())
+            action = policy.get_action(self.curr_state, sample_count = ray.get(data_server.get_sample_count.remote()), mode = 'sample')
+            next_state, reward, terminated, truncated, info = self.env.step(action)
+            interact_transition = {'state':self.curr_state,'action':action,'reward':reward,'next_state':next_state,'done':terminated,'info':info}
+            policy_transition = policy.get_policy_transition()
+            exps.append(Exp(**interact_transition, **policy_transition))
+            self.curr_state = next_state
+            self.ep_reward += reward
+            self.ep_step += 1
+            if terminated or (0 < self.cfg.max_step <= self.ep_step):
+                run_epsiode += 1
+                ray.get(data_server.increase_episode.remote())
+                global_episode = ray.get(data_server.get_episode.remote())
+                if global_episode % self.cfg.interact_summary_fre == 0:
+                    logger.info.remote(f"Interactor {self.id} finished episode {global_episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
+                    interact_summary = {'reward':self.ep_reward,'step':self.ep_step}
+                    stats_recorder.add_summary.remote((global_episode, interact_summary), writter_type = 'interact')
+                    self.reset_ep_params()
+                    self.curr_state, self.info = self.env.reset(seed = self.seed) # reset environment
+                    if run_epsiode >= self.cfg.n_sample_episodes:
+                        break
+            run_step += 1
+            if run_step >= self.cfg.n_sample_steps:
+                break
+        output = {"exps": exps,  "run_step": run_step, "run_epsiode": run_epsiode}
+        return output
+        

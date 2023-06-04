@@ -15,7 +15,7 @@ from framework.collectors import SimpleCollector, RayCollector
 from framework.dataserver import DataServer
 from framework.interactors import SimpleInteractor, RayInteractor
 from framework.learners import SimpleLearner, RayLearner
-from framework.stats import SimpleStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
+from framework.stats import SimpleStatsRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.workers import Worker, SimpleTester, RayTester   
 
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
@@ -225,7 +225,7 @@ class Main(object):
         learner = SimpleLearner(cfg, policy = policy, online_tester = online_tester) # create learner
         self.logger.info(f"Start {cfg.mode}ing!") # print info
         while True:
-            interactor_output = interactor.run(policy, n_steps = self.cfg.n_sample_steps, n_episodes = self.cfg.n_sample_episodes, stats_recorder = stats_recorder, logger = self.logger) # run interactor
+            interactor_output = interactor.run(policy, stats_recorder = stats_recorder, logger = self.logger) # run interactor
             training_data = collector.handle_exps_after_interact(interactor_output) # get training data from collector
             learner.run(training_data, stats_recorder = stats_recorder, logger=self.logger) # train learner
             if interactor.get_task_end_flag():
@@ -241,7 +241,8 @@ class Main(object):
         test_env = self.create_single_env() # create single env
         self.online_tester = RayTester.options(num_gpus= self.n_gpus_tester).remote(cfg,test_env) # create online tester
         policy, data_handler = self.policy_config(cfg) # create policy and data_handler
-        stats_recorder = StatsRecorder.remote(cfg) # create stats recorder
+        stats_recorder = RayStatsRecorder.remote(cfg) # create stats recorder
+        collector = RayCollector.remote(cfg, data_handler = data_handler)
         data_server = DataServer.remote(cfg) # create data server
         ray_logger = RayLogger.remote(cfg.log_dir) # create ray logger 
         learners = []
@@ -253,7 +254,7 @@ class Main(object):
             worker = Worker.remote(cfg, id = i,env = envs[i], logger = ray_logger)
             worker.set_learner_id.remote(i%cfg.n_learners)
             workers.append(worker)
-        worker_tasks = [worker.run.remote(data_server = data_server,learners = learners,stats_recorder = stats_recorder) for worker in workers]
+        worker_tasks = [worker.run.remote(collector = collector, data_server = data_server,learners = learners,stats_recorder = stats_recorder) for worker in workers]
         ray.get(worker_tasks) # wait for all workers finish
         ray.shutdown() # shutdown ray
 

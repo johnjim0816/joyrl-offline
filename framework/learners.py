@@ -33,7 +33,6 @@ class SimpleLearner(BaseLearner):
         super().__init__(cfg, id, policy, data_handler, online_tester)
         self.update_step = 0
     def learn(self, training_data, logger = None, stats_recorder = None, *args, **kwargs):
-        if training_data is None: return None # if no training data, return
         self.update_step += 1
         self.policy.learn(**training_data,update_step=self.update_step)
         # self.data_handler.add_data_after_learn(self.policy.data_after_train)
@@ -61,22 +60,25 @@ class RayLearner(BaseLearner):
         super().__init__(cfg, id, policy, data_handler, online_tester)
         self.model_params_que = Queue(maxsize=128)
     
-    def learn(self,training_data, data_server = None, logger = None):
+    def learn(self, training_data, data_server = None, logger = None, stats_recorder = None):
         ''' learn policy
         '''
-        if training_data is not None:
-            data_server.increase_update_step.remote()
-            self.update_step = ray.get(data_server.get_update_step.remote())
-            self.policy.learn(**training_data,update_step=self.update_step)
-            self.data_handler.add_data_after_learn(self.policy.data_after_train)
-            if self.update_step % self.cfg.model_save_fre == 0:
-                self.policy.save_model(f"{self.cfg.model_dir}/{self.update_step}")
-                if self.cfg.online_eval == True:
-                    best_flag, online_eval_reward = ray.get(self.online_tester.eval.remote(self.policy))
-                    logger.info.remote(f"learner id: {self.id}, update_step: {self.update_step}, online_eval_reward: {online_eval_reward:.3f}")
-                    if best_flag:
-                        logger.info.remote(f"learner {self.id} for current update step obtain a better online_eval_reward: {online_eval_reward:.3f}, save the best model!")
-                        self.policy.save_model(f"{self.cfg.model_dir}/best")
-            return self.update_step, self.policy.summary
-        return None, None
+        ray.get(data_server.increase_update_step.remote())
+        self.update_step = ray.get(data_server.get_update_step.remote())
+        self.policy.learn(**training_data,update_step=self.update_step)
+        if self.update_step % self.cfg.model_save_fre == 0:
+            self.policy.save_model(f"{self.cfg.model_dir}/{self.update_step}")
+            if self.cfg.online_eval == True:
+                best_flag, online_eval_reward = ray.get(self.online_tester.eval.remote(self.policy))
+                logger.info.remote(f"learner id: {self.id}, update_step: {self.update_step}, online_eval_reward: {online_eval_reward:.3f}")
+                if best_flag:
+                    logger.info.remote(f"learner {self.id} for current update step obtain a better online_eval_reward: {online_eval_reward:.3f}, save the best model!")
+                    self.policy.save_model(f"{self.cfg.model_dir}/best")
+        if self.update_step % self.cfg.model_summary_fre == 0:
+            stats_recorder.add_summary.remote((self.update_step, self.policy.summary['scalar']), writter_type = 'model')
+    def run(self, training_data, data_server = None, logger = None, stats_recorder = None):
+        ''' learn policy
+        '''
+        if training_data is None: return None # if no training data, return
+        self.learn(training_data, data_server = data_server, logger = logger, stats_recorder = stats_recorder)
 
