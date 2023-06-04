@@ -188,24 +188,27 @@ class Main(object):
     def check_sample_length(self,cfg):
         ''' check  sample length
         '''
+        onpolicy_flag = False
         onpolicy_batch_size_flag = False
         onpolicy_batch_episode_flag = False
+        
         if not hasattr(cfg, 'batch_size'):
-            setattr(self.cfg, 'batch_size', -1)
+            setattr(self.cfg, 'batch_size', float("inf"))
         if not hasattr(cfg, 'batch_episode'):
-            setattr(self.cfg, 'batch_episode', -1)
+            setattr(self.cfg, 'batch_episode', float("inf"))
         if cfg.buffer_type.lower().startswith('onpolicy'): # on policy
-            if cfg.batch_size > 0 and cfg.batch_episode > 0:
+            onpolicy_flag = True
+            if cfg.batch_episode > 0:
                 onpolicy_batch_episode_flag = True
             elif cfg.batch_size > 0:
                 onpolicy_batch_size_flag = True
-            elif cfg.batch_episode > 0:
-                onpolicy_batch_episode_flag = True
             else:
                 raise ValueError("the parameter 'batch_size' or 'batch_episode' must >0 when using onpolicy buffer!")
-            
-        n_sample_steps = cfg.batch_size if onpolicy_batch_size_flag else 1 # 1 for offpolicy
-        n_sample_episodes = cfg.batch_episode if onpolicy_batch_episode_flag else float("inf") # inf for offpolicy
+        if onpolicy_flag:
+            n_sample_steps = cfg.batch_size if onpolicy_batch_size_flag else float("inf") # inf for offpolicy
+            n_sample_episodes = cfg.batch_episode if onpolicy_batch_episode_flag else float("inf") # inf for offpolicy
+        else:
+            n_sample_steps = 1 # 1 for offpolicy
         setattr(self.cfg, 'n_sample_steps', n_sample_steps)
         setattr(self.cfg, 'n_sample_episodes', n_sample_episodes)
         # setattr(self.cfg, 'onpolicy_batch_size_flag', onpolicy_batch_size_flag)
