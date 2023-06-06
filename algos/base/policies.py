@@ -1,14 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-04-17 22:40:10
-LastEditor: JiangJi
-LastEditTime: 2023-05-30 12:45:37
-Discription: 
-'''
-import gymnasium
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -93,11 +82,11 @@ class BasePolicy(nn.Module):
         ''' update policy summary
         '''
         self.summary['scalar']['loss'] = self.loss.item()
-    def train(self, **kwargs):
-        ''' train policy
+    def learn(self, **kwargs):
+        ''' learn policy
         '''
         raise NotImplementedError
-    def update_data_after_train(self):
+    def update_data_after_learn(self):
         ''' update data after training
         '''
         self.data_after_train = {}
@@ -153,12 +142,12 @@ class ToyPolicy:
         self.policy_transition = {}
     def get_policy_transition(self):
         return self.policy_transition
-    def update_data_after_train(self):
+    def update_data_after_learn(self):
         ''' update data after training
         '''
         self.data_after_train = {}
-    def train(self, **kwargs):
-        ''' train policy
+    def learn(self, **kwargs):
+        ''' learn policy
         '''
         raise NotImplementedError
     def save_model(self, fpath):

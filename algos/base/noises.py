@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-05-25 20:20:17
-LastEditor: JiangJi
-LastEditTime: 2023-05-25 20:20:17
-Discription: 
-'''
 import numpy as np
 
 class OUNoise(object):

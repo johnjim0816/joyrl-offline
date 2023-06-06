@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-02-21 20:32:11
-LastEditor: Scc_hy
-LastEditTime: 2023-05-28 11:26:11
-Discription: 
-'''
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -103,7 +93,7 @@ class Policy(BasePolicy):
         action = self.action_scale * action + self.action_bias
         return action.detach().cpu().numpy()[0]
 
-    def train(self, **kwargs):
+    def learn(self, **kwargs):
         # if len(self.memory) < self.explore_steps:
         #     return
         if kwargs.get('update_step') < self.explore_steps:

@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-02-21 20:32:12
-LastEditor: JiangJi
-LastEditTime: 2023-05-27 12:08:17
-Discription: 
-'''
 class DefaultConfig:
     ''' Default parameters for running
     '''
@@ -52,3 +42,6 @@ class GeneralConfig():
         self.load_checkpoint = True # if load checkpoint
         self.load_path = "Train_single_CartPole-v1_DQN_20230515-211721" # path to load model
         self.load_model_step = 'best' # load model at which step
+        # stats recorder settings
+        self.interact_summary_fre = 1 # record interact stats per episode
+        self.model_summary_fre = 1 # record update stats per update step

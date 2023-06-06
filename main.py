@@ -11,10 +11,13 @@ import torch.multiprocessing as mp
 from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter  
 from config.config import GeneralConfig, MergedConfig, DefaultConfig
-from framework.stats import StatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
+from framework.collectors import SimpleCollector, RayCollector
 from framework.dataserver import DataServer
+from framework.interactors import SimpleInteractor, RayInteractor
+from framework.learners import SimpleLearner, RayLearner
+from framework.stats import SimpleStatsRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.workers import Worker, SimpleTester, RayTester   
-from framework.learners import Learner
+
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
 
 class Main(object):
@@ -28,6 +31,7 @@ class Main(object):
         self.print_cfgs()
         all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
         self.check_resources(self.general_cfg)  # check n_workers
+        self.check_sample_length(self.cfg) # check onpolicy sample length
 
     def get_default_cfg(self):
         ''' get default config
@@ -181,67 +185,52 @@ class Main(object):
         else:
             self.n_gpus_tester = 0
             self.n_gpus_learner = 0
-        
-    def single_run(self,cfg):
+    def check_sample_length(self,cfg):
+        ''' check  sample length
+        '''
+        onpolicy_batch_size_flag = False
+        onpolicy_batch_episode_flag = False
+        if not hasattr(cfg, 'batch_size'):
+            setattr(self.cfg, 'batch_size', -1)
+        if not hasattr(cfg, 'batch_episode'):
+            setattr(self.cfg, 'batch_episode', -1)
+        if cfg.buffer_type.lower().startswith('onpolicy'): # on policy
+            if cfg.batch_size > 0 and cfg.batch_episode > 0:
+                onpolicy_batch_episode_flag = True
+            elif cfg.batch_size > 0:
+                onpolicy_batch_size_flag = True
+            elif cfg.batch_episode > 0:
+                onpolicy_batch_episode_flag = True
+            else:
+                raise ValueError("the parameter 'batch_size' or 'batch_episode' must >0 when using onpolicy buffer!")
+            
+        n_sample_steps = cfg.batch_size if onpolicy_batch_size_flag else 1 # 1 for offpolicy
+        n_sample_episodes = cfg.batch_episode if onpolicy_batch_episode_flag else float("inf") # inf for offpolicy
+        setattr(self.cfg, 'n_sample_steps', n_sample_steps)
+        setattr(self.cfg, 'n_sample_episodes', n_sample_episodes)
+        # setattr(self.cfg, 'onpolicy_batch_size_flag', onpolicy_batch_size_flag)
+        # setattr(self.cfg, 'onpolicy_batch_episode_flag', onpolicy_batch_episode_flag)
+            
+    def single_run(self, cfg: MergedConfig):
         ''' single process run
         '''
         envs = self.envs_config()  # configure environment
         env = envs[0] # single env
         test_env = self.create_single_env() # create single env
-        self.online_tester = SimpleTester(cfg,test_env) # create online tester
-        policy, data_handler = self.policy_config(cfg)
-        i_ep , update_step, sample_count = 0, 0, 1
+        policy, data_handler = self.policy_config(cfg) # configure policy and data_handler
+        stats_recorder = SimpleStatsRecorder(cfg) # create stats recorder
+        collector = SimpleCollector(cfg, data_handler = data_handler)
+        online_tester = SimpleTester(cfg,test_env) # create online tester
+        interactor = SimpleInteractor(cfg,env, stats_recorder = stats_recorder) # create interactor
+        learner = SimpleLearner(cfg, policy = policy, online_tester = online_tester) # create learner
         self.logger.info(f"Start {cfg.mode}ing!") # print info
         while True:
-            ep_reward, ep_step = 0, 0 # reward per episode, step per episode
-            ep_frames = [] # frames per episode
-            state, info = env.reset(seed = cfg.seed) # reset env
-            if cfg.collect_traj: self.traj_collector.init_traj_cache() # init traj cache
-            while True:
-                if cfg.render_mode == 'rgb_array': ep_frames.append(env.render()) # render env
-                get_action_mode = "sample" if cfg.mode.lower() == 'train' else "predict"
-                action = policy.get_action(state,sample_count = sample_count,mode = get_action_mode) # sample action
-                next_state, reward, terminated, truncated , info = env.step(action) # update env
-                ep_reward += reward
-                ep_step += 1
-                sample_count += 1
-                # store trajectories per step
-                if cfg.collect_traj: self.traj_collector.add_traj_cache(state, action, reward, next_state, terminated, info)
-                if cfg.mode.lower() == 'train': # train mode
-                    interact_transition = {'state':state,'action':action,'reward':reward,'next_state':next_state,'done':terminated,'info':info}
-                    policy_transition = policy.get_policy_transition() # get policy transition
-                    transition = {**interact_transition,**policy_transition}
-                    data_handler.add_transition(transition) # store transition
-                    training_data = data_handler.sample_training_data() # get training data
-                    if training_data is not None:
-                        update_step += 1
-                        policy.train(**training_data,update_step=update_step)
-                        data_handler.add_data_after_train(policy.data_after_train) # add data after train
-                        # save model
-                        if update_step % cfg.model_save_fre == 0:
-                            policy.save_model(f"{cfg.model_dir}/{update_step}")
-                            if cfg.online_eval == True:
-                                best_flag, online_eval_reward = self.online_tester.eval(policy)
-                                self.logger.info(f"update_step: {update_step}, online_eval_reward: {online_eval_reward:.3f}")
-                                if best_flag:
-                                    self.logger.info(f"current update step obtain a better online_eval_reward: {online_eval_reward:.3f}, save the best model!")
-                                    policy.save_model(f"{cfg.model_dir}/best")
-                        model_summary = policy.summary
-                        for key, value in model_summary['scalar'].items():
-                            self.policy_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = update_step)
-                state = next_state
-                if terminated or (0<= cfg.max_step <= ep_step):
-                    self.logger.info(f"episode: {i_ep}, ep_reward: {ep_reward:.3f}, ep_step: {ep_step:d}")
-                    interact_summary = {'reward': ep_reward, 'step': ep_step}
-                    for key, value in interact_summary.items():
-                        self.interact_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = i_ep)
-                    i_ep += 1
-                    break
-            task_end_flag = (i_ep >= cfg.max_episode)
-            if cfg.collect_traj: self.traj_collector.store_traj(task_end_flag = task_end_flag)
-            if i_ep == 1 and cfg.render_mode == 'rgb_array': save_frames_as_gif(ep_frames, cfg.video_dir) # only save the first episode
-            if task_end_flag:
+            interactor_output = interactor.run(policy, stats_recorder = stats_recorder, logger = self.logger) # run interactor
+            training_data = collector.handle_exps_after_interact(interactor_output) # get training data from collector
+            learner.run(training_data, stats_recorder = stats_recorder, logger=self.logger) # train learner
+            if interactor.get_task_end_flag():
                 break
+ 
         
     def ray_run(self,cfg):
         ''' ray run
@@ -252,19 +241,20 @@ class Main(object):
         test_env = self.create_single_env() # create single env
         self.online_tester = RayTester.options(num_gpus= self.n_gpus_tester).remote(cfg,test_env) # create online tester
         policy, data_handler = self.policy_config(cfg) # create policy and data_handler
-        stats_recorder = StatsRecorder.remote(cfg) # create stats recorder
+        stats_recorder = RayStatsRecorder.remote(cfg) # create stats recorder
+        collector = RayCollector.remote(cfg, data_handler = data_handler)
         data_server = DataServer.remote(cfg) # create data server
         ray_logger = RayLogger.remote(cfg.log_dir) # create ray logger 
         learners = []
         for i in range(cfg.n_learners):
-            learner = Learner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, learner_id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
+            learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
             learners.append(learner)
         workers = []
         for i in range(cfg.n_workers):
-            worker = Worker.remote(cfg, worker_id = i,env = envs[i], logger = ray_logger)
+            worker = Worker.remote(cfg, id = i,env = envs[i], logger = ray_logger)
             worker.set_learner_id.remote(i%cfg.n_learners)
             workers.append(worker)
-        worker_tasks = [worker.run.remote(data_server = data_server,learners = learners,stats_recorder = stats_recorder) for worker in workers]
+        worker_tasks = [worker.run.remote(collector = collector, data_server = data_server,learners = learners,stats_recorder = stats_recorder) for worker in workers]
         ray.get(worker_tasks) # wait for all workers finish
         ray.shutdown() # shutdown ray
 

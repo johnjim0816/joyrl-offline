@@ -67,9 +67,30 @@ class Policy(BasePolicy):
         else:
             self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=self.cfg.actor_lr)
             self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=self.cfg.critic_lr)
-    @torch.no_grad()         
+    def evaluate(self, states, actions):
+        if not self.independ_actor:
+            if self.action_type.lower() == 'continuous':
+                values, mu, sigma = self.policy_net(states)
+            else:
+                probs = self.policy_net(states)
+        else:
+            values = self.critic(states)
+            output = self.actor(states)
+        if self.action_type.lower() == 'continuous':
+            mu , sigma = output['mu'], output['sigma']
+            mean = mu * self.action_scale + self.action_bias
+            std = sigma
+            dist = Normal(mean, std)
+        else:
+            probs = output['probs']
+            dist = Categorical(probs)
+        log_probs = dist.log_prob(actions.squeeze(dim=1))
+        entropies = dist.entropy()
+        return values, log_probs, entropies   
     def get_action(self, state, mode='sample', **kwargs):
-        state = torch.tensor(np.array(state), device=self.device, dtype=torch.float32).unsqueeze(dim=0)
+        state = np.array(state)
+        if len(state.shape) == 1: state = state[np.newaxis, :]
+        state = torch.tensor(state, device=self.device, dtype=torch.float32)
         if not self.independ_actor:
             if self.action_type.lower() == 'continuous':
                 self.value, self.mu, self.sigma = self.policy_net(state)
@@ -77,10 +98,11 @@ class Policy(BasePolicy):
                 self.probs = self.policy_net(state)
         else:
             self.value = self.critic(state)
+            output = self.actor(state) 
             if self.action_type.lower() == 'continuous':
-                self.mu, self.sigma = self.actor(state)
+                self.mu, self.sigma = output['mu'], output['sigma']
             else:
-                self.probs = self.actor(state)
+                self.probs = output['probs']
         if mode == 'sample':
             action = self.sample_action(**kwargs)
             self.update_policy_transition()
@@ -107,14 +129,14 @@ class Policy(BasePolicy):
         else:
             dist = Categorical(self.probs)
             action = dist.sample()
-            self.log_probs = dist.log_prob(action).detach()
-            return action.detach().cpu().numpy().item()
+            self.log_probs = dist.log_prob(action)
+            return action.detach().cpu().numpy()[0]
     def predict_action(self, **kwargs):
         if self.action_type.lower() == 'continuous':
             return self.mu.detach().cpu().numpy()[0]
         else:
-            return torch.argmax(self.probs).detach().cpu().numpy().item()
-    def train(self, **kwargs): 
+            return torch.argmax(self.probs).detach().cpu().numpy()
+    def learn(self, **kwargs): 
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
         if self.action_type.lower() == 'continuous':      
             mus, sigmas = kwargs.get('mu'), kwargs.get('sigma')
@@ -127,12 +149,12 @@ class Policy(BasePolicy):
             old_probs = torch.exp(old_log_probs)
         else:
             old_probs, old_log_probs  = kwargs.get('probs'), kwargs.get('log_probs')
-            old_probs = torch.cat(old_probs).to(self.device) # shape:[batch_size,n_actions]
-            old_log_probs = torch.tensor(old_log_probs, device=self.device, dtype=torch.float32).unsqueeze(dim=1) # shape:[batch_size,1]
+            old_probs = torch.cat(old_probs,dim=0).to(self.device) # shape:[batch_size,n_actions]
+            old_log_probs = torch.cat(old_log_probs,dim=0).to(self.device).unsqueeze(dim=1) # shape:[batch_size,1]
         # convert to tensor
         states = torch.tensor(np.array(states), device=self.device, dtype=torch.float32) # shape:[batch_size,n_states]
         # actions = torch.tensor(np.array(actions), device=self.device, dtype=torch.float32).unsqueeze(dim=1) # shape:[batch_size,1]
-        actions = torch.tensor(np.array(actions), device=self.device, dtype=torch.float32) # shape:[batch_size,1]
+        actions = torch.tensor(np.array(actions), device=self.device, dtype=torch.float32).unsqueeze(dim=1) # shape:[batch_size,1]
         next_states = torch.tensor(np.array(next_states), device=self.device, dtype=torch.float32) # shape:[batch_size,n_states]
         rewards = torch.tensor(np.array(rewards), device=self.device, dtype=torch.float32) # shape:[batch_size,1]
         dones = torch.tensor(np.array(dones), device=self.device, dtype=torch.float32) # shape:[batch_size,1]
@@ -140,32 +162,21 @@ class Policy(BasePolicy):
         torch_dataset = Data.TensorDataset(states, actions, old_probs, old_log_probs,returns)
         train_loader = Data.DataLoader(dataset=torch_dataset, batch_size=self.sgd_batch_size, shuffle=True,drop_last=False)
         for _ in range(self.k_epochs):
-            for batch_idx, (old_states, old_actions, old_probs, old_log_probs, returns) in enumerate(train_loader):
+            for batch_idx, (states_sgd, actions_sgd, old_probs_sgd, old_log_probs_sgd, returns_sgd) in enumerate(train_loader):
                 # compute advantages
-                values = self.critic(old_states) # detach to avoid backprop through the critic
-                advantages = returns - values.detach() # shape:[batch_size,1]
-                # get action probabilities
-                if self.action_type.lower() == 'continuous':
-                    mu, sigma = self.actor(old_states)
-                    mean = mu * self.action_scale + self.action_bias
-                    std = sigma
-                    dist = Normal(mean, std)
-                    new_log_probs = dist.log_prob(old_actions)
-                else:
-                    new_probs = self.actor(old_states) # shape:[batch_size,n_actions]
-                    dist = Categorical(new_probs)
-                    # get new action probabilities
-                    new_log_probs = dist.log_prob(old_actions.squeeze(dim=1)) # shape:[batch_size]
+                values_sgd, new_log_probs_sgd, entropies = self.evaluate(states_sgd,actions_sgd)
+                # values_sgd = self.critic(states_sgd) # detach to avoid backprop through the critic
+                advantages = returns_sgd - values_sgd.detach() # shape:[batch_size,1]
                 # compute ratio (pi_theta / pi_theta__old):
-                ratio = torch.exp(new_log_probs - old_log_probs) # shape: [batch_size, 1]
+                ratio = torch.exp(new_log_probs_sgd.unsqueeze(dim=1) - old_log_probs_sgd.detach()) # shape: [batch_size, 1]
                 # compute surrogate loss
                 surr1 = ratio * advantages # shape: [batch_size, 1]
                 if self.ppo_type == 'clip':
                     surr2 = torch.clamp(ratio, 1 - self.eps_clip, 1 + self.eps_clip) * advantages
                     # compute actor loss
-                    self.actor_loss = - (torch.mean(torch.min(surr1, surr2)) + torch.mean(self.entropy_coef * dist.entropy()))
+                    self.actor_loss = - (torch.mean(torch.min(surr1, surr2)) + torch.mean(self.entropy_coef * entropies))
                 elif self.ppo_type == 'kl':
-                    kl_mean = F.kl_div(torch.log(new_probs.detach()), old_probs.unsqueeze(1),reduction='mean') # KL(input|target),new_probs.shape: [batch_size, n_actions]
+                    kl_mean = F.kl_div(torch.log(new_log_probs_sgd.detach()), old_probs_sgd.unsqueeze(1),reduction='mean') # KL(input|target),new_probs.shape: [batch_size, n_actions]
                     # kl_div = torch.mean(new_probs * (torch.log(new_probs) - torch.log(old_probs)), dim=1) # KL(new|old),new_probs.shape: [batch_size, n_actions]
                     surr2 = self.kl_lambda * kl_mean
                     # surr2 = torch.clamp(ratio, 1 - self.eps_clip, 1 + self.eps_clip) * advantages
@@ -178,7 +189,7 @@ class Policy(BasePolicy):
                 else:
                     raise NameError("ppo_type must be 'clip' or 'kl'")
                 # compute critic loss
-                self.critic_loss = nn.MSELoss()(returns, values) # shape: [batch_size, 1]
+                self.critic_loss = nn.MSELoss()(returns_sgd, values_sgd) # shape: [batch_size, 1]
                 # compute total loss
                 if self.share_optimizer:
                     self.optimizer.zero_grad()

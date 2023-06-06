@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-04-16 22:30:46
-LastEditor: JiangJi
-LastEditTime: 2023-05-25 23:35:46
-Discription: 
-'''
 import torch.nn as nn
 from algos.base.base_layers import create_layer, LayerConfig
 from algos.base.action_layers import ActionLayerType, DiscreteActionLayer, ContinuousActionLayer, DPGActionLayer
@@ -62,7 +52,7 @@ class QNetwork(BaseNework):
                 layer.reset_noise()
         
 class ValueNetwork(BaseNework):
-    ''' Value network, for policy-based methods like DDPG, in which the actor and critic share the same network
+    ''' Value network, for policy-based methods,  in which the actor and critic share the same network
     '''
     def __init__(self, cfg, state_size, action_space) -> None:
         super(ValueNetwork, self).__init__()
