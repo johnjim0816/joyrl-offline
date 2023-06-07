@@ -245,18 +245,34 @@ class Main(object):
         collector = RayCollector.remote(cfg, data_handler = data_handler)
         data_server = DataServer.remote(cfg) # create data server
         ray_logger = RayLogger.remote(cfg.log_dir) # create ray logger 
-        learners = []
-        for i in range(cfg.n_learners):
-            learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
-            learners.append(learner)
-        workers = []
+        # learners = []
+        
+        # for i in range(cfg.n_learners):
+        #     learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
+        #     learners.append(learner)
+        interactors = []
         for i in range(cfg.n_workers):
-            worker = Worker.remote(cfg, id = i,env = envs[i], logger = ray_logger)
-            worker.set_learner_id.remote(i%cfg.n_learners)
-            workers.append(worker)
-        worker_tasks = [worker.run.remote(collector = collector, data_server = data_server,learners = learners,stats_recorder = stats_recorder) for worker in workers]
-        ray.get(worker_tasks) # wait for all workers finish
-        ray.shutdown() # shutdown ray
+            interactor = RayInteractor.remote(cfg, id = i,env = envs[i], stats_recorder = stats_recorder)
+            interactor.set_learner_id.remote(i%cfg.n_learners)
+            interactors.append(interactor)
+        learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
+        while True:
+            policy = ray.get(learner.get_policy.remote())
+            interactor_tasks = [interactor.run.remote(policy, stats_recorder = stats_recorder, logger = ray_logger) for interactor in interactors]
+            interactor_outputs = ray.get(interactor_tasks)
+            training_data = collector.handle_exps_after_interact.remote(interactor_outputs)
+            learner_tasks = [learner.run.remote(training_data, stats_recorder = stats_recorder, logger = ray_logger) for learner in learners]
+            ray.get(learner_tasks)
+            if ray.get(interactors[0].get_task_end_flag.remote()):
+                break
+        # workers = []
+        # for i in range(cfg.n_workers):
+        #     worker = Worker.remote(cfg, id = i,env = envs[i], logger = ray_logger)
+        #     worker.set_learner_id.remote(i%cfg.n_learners)
+        #     workers.append(worker)
+        # worker_tasks = [worker.run.remote(collector = collector, data_server = data_server,learners = learners,stats_recorder = stats_recorder) for worker in workers]
+        # ray.get(worker_tasks) # wait for all workers finish
+        # ray.shutdown() # shutdown ray
 
     def run(self) -> None:
         s_t = time.time()
