@@ -1,0 +1,54 @@
+general_cfg:
+  algo_name: TRPO
+  env_name: gym
+  device: cuda
+  mode: train
+  collect_traj: false # if collect trajectories or not
+  mp_backend: single # multi-processing mode: single(default), ray
+  n_workers: 1 # number of workers if using multi-processing, default 1
+  load_checkpoint: false
+  load_path: Train_single_CartPole-v1_TRPO_20230528-203357
+  load_model_step: best # load model step
+  max_episode: 200 # max episodes, set -1 to keep running
+  max_step: 200
+  seed: 1
+  online_eval: true # if online eval or not
+  online_eval_episode: 10 # online eval episodes
+  model_save_fre: 5 # update step frequency of saving model
+
+  # test_eps: 10
+  # train_eps: 100
+  # wrapper: null
+algo_cfg:
+  action_type: discrete 
+  buffer_type: ONPOLICY_QUE
+  batch_episode: 1
+  buffer_size: 100000
+  lmbda: 0.95
+  gamma: 0.98
+  alpha: 0.5
+  search_steps: 15
+  grad_steps: 10
+  actor_layers:
+    - layer_type: linear
+      layer_size: [256]
+      activation: relu
+    - layer_type: linear
+      layer_size: [256]
+      activation: relu
+  critic_layers:
+    - layer_type: linear
+      layer_size: [256]
+      activation: relu
+    - layer_type: linear
+      layer_size: [256]
+      activation: relu
+  critic_lr: 0.02
+  train_batch_size: 64
+  sgd_batch_size: 128
+  kl_constraint: 0.0005
+  onpolicy_flag: True
+  batch_size_flag: False
+env_cfg:
+  id: CartPole-v1
+  render_mode: null  
