@@ -79,7 +79,7 @@ class Policy(BasePolicy):
         action = action.cpu().detach().numpy()[0]
         return action
 
-    def train(self, **kwargs):
+    def learn(self, **kwargs):
         ''' train policy
         '''
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
