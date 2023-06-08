@@ -189,6 +189,7 @@ class Main(object):
     def check_sample_length(self,cfg):
         ''' check  sample length
         '''
+        onpolicy_flag = False
         onpolicy_batch_size_flag = False
         onpolicy_batch_episode_flag = False
         if not hasattr(cfg, 'batch_size'):
@@ -196,6 +197,7 @@ class Main(object):
         if not hasattr(cfg, 'batch_episode'):
             setattr(self.cfg, 'batch_episode', -1)
         if cfg.buffer_type.lower().startswith('onpolicy'): # on policy
+            onpolicy_flag = True
             if cfg.batch_size > 0 and cfg.batch_episode > 0:
                 onpolicy_batch_episode_flag = True
             elif cfg.batch_size > 0:
@@ -204,14 +206,15 @@ class Main(object):
                 onpolicy_batch_episode_flag = True
             else:
                 raise ValueError("the parameter 'batch_size' or 'batch_episode' must >0 when using onpolicy buffer!")
-            
-        n_sample_steps = cfg.batch_size if onpolicy_batch_size_flag else 1 # 1 for offpolicy
+        if onpolicy_flag:
+            n_sample_steps = cfg.batch_size if onpolicy_batch_size_flag else float("inf")
+        else:
+            n_sample_steps = 1 # 1 for offpolicy  
         n_sample_episodes = cfg.batch_episode if onpolicy_batch_episode_flag else float("inf") # inf for offpolicy
+        setattr(self.cfg, 'onpolicy_flag', onpolicy_flag)
         setattr(self.cfg, 'n_sample_steps', n_sample_steps)
         setattr(self.cfg, 'n_sample_episodes', n_sample_episodes)
-        # setattr(self.cfg, 'onpolicy_batch_size_flag', onpolicy_batch_size_flag)
-        # setattr(self.cfg, 'onpolicy_batch_episode_flag', onpolicy_batch_episode_flag)
-            
+
     def single_run(self, cfg: MergedConfig):
         ''' single process run
         '''
@@ -225,15 +228,14 @@ class Main(object):
         interactor = SimpleInteractor(cfg, env, stats_recorder = stats_recorder) # create interactor
         interactors = [interactor] # single interactor
         learner = SimpleLearner(cfg, policy = policy, online_tester = online_tester) # create learner
-        learners = [learner] # single learner
-        self.logger.info(f"Start {cfg.mode}ing!") # print info
-        while True:
-            interactor_output = interactor.run(policy, stats_recorder = stats_recorder, logger = self.logger) # run interactor
-            training_data = collector.handle_exps_after_interact(interactor_output) # get training data from collector
-            learner.run(training_data, stats_recorder = stats_recorder, logger=self.logger) # train learner
-            if interactor.get_task_end_flag():
-                break
- 
+        trainer = SimpleTrainer(cfg, 
+                                interactors = interactors, 
+                                learner = learner, 
+                                collector = collector, 
+                                stats_recorder = stats_recorder, 
+                                logger = self.logger) # create trainer
+        self.logger.info(f"Start {self.cfg.mode}ing!") # print info
+        trainer.run() # run trainer
         
     def ray_run(self,cfg):
         ''' ray run

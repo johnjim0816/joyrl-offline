@@ -25,10 +25,10 @@ class BaseDataServer:
         ''' get current episode
         '''
         return self.global_episode
-    def check_episode_limit(self):
+    def check_task_end(self):
         ''' check if episode reaches the max episode
         '''
-        return self.global_episode >= self.max_episode
+        return self.global_episode >= self.max_episode >=0
     def increase_sample_count(self, i = 1):
         ''' increase sample count
         '''

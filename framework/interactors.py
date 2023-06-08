@@ -1,4 +1,5 @@
 import ray
+from collections import deque
 from algos.base.exps import Exp
 from utils.utils import save_frames_as_gif
 
@@ -9,15 +10,17 @@ class BaseInteractor:
         self.seed = self.cfg.seed + self.id
         self.env = env
         self.curr_state, self.info = self.env.reset(seed = self.seed)
-        self.reset_interact_summary()
         self.reset_ep_params()
-    def reset_interact_summary(self):
+    def reset_interact_summary_que(self):
         ''' Create interact summary
         '''
-        self.interact_summary = {
-            'reward': [],
-            'step': []
-        }
+        self.interact_summary_que = deque(maxlen = 128)
+    def add_interact_summary(self, interact_summary):
+        ''' Add interact summary
+        '''
+        self.interact_summary_que.append(interact_summary)
+    def get_interact_summary_que(self):
+        return self.interact_summary_que
     def reset_ep_params(self):
         ''' Reset episode params
         '''
@@ -28,8 +31,7 @@ class BaseInteractor:
 class SimpleInteractor(BaseInteractor):
     def __init__(self, cfg, env, id = 0, *args, **kwargs) -> None:
         super().__init__(cfg, env, id, *args, **kwargs)
-        self.episode = 0 # global episode
-        self.ep_frames = [] # episode frames
+
     def get_task_end_flag(self):
         ''' Get interact end flag
         '''
@@ -38,8 +40,9 @@ class SimpleInteractor(BaseInteractor):
         else:
             return False
     def run(self, policy = None, *args, **kwargs):
-        dataserver = kwargs['dataserver']
+        dataserver, logger = kwargs['dataserver'], kwargs['logger']
         exps = []
+        self.reset_interact_summary_que()
         run_step , run_epsiode = 0, 0 # local run step, local run episode
         while True:
             dataserver.increase_sample_count() # increase sample count
@@ -56,15 +59,16 @@ class SimpleInteractor(BaseInteractor):
             self.ep_reward += reward
             self.ep_step += 1
             if terminated or (0 < self.cfg.max_step <= self.ep_step):
-                self.episode += 1
+                dataserver.increase_episode() # increase episode
+                global_episode = dataserver.get_episode() # get global episode
                 run_epsiode += 1
-                if len(self.ep_frames)>0: 
-                    save_frames_as_gif(self.ep_frames, self.cfg.video_dir) # only save the first episode
-                    self.ep_frames = []
-                if self.episode % self.cfg.interact_summary_fre == 0: 
-                    logger.info(f"Interactor {self.id} finished episode {self.episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
-                    interact_summary = {'reward':self.ep_reward,'step':self.ep_step}
-                    stats_recorder.add_summary((self.episode, interact_summary), writter_type = 'interact')
+                # if len(self.ep_frames)>0: 
+                #     save_frames_as_gif(self.ep_frames, self.cfg.video_dir) # only save the first episode
+                #     self.ep_frames = []
+                if global_episode % self.cfg.interact_summary_fre == 0 and global_episode <= self.cfg.max_episode: 
+                    logger.info(f"Interactor {self.id} finished episode {global_episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
+                    interact_summary_data = {'reward':self.ep_reward,'step':self.ep_step}
+                    self.add_interact_summary((global_episode, interact_summary_data))
                 self.reset_ep_params()
                 self.curr_state, self.info = self.env.reset(seed = self.seed) # reset environment
                 if run_epsiode >= self.cfg.n_sample_episodes:
@@ -72,7 +76,7 @@ class SimpleInteractor(BaseInteractor):
             run_step += 1
             if run_step >= self.cfg.n_sample_steps:
                 break
-        output = {"exps": exps,  "run_step": run_step, "run_epsiode": run_epsiode}
+        output = {"exps": exps, "interact_summary_que": self.get_interact_summary_que()}
         return output
 
 @ray.remote    
