@@ -16,6 +16,7 @@ from framework.dataserver import DataServer
 from framework.interactors import SimpleInteractor, RayInteractor
 from framework.learners import SimpleLearner, RayLearner
 from framework.stats import SimpleStatsRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
+from framework.trainers import SimpleTrainer, RayTrainer
 from framework.workers import Worker, SimpleTester, RayTester   
 
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
@@ -221,8 +222,10 @@ class Main(object):
         stats_recorder = SimpleStatsRecorder(cfg) # create stats recorder
         collector = SimpleCollector(cfg, data_handler = data_handler)
         online_tester = SimpleTester(cfg,test_env) # create online tester
-        interactor = SimpleInteractor(cfg,env, stats_recorder = stats_recorder) # create interactor
+        interactor = SimpleInteractor(cfg, env, stats_recorder = stats_recorder) # create interactor
+        interactors = [interactor] # single interactor
         learner = SimpleLearner(cfg, policy = policy, online_tester = online_tester) # create learner
+        learners = [learner] # single learner
         self.logger.info(f"Start {cfg.mode}ing!") # print info
         while True:
             interactor_output = interactor.run(policy, stats_recorder = stats_recorder, logger = self.logger) # run interactor
@@ -252,19 +255,22 @@ class Main(object):
         #     learners.append(learner)
         interactors = []
         for i in range(cfg.n_workers):
-            interactor = RayInteractor.remote(cfg, id = i,env = envs[i], stats_recorder = stats_recorder)
-            interactor.set_learner_id.remote(i%cfg.n_learners)
+            interactor = RayInteractor.remote(cfg, id = i,env = envs[i], stats_recorder = stats_recorder, data_server = data_server)
+            # interactor.set_learner_id.remote(i%cfg.n_learners)
             interactors.append(interactor)
-        learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
+        learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester,data_server = data_server)
+        learners = [learner]
         while True:
             policy = ray.get(learner.get_policy.remote())
             interactor_tasks = [interactor.run.remote(policy, stats_recorder = stats_recorder, logger = ray_logger) for interactor in interactors]
             interactor_outputs = ray.get(interactor_tasks)
             training_data = collector.handle_exps_after_interact.remote(interactor_outputs)
-            learner_tasks = [learner.run.remote(training_data, stats_recorder = stats_recorder, logger = ray_logger) for learner in learners]
-            ray.get(learner_tasks)
-            if ray.get(interactors[0].get_task_end_flag.remote()):
+            for _ in range(cfg.n_workers):
+                learner_tasks = [learner.run.remote(training_data, stats_recorder = stats_recorder, logger = ray_logger) for learner in learners]
+                ray.get(learner_tasks)
+            if ray.get(data_server.check_episode_limit.remote()):
                 break
+        ray.shutdown()
         # workers = []
         # for i in range(cfg.n_workers):
         #     worker = Worker.remote(cfg, id = i,env = envs[i], logger = ray_logger)
