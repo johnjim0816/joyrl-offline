@@ -47,36 +47,17 @@ class SimpleTrainer(BaseTrainer):
         while True:
             policy = self.learner.get_policy() # get policy from main learner
             interact_outputs = [interactor.run(policy, dataserver = self.dataserver, logger = self.logger ) for interactor in self.interactors] # run interactors
-            exps_list = [interact_output['exps'] for interact_output in interact_outputs] # get exps from interact outputs
-            self.collector.add_exps_list(exps_list) # handle exps after interact
-            interact_summary_que_list = [interact_output['interact_summary_que'] for interact_output in interact_outputs] # get interact summary que
-            for interact_summary_que in interact_summary_que_list:
-                while len(interact_summary_que) > 0:
-                    interact_summary_data = interact_summary_que.popleft()
-                    self.stats_recorder.add_summary(interact_summary_data, writter_type = 'interact')
-            if self.cfg.onpolicy_flag: 
-                n_steps_per_learn = len(self.collector.get_buffer_length())
-            else:
-                n_steps_per_learn = self.cfg.n_steps_per_learn
+            self.collector.add_exps_list([interact_output['exps'] for interact_output in interact_outputs]) # handle exps after interact
+            self.stats_recorder.add_summary([interact_output['interact_summary'] for interact_output in interact_outputs], writter_type = 'interact')
+            n_steps_per_learn = len(self.collector.get_buffer_length()) if self.cfg.onpolicy_flag else self.cfg.n_steps_per_learn
             for _ in range(n_steps_per_learn):
                 training_data = self.collector.get_training_data() # get training data
                 learner_output = self.learner.run(training_data, dataserver = self.dataserver) # run learner
                 if learner_output is not None:
-                    policy_data_after_learn = learner_output.get('policy_data_after_learn', None) # get policy data after learn
-                    self.collector.handle_data_after_learn(policy_data_after_learn) # handle exps after update
-                    global_update_step = self.dataserver.get_update_step() # get global update step
-                    if global_update_step % self.cfg.model_summary_fre == 0:
-                        self.stats_recorder.add_summary((global_update_step, learner_output['policy_summary']), writter_type = 'policy')
-                    if global_update_step % self.cfg.model_save_fre == 0:
-                        policy = self.learner.get_policy() # get policy from main learner
-                        policy.save_model(f"{self.cfg.model_dir}/{global_update_step}")
-                        if self.cfg.online_eval == True: # online evaluation
-                            best_flag, online_eval_reward = self.online_tester.eval(policy)
-                            learn_id = self.learner.get_id()
-                            self.logger.info(f"learner id: {learn_id}, update_step: {global_update_step}, online_eval_reward: {online_eval_reward:.3f}")
-                            if best_flag:
-                                self.logger.info(f"learner {learn_id} for current update step obtain a better online_eval_reward: {online_eval_reward:.3f}, save the best model!")
-                                policy.save_model(f"{self.cfg.model_dir}/best")
+                    policy = self.learner.get_policy() # get policy from main learner
+                    self.collector.handle_data_after_learn(learner_output['policy_data_after_learn']) # handle exps after update
+                    self.stats_recorder.add_summary([learner_output['policy_summary']], writter_type = 'policy')
+                    self.online_tester.run(policy, dataserver = self.dataserver, logger = self.logger) # online evaluation
             if self.dataserver.check_task_end():
                 break    
         e_t = time.time() # end time
@@ -116,9 +97,34 @@ class RayTrainer(BaseTrainer):
             policy = ray.get(self.learner.get_policy()) # get policy from main learner
             interact_tasks = [interactor.run.remote(policy, dataserver = self.dataserver, logger = self.logger ) for interactor in self.interactors] # run interactors
             interact_outputs = ray.get(interact_tasks)
-            exps_list_remote = ray.put([interact_output['exps'] for interact_output in interact_outputs]) # get exps from interact outputs
-            self.collector.add_exps_list.remote(exps_list_remote) # handle exps after interact
-
+            # exps_list = ray.put([interact_output['exps'] for interact_output in interact_outputs]) # get exps from interact outputs
+            exps_list = [interact_output['exps'] for interact_output in interact_outputs]
+            self.collector.add_exps_list.remote(exps_list) # handle exps after interact
+            summary_all_interactors = [interact_output['interact_summary'] for interact_output in interact_outputs] # get interact summary
+            self.stats_recorder.add_summary.remote(summary_all_interactors, writter_type = 'interact')
+            if self.cfg.onpolicy_flag: 
+                n_steps_per_learn = len(self.collector.get_buffer_length())
+            else:
+                n_steps_per_learn = self.cfg.n_steps_per_learn
+            for _ in range(n_steps_per_learn):
+                training_data = ray.get(self.collector.get_training_data.remote()) # get training data
+                learner_output = ray.get(self.learner.run.remote(training_data, dataserver = self.dataserver)) # run learner
+                if learner_output is not None:
+                    policy_data_after_learn = learner_output['policy_data_after_learn'] # get policy data after learn
+                    self.collector.handle_data_after_learn.remote(policy_data_after_learn) # handle exps after update
+                    summary_all_learners = [learner_output['policy_summary']] # get policy summary
+                    self.stats_recorder.add_summary.remote(summary_all_learners, writter_type = 'policy')
+                    global_update_step = ray.get(self.dataserver.get_update_step.remote()) # get global update step
+                    if global_update_step % self.cfg.model_save_fre == 0:
+                        policy = ray.get(self.learner.remote.get_policy()) # get policy from main learner
+                        policy.save_model(f"{self.cfg.model_dir}/{global_update_step}")
+                        if self.cfg.online_eval == True: # online evaluation
+                            best_flag, online_eval_reward = self.online_tester.eval.remote(policy)
+                            learner_id = self.learner.get_id()
+                            self.logger.info(f"learner id: {learner_id}, update_step: {global_update_step}, online_eval_reward: {online_eval_reward:.3f}")
+                            if best_flag:
+                                self.logger.info(f"learner {learner_id} for current update step obtain a better online_eval_reward: {online_eval_reward:.3f}, save the best model!")
+                                policy.save_model(f"{self.cfg.model_dir}/best")
             if ray.get(self.dataserver.check_task_end.remote()):
                 break   
         e_t = time.time() # end time

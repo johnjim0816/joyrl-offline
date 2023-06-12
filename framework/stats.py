@@ -24,11 +24,12 @@ class BaseStatsRecorder:
         self.writter_types = ['interact','policy']
         for writter_type in self.writter_types:
             self.writters[writter_type] = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/{writter_type}")
-    def add_summary(self, summary_data, writter_type = None):
-        step, summary = summary_data
-        for key, value in summary.items():
-            self.writters[writter_type].add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = step)
-    def handle_in
+    def add_summary(self, summary_all_entities, writter_type = None):
+        for summary_each_entity in summary_all_entities:
+            for summary_data in summary_each_entity:
+                step, summary = summary_data
+                for key, value in summary.items():
+                    self.writters[writter_type].add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = step)
 
 class SimpleStatsRecorder(BaseStatsRecorder):
     def __init__(self, cfg) -> None:
@@ -41,31 +42,7 @@ class RayStatsRecorder(BaseStatsRecorder):
     '''
     def __init__(self, cfg) -> None:
         super().__init__(cfg)
-    #     self.cfg = cfg
-    #     self.interact_summary_que = Queue(maxsize=128)
-    #     self.model_summary_que = Queue(maxsize=128)
-    #     self.interact_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/interact")
-    #     self.policy_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/model")
-    # def add_interact_summary(self,summary):
-    #     ''' add interact summary
-    #     '''
-    #     self.interact_summary_que.put(summary, block=False)
-    #     self.write_interact_summary()
-    # def add_model_summary(self,summary):
-    #     ''' add model summary
-    #     '''
-    #     self.model_summary_que.put(summary, block=False) 
-    #     self.write_model_summary()
-    # def write_interact_summary(self):
-    #     while self.interact_summary_que.qsize() > 0:
-    #         episode,interact_summary = self.interact_summary_que.get()
-    #         for key, value in interact_summary.items():
-    #             self.interact_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = episode)
-    # def write_model_summary(self):
-    #     while self.model_summary_que.qsize() > 0:
-    #         update_step, model_summary = self.model_summary_que.get()
-    #         for key, value in model_summary['scalar'].items():
-    #             self.policy_writter.add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = update_step)
+  
 class BaseLogger(object):
     def __init__(self, fpath = None) -> None:
         Path(fpath).mkdir(parents=True, exist_ok=True)

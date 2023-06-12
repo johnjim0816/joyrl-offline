@@ -1,26 +1,27 @@
 import ray
-from collections import deque
+from typing import Tuple
 from algos.base.exps import Exp
+from config.config import MergedConfig
 from utils.utils import save_frames_as_gif
 
 class BaseInteractor:
-    def __init__(self, cfg, env, id = 0, *args, **kwargs) -> None:
+    def __init__(self, cfg: MergedConfig, env, id = 0, *args, **kwargs) -> None:
         self.cfg = cfg
         self.id = id 
         self.env = env
         self.seed = self.cfg.seed + self.id
         self.curr_state, self.info = self.env.reset(seed = self.seed)
         self.reset_ep_params()
-    def reset_interact_summary_que(self):
+    def reset_summary(self):
         ''' Create interact summary
         '''
-        self.interact_summary_que = deque(maxlen = 128)
-    def add_interact_summary(self, interact_summary):
+        self.summary = list()
+    def update_summary(self, summary: Tuple):
         ''' Add interact summary
         '''
-        self.interact_summary_que.append(interact_summary)
-    def get_interact_summary_que(self):
-        return self.interact_summary_que
+        self.summary.append(summary)
+    def get_summary(self):
+        return self.summary
     def reset_ep_params(self):
         ''' Reset episode params
         '''
@@ -32,13 +33,6 @@ class SimpleInteractor(BaseInteractor):
     def __init__(self, cfg, env, id = 0, *args, **kwargs) -> None:
         super().__init__(cfg, env, id, *args, **kwargs)
 
-    def get_task_end_flag(self):
-        ''' Get interact end flag
-        '''
-        if self.episode >= self.cfg.max_episode:
-            return True
-        else:
-            return False
     def run(self, policy = None, *args, **kwargs):
         dataserver, logger = kwargs['dataserver'], kwargs['logger']
         exps = []
@@ -67,8 +61,8 @@ class SimpleInteractor(BaseInteractor):
                 #     self.ep_frames = []
                 if global_episode % self.cfg.interact_summary_fre == 0 and global_episode <= self.cfg.max_episode: 
                     logger.info(f"Interactor {self.id} finished episode {global_episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
-                    interact_summary_data = {'reward':self.ep_reward,'step':self.ep_step}
-                    self.add_interact_summary((global_episode, interact_summary_data))
+                    interact_summary = {'reward':self.ep_reward,'step':self.ep_step}
+                    self.update_summary((global_episode, interact_summary))
                 self.reset_ep_params()
                 self.curr_state, self.info = self.env.reset(seed = self.seed) # reset environment
                 if run_epsiode >= self.cfg.n_sample_episodes:
@@ -76,7 +70,7 @@ class SimpleInteractor(BaseInteractor):
             run_step += 1
             if run_step >= self.cfg.n_sample_steps:
                 break
-        output = {"exps": exps, "interact_summary_que": self.get_interact_summary_que()}
+        output = {"exps": exps, "interact_summary": self.get_summary()}
         return output
 
 @ray.remote    
