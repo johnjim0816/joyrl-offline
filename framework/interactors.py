@@ -7,8 +7,8 @@ class BaseInteractor:
     def __init__(self, cfg, env, id = 0, *args, **kwargs) -> None:
         self.cfg = cfg
         self.id = id 
-        self.seed = self.cfg.seed + self.id
         self.env = env
+        self.seed = self.cfg.seed + self.id
         self.curr_state, self.info = self.env.reset(seed = self.seed)
         self.reset_ep_params()
     def reset_interact_summary_que(self):

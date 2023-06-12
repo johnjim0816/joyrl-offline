@@ -27,7 +27,7 @@ class SimpleLearner(BaseLearner):
         super().__init__(cfg, id, policy, data_handler, online_tester)
     def run(self, training_data, *args, **kwargs):
         if training_data is None: return None
-        dataserver = kwargs['data_server']
+        dataserver = kwargs['dataserver']
         dataserver.increase_update_step()
         global_update_step = dataserver.get_update_step()
         self.policy.learn(**training_data,update_step=global_update_step)

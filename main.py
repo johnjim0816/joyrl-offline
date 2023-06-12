@@ -12,7 +12,7 @@ from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter  
 from config.config import GeneralConfig, MergedConfig, DefaultConfig
 from framework.collectors import SimpleCollector, RayCollector
-from framework.dataserver import DataServer
+from framework.dataserver import SimpleDataServer
 from framework.interactors import SimpleInteractor, RayInteractor
 from framework.learners import SimpleLearner, RayLearner
 from framework.stats import SimpleStatsRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
@@ -27,9 +27,6 @@ class Main(object):
         self.process_yaml_cfg()  # load yaml config
         self.merge_cfgs() # merge all configs
         self.create_dirs()  # create dirs
-        self.create_loggers()  # create loggers
-        # print all configs
-        self.print_cfgs()
         all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
         self.check_resources(self.general_cfg)  # check n_workers
         self.check_sample_length(self.cfg) # check onpolicy sample length
@@ -44,30 +41,6 @@ class Main(object):
         self.env_name = self.general_cfg.env_name
         env_mod = importlib.import_module(f"envs.{self.env_name}.config") # import env config
         self.env_cfg = env_mod.EnvConfig()
-    
-    def print_cfgs(self):
-        ''' print parameters
-        '''
-        def print_cfg(cfg: DefaultConfig, name = ''):
-            cfg_dict = vars(cfg)
-            self.logger.info(f"{name}:")
-            self.logger.info(''.join(['='] * 80))
-            tplt = "{:^20}\t{:^20}\t{:^20}"
-            self.logger.info(tplt.format("Name", "Value", "Type"))
-            for k, v in cfg_dict.items():
-                if v.__class__.__name__ == 'list': # convert list to str
-                    v = str(v)
-                if k in ['model_dir','tb_writter']:
-                    continue
-                if v is None: # avoid NoneType
-                    v = 'None'
-                if "support" in k: # avoid ndarray
-                    v = str(v[0])
-                self.logger.info(tplt.format(k, v, str(type(v))))
-            self.logger.info(''.join(['='] * 80))
-        print_cfg(self.general_cfg,name = 'General Configs')
-        print_cfg(self.algo_cfg,name = 'Algo Configs')
-        print_cfg(self.env_cfg,name = 'Env Configs')
 
     def process_yaml_cfg(self):
         ''' load yaml config
@@ -93,10 +66,14 @@ class Main(object):
                 env_mod = importlib.import_module(f"envs.{self.env_name}.config")
                 self.env_cfg = env_mod.EnvConfig()
                 self.load_yaml_cfg(self.env_cfg,load_cfg,'env_cfg')
+
     def merge_cfgs(self):
         ''' merge all configs
         '''
         self.cfg = MergedConfig()
+        setattr(self.cfg, 'general_cfg', self.general_cfg)
+        setattr(self.cfg, 'algo_cfg', self.algo_cfg)
+        setattr(self.cfg, 'env_cfg', self.env_cfg)
         self.cfg = merge_class_attrs(self.cfg, self.general_cfg)
         self.cfg = merge_class_attrs(self.cfg, self.algo_cfg)
         self.cfg = merge_class_attrs(self.cfg, self.env_cfg)
@@ -125,14 +102,7 @@ class Main(object):
         }
         for k,v in dirs_dic.items():
             config_dir(v,name=k)
-    def create_loggers(self):
-        ''' create logger
-        '''
-        self.logger = SimpleLogger(self.cfg.log_dir)
-        self.traj_collector = SimpleTrajCollector(self.cfg.res_dir)
-        if self.cfg.mp_backend == 'ray': return
-        self.interact_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/interact")
-        self.policy_writter = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/model")
+
         
     def create_single_env(self):
         ''' create single env
@@ -146,17 +116,16 @@ class Main(object):
             env_wapper = __import__('.'.join(wrapper_class_path), fromlist=[wrapper_class_name])
             env = getattr(env_wapper, wrapper_class_name)(env)
         return env
-    def envs_config(self):
+    def envs_config(self, cfg: MergedConfig):
         ''' configure environment
         '''
         # register_env(self.env_cfg.id)
         envs = [] # numbers of envs, equal to cfg.n_workers
-        for _ in range(self.cfg.n_workers):
+        for _ in range(cfg.n_workers):
             env = self.create_single_env()
             envs.append(env)
         setattr(self.cfg, 'obs_space', envs[0].observation_space)
-        setattr(self.cfg, 'action_space', envs[0].action_space)
-        self.logger.info(f"obs_space: {envs[0].observation_space}, n_actions: {envs[0].action_space}")  # print info
+        setattr(self.cfg, 'action_space', envs[0].action_space) 
         return envs
     def policy_config(self,cfg):
         ''' configure policy and data_handler
@@ -215,26 +184,27 @@ class Main(object):
         setattr(self.cfg, 'n_sample_steps', n_sample_steps)
         setattr(self.cfg, 'n_sample_episodes', n_sample_episodes)
 
-    def single_run(self, cfg: MergedConfig):
+    def single_run(self, cfg: MergedConfig, *args, **kwargs):
         ''' single process run
         '''
-        envs = self.envs_config()  # configure environment
-        env = envs[0] # single env
-        test_env = self.create_single_env() # create single env
-        policy, data_handler = self.policy_config(cfg) # configure policy and data_handler
+        interactors = []
+        for i in range(cfg.n_workers):
+            interactor = SimpleInteractor(cfg, kwargs['envs'][i], id = i)
+            interactors.append(interactor)
+        learner = SimpleLearner(cfg, policy = kwargs['policy']) # create learner
+        online_tester = SimpleTester(cfg, kwargs['test_env']) # create online tester
+        collector = SimpleCollector(cfg, data_handler = kwargs['data_handler'])
+        dataserver = SimpleDataServer(cfg)
         stats_recorder = SimpleStatsRecorder(cfg) # create stats recorder
-        collector = SimpleCollector(cfg, data_handler = data_handler)
-        online_tester = SimpleTester(cfg,test_env) # create online tester
-        interactor = SimpleInteractor(cfg, env, stats_recorder = stats_recorder) # create interactor
-        interactors = [interactor] # single interactor
-        learner = SimpleLearner(cfg, policy = policy, online_tester = online_tester) # create learner
+        logger = SimpleLogger(cfg.log_dir)
         trainer = SimpleTrainer(cfg, 
                                 interactors = interactors, 
                                 learner = learner, 
                                 collector = collector, 
+                                online_tester = online_tester,
+                                dataserver = dataserver,
                                 stats_recorder = stats_recorder, 
-                                logger = self.logger) # create trainer
-        self.logger.info(f"Start {self.cfg.mode}ing!") # print info
+                                logger = logger) # create trainer
         trainer.run() # run trainer
         
     def ray_run(self,cfg):
@@ -273,23 +243,23 @@ class Main(object):
             if ray.get(data_server.check_episode_limit.remote()):
                 break
         ray.shutdown()
-        # workers = []
-        # for i in range(cfg.n_workers):
-        #     worker = Worker.remote(cfg, id = i,env = envs[i], logger = ray_logger)
-        #     worker.set_learner_id.remote(i%cfg.n_learners)
-        #     workers.append(worker)
-        # worker_tasks = [worker.run.remote(collector = collector, data_server = data_server,learners = learners,stats_recorder = stats_recorder) for worker in workers]
-        # ray.get(worker_tasks) # wait for all workers finish
-        # ray.shutdown() # shutdown ray
 
     def run(self) -> None:
-        s_t = time.time()
+        envs = self.envs_config(self.cfg)  # configure environment
+        test_env = self.create_single_env() # create single env
+        policy, data_handler = self.policy_config(self.cfg) # configure policy and data_handler
         if self.general_cfg.mp_backend == 'ray':
-            self.ray_run(self.cfg)
+            self.ray_run(self.cfg,
+                         envs = envs,
+                         test_env = test_env,
+                         policy = policy,
+                         data_handler = data_handler)
         else:
-            self.single_run(self.cfg)
-        e_t = time.time()
-        self.logger.info(f"Finish {self.cfg.mode}ing! total time consumed: {e_t-s_t:.2f}s")
+            self.single_run(self.cfg,
+                            envs = envs,
+                            test_env = test_env,
+                            policy = policy,
+                            data_handler = data_handler)
         save_cfgs(self.save_cfgs, self.cfg.task_dir)  # save config
 
 if __name__ == "__main__":

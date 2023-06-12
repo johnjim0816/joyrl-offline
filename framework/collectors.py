@@ -10,7 +10,7 @@ class BaseCollector:
         '''
         for exps in exps_list:
             self.data_handler.add_exps(exps) # add exps to data handler
-    def get_training_data_list(self):
+    def get_training_data(self):
         training_data = self.data_handler.sample_training_data() # sample training data
         return training_data
     def handle_data_after_learn(self, policy_data_after_learn, *args, **kwargs):

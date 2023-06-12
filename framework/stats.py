@@ -21,7 +21,7 @@ class BaseStatsRecorder:
         self.init_writter()
     def init_writter(self):
         self.writters = {}
-        self.writter_types = ['interact','model']
+        self.writter_types = ['interact','policy']
         for writter_type in self.writter_types:
             self.writters[writter_type] = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/{writter_type}")
     def add_summary(self, summary_data, writter_type = None):

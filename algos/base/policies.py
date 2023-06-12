@@ -82,6 +82,8 @@ class BasePolicy(nn.Module):
         ''' update policy summary
         '''
         self.summary['scalar']['loss'] = self.loss.item()
+    def get_summary(self):
+        return self.summary['scalar']
     def learn(self, **kwargs):
         ''' learn policy
         '''
@@ -90,6 +92,8 @@ class BasePolicy(nn.Module):
         ''' update data after training
         '''
         self.data_after_train = {}
+    def get_data_after_learn(self):
+        return self.data_after_train
     def save_model(self, fpath):
         ''' save model
         '''
