@@ -207,15 +207,17 @@ class Main(object):
                                 logger = logger) # create trainer
         trainer.run() # run trainer
         
-    def ray_run(self,cfg):
+    def ray_run(self, cfg: MergedConfig, *args, **kwargs):
         ''' ray run
         '''
         ray.shutdown()
         ray.init(include_dashboard=True)
-        envs = self.envs_config()  # configure environment
-        test_env = self.create_single_env() # create single env
-        self.online_tester = RayTester.options(num_gpus= self.n_gpus_tester).remote(cfg,test_env) # create online tester
-        policy, data_handler = self.policy_config(cfg) # create policy and data_handler
+        interactors = []
+        for i in range(cfg.n_workers):
+            interactor = RayInteractor.remote(cfg, env = kwargs['envs'][i], id = i)
+            interactors.append(interactor)
+        learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester,data_server = data_server)
+        self.online_tester = RayTester.options(num_gpus= self.n_gpus_tester).remote(cfg,kwargs['test_env']test_env) # create online tester
         stats_recorder = RayStatsRecorder.remote(cfg) # create stats recorder
         collector = RayCollector.remote(cfg, data_handler = data_handler)
         data_server = DataServer.remote(cfg) # create data server
@@ -228,7 +230,6 @@ class Main(object):
         interactors = []
         for i in range(cfg.n_workers):
             interactor = RayInteractor.remote(cfg, id = i,env = envs[i], stats_recorder = stats_recorder, data_server = data_server)
-            # interactor.set_learner_id.remote(i%cfg.n_learners)
             interactors.append(interactor)
         learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester,data_server = data_server)
         learners = [learner]
