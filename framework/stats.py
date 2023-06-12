@@ -28,6 +28,7 @@ class BaseStatsRecorder:
         step, summary = summary_data
         for key, value in summary.items():
             self.writters[writter_type].add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = step)
+    def handle_in
 
 class SimpleStatsRecorder(BaseStatsRecorder):
     def __init__(self, cfg) -> None:
