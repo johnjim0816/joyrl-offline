@@ -59,38 +59,11 @@ class SimpleDataServer(BaseDataServer):
         '''
         return self.ep_frames
 @ray.remote
-class DataServer:
-    def __init__(self, cfg) -> None:
+class RayDataServer(BaseDataServer):
+    def __init__(self,cfg) -> None:
+        super().__init__(cfg)
         self.curr_episode = 0 # current episode
         self.sample_count = 0 # sample count
         self.update_step = 0 # update step
         self.max_episode = cfg.max_episode
-    def increase_episode(self):
-        ''' increase episode
-        '''
-        self.curr_episode += 1
-    def check_episode_limit(self):
-        ''' check if episode reaches the max episode
-        '''
-        return self.curr_episode > self.max_episode
-    def get_episode(self):
-        ''' get current episode
-        '''
-        return self.curr_episode
-    def increase_sample_count(self, i = 1):
-        ''' increase sample count
-        '''
-        self.sample_count += i
-    def get_sample_count(self):
-        ''' get sample count
-        '''
-        return self.sample_count
-    def increase_update_step(self):
-        ''' increase update step
-        '''
-        self.update_step += 1
-    def get_update_step(self):
-        ''' get update step
-        '''
-        return self.update_step
-
+    

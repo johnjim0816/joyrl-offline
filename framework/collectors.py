@@ -26,3 +26,9 @@ class SimpleCollector(BaseCollector):
 class RayCollector(BaseCollector):
     def __init__(self, cfg, data_handler) -> None:
         super().__init__(cfg, data_handler)
+    def add_exps_list(self, exps_list_remote):
+        ''' add exps to data handler
+        '''
+        exps_list = ray.get(exps_list_remote)
+        for exps in exps_list:
+            self.data_handler.add_exps.remote(exps)

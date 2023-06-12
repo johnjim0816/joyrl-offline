@@ -1,5 +1,5 @@
 import time
-
+import ray
 class BaseTrainer:
     def __init__(self, cfg, *args,**kwargs) -> None:
         self.cfg = cfg
@@ -10,6 +10,7 @@ class BaseTrainer:
         self.dataserver = kwargs['dataserver']
         self.stats_recorder = kwargs['stats_recorder']
         self.logger = kwargs['logger']
+        self.print_cfgs()
 
     def print_cfgs(self):
         ''' print parameters
@@ -32,13 +33,14 @@ class BaseTrainer:
         print_cfg(self.cfg.general_cfg, name = 'General Configs')
         print_cfg(self.cfg.algo_cfg, name = 'Algo Configs')
         print_cfg(self.cfg.env_cfg, name = 'Env Configs')
+
     def run(self):
         raise NotImplementedError
     
 class SimpleTrainer(BaseTrainer):
     def __init__(self, cfg, *args,**kwargs) -> None:
         super().__init__(cfg, *args, **kwargs)
-        self.print_cfgs()
+        
     def run(self):
         self.logger.info(f"Start {self.cfg.mode}ing!") # print info
         s_t = time.time() # start time
@@ -80,6 +82,44 @@ class SimpleTrainer(BaseTrainer):
         e_t = time.time() # end time
         self.logger.info(f"Finish {self.cfg.mode}ing! Time cost: {e_t - s_t:.3f} s") # print info      
 
+@ray.remote
 class RayTrainer(BaseTrainer):
-    def __init__(self,*args,**kwargs) -> None:
-        pass
+    def __init__(self, cfg, *args,**kwargs) -> None:
+        super().__init__(cfg, *args, **kwargs)
+
+    def print_cfgs(self):
+        ''' print parameters
+        '''
+        def print_cfg(cfg, name = ''):
+            cfg_dict = vars(cfg)
+            self.logger.info.remote(f"{name}:")
+            self.logger.info.remote(''.join(['='] * 80))
+            tplt = "{:^20}\t{:^20}\t{:^20}"
+            self.logger.info.remote(tplt.format("Name", "Value", "Type"))
+            for k, v in cfg_dict.items():
+                if v.__class__.__name__ == 'list': # convert list to str
+                    v = str(v)
+                if v is None: # avoid NoneType
+                    v = 'None'
+                if "support" in k: # avoid ndarray
+                    v = str(v[0])
+                self.logger.info.remote(tplt.format(k, v, str(type(v))))
+            self.logger.info.remote(''.join(['='] * 80))
+        print_cfg(self.cfg.general_cfg, name = 'General Configs')
+        print_cfg(self.cfg.algo_cfg, name = 'Algo Configs')
+        print_cfg(self.cfg.env_cfg, name = 'Env Configs')
+    
+    def run(self):
+        self.logger.info.remote(f"Start {self.cfg.mode}ing!") # print info
+        s_t = time.time() # start time
+        while True:
+            policy = ray.get(self.learner.get_policy()) # get policy from main learner
+            interact_tasks = [interactor.run.remote(policy, dataserver = self.dataserver, logger = self.logger ) for interactor in self.interactors] # run interactors
+            interact_outputs = ray.get(interact_tasks)
+            exps_list_remote = ray.put([interact_output['exps'] for interact_output in interact_outputs]) # get exps from interact outputs
+            self.collector.add_exps_list.remote(exps_list_remote) # handle exps after interact
+
+            if ray.get(self.dataserver.check_task_end.remote()):
+                break   
+        e_t = time.time() # end time
+        self.logger.info(f"Finish {self.cfg.mode}ing! Time cost: {e_t - s_t:.3f} s") # print info      

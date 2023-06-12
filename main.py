@@ -12,7 +12,7 @@ from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter  
 from config.config import GeneralConfig, MergedConfig, DefaultConfig
 from framework.collectors import SimpleCollector, RayCollector
-from framework.dataserver import SimpleDataServer
+from framework.dataserver import SimpleDataServer, RayDataServer
 from framework.interactors import SimpleInteractor, RayInteractor
 from framework.learners import SimpleLearner, RayLearner
 from framework.stats import SimpleStatsRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
@@ -216,23 +216,21 @@ class Main(object):
         for i in range(cfg.n_workers):
             interactor = RayInteractor.remote(cfg, env = kwargs['envs'][i], id = i)
             interactors.append(interactor)
-        learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester,data_server = data_server)
-        self.online_tester = RayTester.options(num_gpus= self.n_gpus_tester).remote(cfg,kwargs['test_env']test_env) # create online tester
+        learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = kwargs['policy'])
+        online_tester = RayTester.options(num_gpus= self.n_gpus_tester).remote(cfg,kwargs['test_env']) #
+        collector = RayCollector.remote(cfg, data_handler = kwargs['data_handler'])
+        dataserver = RayDataServer.remote(cfg)
         stats_recorder = RayStatsRecorder.remote(cfg) # create stats recorder
-        collector = RayCollector.remote(cfg, data_handler = data_handler)
-        data_server = DataServer.remote(cfg) # create data server
-        ray_logger = RayLogger.remote(cfg.log_dir) # create ray logger 
-        # learners = []
-        
-        # for i in range(cfg.n_learners):
-        #     learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester)
-        #     learners.append(learner)
-        interactors = []
-        for i in range(cfg.n_workers):
-            interactor = RayInteractor.remote(cfg, id = i,env = envs[i], stats_recorder = stats_recorder, data_server = data_server)
-            interactors.append(interactor)
-        learner = RayLearner.options(num_gpus= self.n_gpus_learner / cfg.n_learners).remote(cfg, id = i, policy = policy,data_handler = data_handler, online_tester = self.online_tester,data_server = data_server)
-        learners = [learner]
+        logger = RayLogger.remote(cfg.log_dir) # create ray logger 
+        trainer = RayTrainer.remote(cfg,
+                                    interactors = interactors, 
+                                    learner = learner, 
+                                    collector = collector, 
+                                    online_tester = online_tester,
+                                    dataserver = dataserver,
+                                    stats_recorder = stats_recorder, 
+                                    logger = logger) # create trainer
+        trainer.run.remote() # run trainer
         while True:
             policy = ray.get(learner.get_policy.remote())
             interactor_tasks = [interactor.run.remote(policy, stats_recorder = stats_recorder, logger = ray_logger) for interactor in interactors]
