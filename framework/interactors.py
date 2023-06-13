@@ -22,6 +22,8 @@ class BaseInteractor:
         self.summary.append(summary)
     def get_summary(self):
         return self.summary
+    def write_summary(self, stats_recorder):
+        stats_recorder.add_summary(self.summary)
     def reset_ep_params(self):
         ''' Reset episode params
         '''

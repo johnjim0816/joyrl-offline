@@ -38,13 +38,16 @@ class SimpleTester(BaseTester):
             logger.info(f"current update step obtain a better online_eval_reward: {mean_eval_reward:.3f}, save the best model!")
             policy.save_model(f"{self.cfg.model_dir}/best")
             self.best_eval_reward = mean_eval_reward
+        summary_data = [(global_update_step,{"online_eval_reward": mean_eval_reward})]
+        output = {"summary":summary_data}
+        return output
     def run(self, policy, *args, **kwargs):
         ''' Run online tester
         '''
         dataserver, logger = kwargs['dataserver'], kwargs['logger']
         global_update_step = dataserver.get_update_step() # get global update step
         if global_update_step % self.cfg.model_save_fre == 0 and self.cfg.online_eval == True:
-            self.eval(policy, global_update_step = global_update_step, logger = logger)
+            return self.eval(policy, global_update_step = global_update_step, logger = logger)
     
 @ray.remote
 class RayTester(BaseTester):
@@ -73,6 +76,9 @@ class RayTester(BaseTester):
             logger.info.remote(f"current update step obtain a better online_eval_reward: {mean_eval_reward:.3f}, save the best model!")
             policy.save_model(f"{self.cfg.model_dir}/best")
             self.best_eval_reward = mean_eval_reward
+        summary_data = [(global_update_step,{"online_eval_reward": mean_eval_reward})]
+        output = {"summary":summary_data}
+        return output
 
     def run(self, policy, *args, **kwargs):
         ''' Run online tester
@@ -80,4 +86,4 @@ class RayTester(BaseTester):
         dataserver, logger = kwargs['dataserver'], kwargs['logger']
         global_update_step = ray.get(dataserver.get_update_step.remote()) # get global update step
         if global_update_step % self.cfg.model_save_fre == 0 and self.cfg.online_eval == True:
-            self.eval(policy, global_update_step = global_update_step, logger = logger)
+            return self.eval(policy, global_update_step = global_update_step, logger = logger)

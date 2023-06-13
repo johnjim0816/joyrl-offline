@@ -4,7 +4,7 @@ general_cfg:
   device: cpu # device, cpu or cuda
   mode: train # run mode: train, test
   collect_traj: false # if collect trajectories or not
-  mp_backend: single # multi-processing mode: single(default), ray
+  mp_backend:  # multi-processing mode: single(default), ray
   n_workers: 1 # number of workers if using multi-processing, default 1
   load_checkpoint: false # if load checkpoint or not
   load_path: Train_single_CartPole-v1_DQN_20230515-211721 # if load checkpoint, then config path in 'tasks' dir

@@ -57,7 +57,9 @@ class SimpleTrainer(BaseTrainer):
                     policy = self.learner.get_policy() # get policy from main learner
                     self.collector.handle_data_after_learn(learner_output['policy_data_after_learn']) # handle exps after update
                     self.stats_recorder.add_summary([learner_output['policy_summary']], writter_type = 'policy')
-                    self.online_tester.run(policy, dataserver = self.dataserver, logger = self.logger) # online evaluation
+                    online_tester_output = self.online_tester.run(policy, dataserver = self.dataserver, logger = self.logger) # online evaluation
+                    if online_tester_output is not None:
+                        self.stats_recorder.add_summary([online_tester_output['summary']], writter_type = 'policy')
             if self.dataserver.check_task_end():
                 break    
         e_t = time.time() # end time
@@ -106,7 +108,8 @@ class RayTrainer(BaseTrainer):
                     policy = ray.get(self.learner.get_policy.remote()) # get policy from main learner
                     self.collector.handle_data_after_learn.remote(learner_output['policy_data_after_learn']) # handle exps after update
                     self.stats_recorder.add_summary.remote([learner_output['policy_summary']], writter_type = 'policy')
-                    self.online_tester.run.remote(policy, dataserver = self.dataserver, logger = self.logger) 
+                    online_tester_output = self.online_tester.run.remote(policy, dataserver = self.dataserver, logger = self.logger)
+                    self.stats_recorder.add_summary.remote([online_tester_output['summary']], writter_type = 'policy') 
             if ray.get(self.dataserver.check_task_end.remote()):
                 break   
         e_t = time.time() # end time
