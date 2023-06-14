@@ -9,15 +9,14 @@ import gymnasium as gym
 import ray
 import torch.multiprocessing as mp
 from pathlib import Path
-from torch.utils.tensorboard import SummaryWriter  
 from config.config import GeneralConfig, MergedConfig, DefaultConfig
 from framework.collectors import SimpleCollector, RayCollector
 from framework.dataserver import SimpleDataServer, RayDataServer
 from framework.interactors import SimpleInteractor, RayInteractor
 from framework.learners import SimpleLearner, RayLearner
 from framework.stats import SimpleStatsRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
+from framework.testers import SimpleTester, RayTester
 from framework.trainers import SimpleTrainer, RayTrainer
-from framework.workers import Worker, SimpleTester, RayTester   
 
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
 
@@ -90,7 +89,7 @@ class Main(object):
             setattr(self.cfg, name, dir)
         curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
         env_name = self.env_cfg.id if self.env_cfg.id is not None else self.general_cfg.env_name
-        task_dir = f"{os.getcwd()}/tasks/{self.general_cfg.mode.capitalize()}_{self.general_cfg.mp_backend}_{env_name}_{self.general_cfg.algo_name}_{curr_time}"
+        task_dir = f"{os.getcwd()}/tasks/{self.general_cfg.mode.capitalize()}_{env_name}_{self.general_cfg.algo_name}_{curr_time}"
         dirs_dic = {
             'task_dir':task_dir,
             'model_dir':f"{task_dir}/models",
@@ -103,7 +102,6 @@ class Main(object):
         for k,v in dirs_dic.items():
             config_dir(v,name=k)
 
-        
     def create_single_env(self):
         ''' create single env
         '''
@@ -222,25 +220,15 @@ class Main(object):
         dataserver = RayDataServer.remote(cfg)
         stats_recorder = RayStatsRecorder.remote(cfg) # create stats recorder
         logger = RayLogger.remote(cfg.log_dir) # create ray logger 
-        trainer = RayTrainer.remote(cfg,
-                                    interactors = interactors, 
-                                    learner = learner, 
-                                    collector = collector, 
-                                    online_tester = online_tester,
-                                    dataserver = dataserver,
-                                    stats_recorder = stats_recorder, 
-                                    logger = logger) # create trainer
-        trainer.run.remote() # run trainer
-        while True:
-            policy = ray.get(learner.get_policy.remote())
-            interactor_tasks = [interactor.run.remote(policy, stats_recorder = stats_recorder, logger = ray_logger) for interactor in interactors]
-            interactor_outputs = ray.get(interactor_tasks)
-            training_data = collector.handle_exps_after_interact.remote(interactor_outputs)
-            for _ in range(cfg.n_workers):
-                learner_tasks = [learner.run.remote(training_data, stats_recorder = stats_recorder, logger = ray_logger) for learner in learners]
-                ray.get(learner_tasks)
-            if ray.get(data_server.check_episode_limit.remote()):
-                break
+        trainer = RayTrainer(cfg,
+                             interactors = interactors, 
+                             learner = learner, 
+                             collector = collector, 
+                             online_tester = online_tester,
+                             dataserver = dataserver,
+                             stats_recorder = stats_recorder, 
+                             logger = logger) # create trainer
+        trainer.run() # run trainer
         ray.shutdown()
 
     def run(self) -> None:

@@ -28,7 +28,9 @@ class BaseDataServer:
     def check_task_end(self):
         ''' check if episode reaches the max episode
         '''
-        return self.global_episode >= self.max_episode >=0
+        if self.max_episode < 0:
+            return False
+        return self.global_episode >= self.max_episode 
     def increase_sample_count(self, i = 1):
         ''' increase sample count
         '''
@@ -62,8 +64,5 @@ class SimpleDataServer(BaseDataServer):
 class RayDataServer(BaseDataServer):
     def __init__(self,cfg) -> None:
         super().__init__(cfg)
-        self.curr_episode = 0 # current episode
-        self.sample_count = 0 # sample count
-        self.update_step = 0 # update step
-        self.max_episode = cfg.max_episode
+
     
