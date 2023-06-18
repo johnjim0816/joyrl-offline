@@ -129,7 +129,7 @@ class ActorNetwork(BaseActorNetwork):
             return mu
 
 class CriticNetwork(BaseCriticNetwork):
-    def __init__(self, cfg, input_size):
+    def __init__(self, cfg, input_size, output_dim = 1):
         super(CriticNetwork, self).__init__()
         self.cfg = cfg
         self.layers_cfg_dic = cfg.critic_layers # load layers config
@@ -142,7 +142,7 @@ class CriticNetwork(BaseCriticNetwork):
             layer, layer_out_size = create_layer(output_size, layer_cfg)
             output_size = layer_out_size
             self.layers.append(layer) 
-        head_layer_cfg = LayerConfig(layer_type='linear', layer_size=[1], activation='none')
+        head_layer_cfg = LayerConfig(layer_type='linear', layer_size=[output_dim], activation='none')
         self.head_layer, layer_out_size = create_layer(output_size, head_layer_cfg)
     def forward(self, x):
         for layer in self.layers:
