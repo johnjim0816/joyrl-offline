@@ -129,12 +129,12 @@ class ActorNetwork(BaseActorNetwork):
             return mu
 
 class CriticNetwork(BaseCriticNetwork):
-    def __init__(self, cfg, state_size, output_dim = 1):
+    def __init__(self, cfg, input_size, output_dim = 1):
         super(CriticNetwork, self).__init__()
         self.cfg = cfg
         self.layers_cfg_dic = cfg.critic_layers # load layers config
         self.layers = nn.ModuleList()
-        output_size = state_size
+        output_size = input_size
         for layer_cfg_dic in self.layers_cfg_dic:
             if "layer_type" not in layer_cfg_dic:
                 raise ValueError("layer_type must be specified in layer_cfg")

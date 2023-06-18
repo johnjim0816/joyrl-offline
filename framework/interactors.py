@@ -39,7 +39,7 @@ class SimpleInteractor(BaseInteractor):
         dataserver, logger = kwargs['dataserver'], kwargs['logger']
         self.reset_summary()
         exps = []
-        run_step , run_epsiode = 0, 0 # local run step, local run episode
+        run_step , run_episode = 0, 0 # local run step, local run episode
         while True:
             dataserver.increase_sample_count() # increase sample count
             global_sample_count = dataserver.get_sample_count() # get global sample count
@@ -57,7 +57,7 @@ class SimpleInteractor(BaseInteractor):
             if terminated or (0 < self.cfg.max_step <= self.ep_step):
                 dataserver.increase_episode() # increase episode
                 global_episode = dataserver.get_episode() # get global episode
-                run_epsiode += 1
+                run_episode += 1
                 # if len(self.ep_frames)>0: 
                 #     save_frames_as_gif(self.ep_frames, self.cfg.video_dir) # only save the first episode
                 #     self.ep_frames = []
@@ -67,7 +67,7 @@ class SimpleInteractor(BaseInteractor):
                     self.update_summary((global_episode, interact_summary))
                 self.reset_ep_params()
                 self.curr_state, self.info = self.env.reset(seed = self.seed) # reset environment
-                if run_epsiode >= self.cfg.n_sample_episodes:
+                if run_episode >= self.cfg.n_sample_episodes:
                     break
             run_step += 1
             if run_step >= self.cfg.n_sample_steps:
@@ -84,7 +84,7 @@ class RayInteractor(BaseInteractor):
         dataserver, logger = kwargs['dataserver'], kwargs['logger']
         self.reset_summary()
         exps = []
-        run_step , run_epsiode = 0, 0 # local run step, local run episode
+        run_step , run_episode = 0, 0 # local run step, local run episode
         while True:
             ray.get(dataserver.increase_sample_count.remote())
             global_sample_count = ray.get(dataserver.get_sample_count.remote())
@@ -98,7 +98,7 @@ class RayInteractor(BaseInteractor):
             self.ep_reward += reward
             self.ep_step += 1
             if terminated or (0 < self.cfg.max_step <= self.ep_step):
-                run_epsiode += 1
+                run_episode += 1
                 ray.get(dataserver.increase_episode.remote())
                 global_episode = ray.get(dataserver.get_episode.remote())
                 if global_episode % self.cfg.interact_summary_fre == 0: 
@@ -107,7 +107,7 @@ class RayInteractor(BaseInteractor):
                     self.update_summary((global_episode, interact_summary))
                 self.reset_ep_params()
                 self.curr_state, self.info = self.env.reset(seed = self.seed) # reset environment
-                if run_epsiode >= self.cfg.n_sample_episodes:
+                if run_episode >= self.cfg.n_sample_episodes:
                     break
             run_step += 1
             if run_step >= self.cfg.n_sample_steps:
