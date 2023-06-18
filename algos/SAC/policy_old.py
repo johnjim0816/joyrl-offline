@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import Adam
 from torch.distributions import Normal
-from common.memories import ReplayBuffer
+# from common.memories import ReplayBuffer
 import random
 import math
 import numpy as np
@@ -12,6 +12,19 @@ import numpy as np
 LOG_SIG_MAX = 2 # 一个常数，用于限制高斯策略网络输出的对数标准差的最大值
 LOG_SIG_MIN = -20 # 一个常数，用于限制高斯策略网络输出的对数标准差的最小值
 epsilon = 1e-6 # 一个非常小的数
+
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.distributions import Categorical,Normal
+import torch.utils.data as Data
+import numpy as np
+
+from algos.base.networks import ValueNetwork, CriticNetwork, ActorNetwork
+from algos.base.policies import BasePolicy
+
 
 
 def weights_init_(m):
@@ -179,16 +192,16 @@ class DeterministicPolicy(nn.Module):
         self.noise = self.noise.to(device)
         return super(DeterministicPolicy, self).to(device)
 
-class Agent:
+class Policy(BasePolicy):
     def __init__(self,cfg) -> None:
         '''智能体类
         Args:
             cfg (class): 超参数类
         '''
-        self.n_states = cfg.n_states
-        self.n_actions = cfg.n_actions
+        # self.n_states = cfg.n_states
+        # self.n_actions = cfg.n_actions
         self.action_space = cfg.action_space
-        self.continous = cfg.continous
+        # self.continous = cfg.continous
         self.sample_count = 0
         self.update_count = 0
         self.gamma = cfg.gamma
@@ -200,11 +213,21 @@ class Agent:
         self.target_update_fre = cfg.target_update_fre
         self.automatic_entropy_tuning = cfg.automatic_entropy_tuning
         self.batch_size = cfg.batch_size
-        self.memory = ReplayBuffer(cfg.buffer_size)
-        self.device = torch.device(cfg.device) 
-        self.critic = QNetwork(cfg.n_states,cfg.n_actions, cfg.hidden_dim).to(device=self.device)
-        self.critic_optim = Adam(self.critic.parameters(), lr=cfg.lr)
-        self.critic_target = QNetwork(cfg.n_states, cfg.n_actions, cfg.hidden_dim).to(self.device)
+        # self.memory = ReplayBuffer(cfg.buffer_size)
+
+        self.create_graph()
+        self.create_optimizer()
+        self.create_summary()
+        self.to(self.device)
+
+    
+
+
+        # self.device = torch.device(cfg.device) 
+        # self.critic = QNetwork(cfg.n_states,cfg.n_actions, cfg.hidden_dim).to(device=self.device)
+        # self.critic_optim = Adam(self.critic.parameters(), lr=cfg.lr)
+        # self.critic_target = QNetwork(cfg.n_states, cfg.n_actions, cfg.hidden_dim).to(self.device)
+        
         for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
             target_param.data.copy_(param.data)
             
@@ -223,6 +246,43 @@ class Agent:
             self.automatic_entropy_tuning = False
             self.policy = DeterministicPolicy(cfg.n_states, cfg.n_actions, cfg.hidden_dim, self.action_space).to(self.device)
             self.policy_optim = Adam(self.policy.parameters(), lr=cfg.lr)
+        
+    def create_graph(self):
+        self.state_size, self.action_size = self.get_state_action_size()
+        self.actor = ActorNetwork(self.cfg, self.state_size, self.action_space)
+        self.critic1 = CriticNetwork(self.cfg, self.state_size)
+        self.critic2 = CriticNetwork(self.cfg, self.state_size)
+        self.target1 = CriticNetwork(self.cfg, self.state_size)
+        self.target2 = CriticNetwork(self.cfg, self.state_size)
+        self.target1.load_state_dict(self.critic1.state_dict())
+        self.target2.load_state_dict(self.critic2.state_dict())
+        self.create_optimizer()
+
+    def create_optimizer(self):
+        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=self.cfg.actor_lr)
+        self.critic1_optimizer = optim.Adam(self.critic1.parameters(), lr=self.cfg.critic_lr1)
+        self.critic2_optimizer = optim.Adam(self.critic2.parameters(), lr=self.cfg.critic_lr2)
+
+    def create_summary(self):
+        '''
+        创建 tensorboard 数据
+        '''
+        self.summary = {
+            'scalar': {
+                'tot_loss': 0.0,
+                'actor_loss': 0.0,
+                'critic_loss': 0.0,
+            },
+        }
+    def update_summary(self):
+        ''' 更新 tensorboard 数据
+        '''
+        if hasattr(self, 'tot_loss'):
+            self.summary['scalar']['tot_loss'] = self.tot_loss.item()
+        self.summary['scalar']['actor_loss'] = self.actor_loss.item()
+        self.summary['scalar']['critic_loss'] = self.critic_loss.item()
+    
+
     def sample_action(self,state):
         self.sample_count+=1
         if self.sample_count < self.start_steps:
@@ -232,72 +292,103 @@ class Agent:
             state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(0)
             action, _, _ = self.policy.sample(state)
             return action.detach().cpu().numpy()[0]
+    
     def predict_action(self,state):
         state = torch.tensor(state, device=self.device, dtype=torch.float32).unsqueeze(0)
         _, _, action = self.policy.sample(state)
         return action.detach().cpu().numpy()[0]
-    def update(self):
-        '''更新 Q 网络和策略网络参数
-        '''
-        if len(self.memory) < self.batch_size: # 检查回访缓冲区中是否有足够的 transitions 形成一个批次，如果没有则返回不进行更新
-            return
-        for i in range(self.n_epochs):
-            self.update_count += 1 # 累加循环次数
-            state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample(batch_size=self.batch_size)
-            ## 完成从回放缓冲区中采样一个批次的转换，然后将状态动作，奖励，下一个状态和完成转换标志转换为 PyTorch 张量，并将其移动到设备上来
-            state_batch = torch.FloatTensor(state_batch).to(self.device)
-            next_state_batch = torch.FloatTensor(next_state_batch).to(self.device)
-            action_batch = torch.FloatTensor(action_batch).to(self.device)
-            reward_batch = torch.FloatTensor(reward_batch).to(self.device).unsqueeze(1)
-            done_batch = torch.FloatTensor(done_batch).to(self.device).unsqueeze(1)
-            # print ("done_batch = ", done_batch)
-            with torch.no_grad(): 
-                next_state_action, next_state_log_pi, _ = self.policy.sample(next_state_batch) # 使用策略网络从下一个状态中采样下一个动作
-                qf1_next_target, qf2_next_target = self.critic_target(next_state_batch, next_state_action) # 使用评论家目标网络计算下一个状态的 Q 值
-                min_qf_next_target = torch.min(qf1_next_target, qf2_next_target) - self.alpha * next_state_log_pi # 计算下一个状态的最小 Q 值
-                next_q_value = reward_batch + (1 - done_batch) * self.gamma * (min_qf_next_target) # 计算目标 Q 值
+    # def update(self):
+    #     '''更新 Q 网络和策略网络参数
+    #     '''
+    #     if len(self.memory) < self.batch_size: # 检查回访缓冲区中是否有足够的 transitions 形成一个批次，如果没有则返回不进行更新
+    #         return
+    #     # for i in range(self.n_epochs):
+    #     #     self.update_count += 1 # 累加循环次数
+    #         # state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample(batch_size=self.batch_size)
 
-            qf1, qf2 = self.critic(state_batch, action_batch)  # 使用评论家网络计算当前状态和动作的 Q 值。在政策改进步骤中，两个 q 函数可以缓解正向偏差
-            qf1_loss = F.mse_loss(qf1, next_q_value)  # JQ = 𝔼(st,at)~D[0.5(Q1(st,at) - r(st,at) - γ(𝔼st+1~p[V(st+1)]))^2]
-            qf2_loss = F.mse_loss(qf2, next_q_value)  # JQ = 𝔼(st,at)~D[0.5(Q1(st,at) - r(st,at) - γ(𝔼st+1~p[V(st+1)]))^2]
-            qf_loss = qf1_loss + qf2_loss # 计算评论家网络的总损失
+    def learn(self, **kwargs): 
+        states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
+        if self.action_type.lower() == 'continuous':      
+            mus, sigmas = kwargs.get('mu'), kwargs.get('sigma')
+            mus = torch.stack(mus, dim=0).to(device=self.device, dtype=torch.float32)
+            sigmas = torch.stack(sigmas, dim=0).to(device=self.device, dtype=torch.float32)
+            means = mus * self.action_scale + self.action_bias
+            stds = sigmas
+            dists = Normal(means,stds)
+            old_log_probs = dists.log_prob(torch.tensor(np.array(actions), device=self.device, dtype=torch.float32)).detach()
+            old_probs = torch.exp(old_log_probs)
+        else:
+            old_probs, old_log_probs  = kwargs.get('probs'), kwargs.get('log_probs')
+            old_probs = torch.cat(old_probs,dim=0).to(self.device) # shape:[batch_size,n_actions]
+            old_log_probs = torch.cat(old_log_probs,dim=0).to(self.device).unsqueeze(dim=1) # shape:[batch_size,1]
+        # convert to tensor
+        states = torch.tensor(np.array(states), device=self.device, dtype=torch.float32) # shape:[batch_size,n_states]
+        # actions = torch.tensor(np.array(actions), device=self.device, dtype=torch.float32).unsqueeze(dim=1) # shape:[batch_size,1]
+        actions = torch.tensor(np.array(actions), device=self.device, dtype=torch.float32).unsqueeze(dim=1) # shape:[batch_size,1]
+        next_states = torch.tensor(np.array(next_states), device=self.device, dtype=torch.float32) # shape:[batch_size,n_states]
+        rewards = torch.tensor(np.array(rewards), device=self.device, dtype=torch.float32) # shape:[batch_size,1]
+        dones = torch.tensor(np.array(dones), device=self.device, dtype=torch.float32) # shape:[batch_size,1]
+        returns = self._compute_returns(rewards, dones) # shape:[batch_size,1]  
+        torch_dataset = Data.TensorDataset(states, actions, old_probs, old_log_probs,returns)
+        train_loader = Data.DataLoader(dataset=torch_dataset, batch_size=self.sgd_batch_size, shuffle=True,drop_last=False)
+        ## 完成从回放缓冲区中采样一个批次的转换，然后将状态动作，奖励，下一个状态和完成转换标志转换为 PyTorch 张量，并将其移动到设备上来
 
-            self.critic_optim.zero_grad() # 清空梯度
-            qf_loss.backward() # 计算梯度
-            for param in self.critic.parameters():  
-                param.grad.data.clamp_(-1, 1) # 限制梯度范围
-            self.critic_optim.step() #更新梯度
+        # state_batch = torch.FloatTensor(state_batch).to(self.device)
+        # next_state_batch = torch.FloatTensor(next_state_batch).to(self.device)
+        # action_batch = torch.FloatTensor(action_batch).to(self.device)
+        # reward_batch = torch.FloatTensor(reward_batch).to(self.device).unsqueeze(1)
+        # done_batch = torch.FloatTensor(done_batch).to(self.device).unsqueeze(1)
+        # print ("done_batch = ", done_batch)
+        # with torch.no_grad(): 
+
+        
+
+        next_state_action, next_state_log_pi, _ = self.policy.sample(next_states) # 使用策略网络从下一个状态中采样下一个动作
+        qf1_next_target, qf2_next_target = self.critic_target(next_states, next_state_action) # 使用评论家目标网络计算下一个状态的 Q 值
+        min_qf_next_target = torch.min(qf1_next_target, qf2_next_target) - self.alpha * next_state_log_pi # 计算下一个状态的最小 Q 值
+        next_q_value = rewards + (1 - dones) * self.gamma * (min_qf_next_target) # 计算目标 Q 值
+
+        qf1, qf2 = self.critic(states, actions)  # 使用评论家网络计算当前状态和动作的 Q 值。在政策改进步骤中，两个 q 函数可以缓解正向偏差
+        qf1_loss = F.mse_loss(qf1, next_q_value)  # JQ = 𝔼(st,at)~D[0.5(Q1(st,at) - r(st,at) - γ(𝔼st+1~p[V(st+1)]))^2]
+        qf2_loss = F.mse_loss(qf2, next_q_value)  # JQ = 𝔼(st,at)~D[0.5(Q1(st,at) - r(st,at) - γ(𝔼st+1~p[V(st+1)]))^2]
+        qf_loss = qf1_loss + qf2_loss # 计算评论家网络的总损失
+
+        self.critic_optim.zero_grad() # 清空梯度
+        qf_loss.backward() # 计算梯度
+        for param in self.critic.parameters():  
+            param.grad.data.clamp_(-1, 1) # 限制梯度范围
+        self.critic_optim.step() #更新梯度
 
 
-            pi, log_pi, _ = self.policy.sample(state_batch) # 从策略网络中采样动作
-            qf1_pi, qf2_pi = self.critic(state_batch, pi) # 计算当前状态和采样的动作的Q值
-            min_qf_pi = torch.min(qf1_pi, qf2_pi) # 计算两个Q值中的最小值，作为当前状态和采样的动作的Q值
-            policy_loss = ((self.alpha * log_pi) - min_qf_pi).mean() # Jπ = 𝔼st∼D,εt∼N[α * logπ(f(εt;st)|st) − Q(st,f(εt;st))]
-            self.policy_optim.zero_grad() # 清空梯度
-            policy_loss.backward() # 计算梯度
-            for param in self.policy.parameters():  
-                param.grad.data.clamp_(-1, 1) # 限制梯度范围         
-            self.policy_optim.step() # 更新梯度
+        pi, log_pi, _ = self.policy.sample(states) # 从策略网络中采样动作
+        qf1_pi, qf2_pi = self.critic(states, pi) # 计算当前状态和采样的动作的Q值
+        min_qf_pi = torch.min(qf1_pi, qf2_pi) # 计算两个Q值中的最小值，作为当前状态和采样的动作的Q值
+        policy_loss = ((self.alpha * log_pi) - min_qf_pi).mean() # Jπ = 𝔼st∼D,εt∼N[α * logπ(f(εt;st)|st) − Q(st,f(εt;st))]
+        self.policy_optim.zero_grad() # 清空梯度
+        policy_loss.backward() # 计算梯度
+        for param in self.policy.parameters():  
+            param.grad.data.clamp_(-1, 1) # 限制梯度范围         
+        self.policy_optim.step() # 更新梯度
 
 
-            ##判断是否进行自动熵调整
-            if self.automatic_entropy_tuning:
-                alpha_loss = -(self.log_alpha * (log_pi + self.target_entropy).detach()).mean()
+        ##判断是否进行自动熵调整
+        if self.automatic_entropy_tuning:
+            alpha_loss = -(self.log_alpha * (log_pi + self.target_entropy).detach()).mean()
 
-                self.alpha_optim.zero_grad()
-                alpha_loss.backward()
-                self.alpha_optim.step()
+            self.alpha_optim.zero_grad()
+            alpha_loss.backward()
+            self.alpha_optim.step()
 
-                self.alpha = self.log_alpha.exp()
-                alpha_tlogs = self.alpha.clone() # For TensorboardX logs
-            else:
-                alpha_loss = torch.tensor(0.).to(self.device)
-                alpha_tlogs = torch.tensor(self.alpha) # For TensorboardX logs
+            self.alpha = self.log_alpha.exp()
+            alpha_tlogs = self.alpha.clone() # For TensorboardX logs
+        else:
+            alpha_loss = torch.tensor(0.).to(self.device)
+            alpha_tlogs = torch.tensor(self.alpha) # For TensorboardX logs
 
-            # 软更新，判断是否需要更新目标网络和目标网络中的参数
-            if self.update_count % self.target_update_fre == 0:
-                for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
-                    target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
+        # 软更新，判断是否需要更新目标网络和目标网络中的参数
+        if self.update_count % self.target_update_fre == 0:
+            for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
+                target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
 
     ## 保存模型
     def save_model(self, fpath):

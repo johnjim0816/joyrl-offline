@@ -49,7 +49,7 @@ class SimpleTrainer(BaseTrainer):
             interact_outputs = [interactor.run(policy, dataserver = self.dataserver, logger = self.logger ) for interactor in self.interactors] # run interactors
             self.collector.add_exps_list([interact_output['exps'] for interact_output in interact_outputs]) # handle exps after interact
             self.stats_recorder.add_summary([interact_output['interact_summary'] for interact_output in interact_outputs], writter_type = 'interact')
-            n_steps_per_learn = len(self.collector.get_buffer_length()) if self.cfg.onpolicy_flag else self.cfg.n_steps_per_learn
+            n_steps_per_learn = self.collector.get_buffer_length() if self.cfg.onpolicy_flag else self.cfg.n_steps_per_learn
             for _ in range(n_steps_per_learn):
                 training_data = self.collector.get_training_data() # get training data
                 learner_output = self.learner.run(training_data, dataserver = self.dataserver) # run learner

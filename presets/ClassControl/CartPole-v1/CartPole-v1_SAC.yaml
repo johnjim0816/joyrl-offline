@@ -1,5 +1,5 @@
 general_cfg:
-  algo_name: PPO
+  algo_name: SAC
   env_name: gym # env name, differ from env_id in env_cfgs
   device: cpu # device, cpu or cuda
   mode: train # run mode: train, test
@@ -7,18 +7,18 @@ general_cfg:
   mp_backend: single # multi-processing mode: single(default), ray
   n_workers: 2 # number of workers if using multi-processing, default 1
   load_checkpoint: false # if load checkpoint or not
-  load_path: Train_single_CartPole-v1_DQN_20230515-211721 # if load checkpoint, then config path in 'tasks' dir
+  load_path: Train_Pendulum-v1_SAC_20230618-165413 # if load checkpoint, then config path in 'tasks' dir
   load_model_step: best # load model step
   max_episode: 200 # max episodes, set -1 to keep running
   max_step: 200 # max steps per episode
   seed: 1 # random seed, set 0 not to use seed
   online_eval: true # if online eval or not
   online_eval_episode: 10 # online eval episodes
-  model_save_fre: 10 # update step frequency of saving model
+  model_save_fre: 100 # update step frequency of saving model
 algo_cfg:
   n_steps_per_learn: 1
-  ppo_type: clip
   action_type: discrete 
+  # action_type: continuous
   independ_actor: true
   share_optimizer: false
   actor_layers:
@@ -35,16 +35,31 @@ algo_cfg:
     - layer_type: linear
       layer_size: [256]
       activation: relu
-  buffer_type: ONPOLICY_QUE
-  actor_lr: 0.0003
-  critic_lr: 0.001
-  entropy_coef: 0.01
-  eps_clip: 0.2
+
+  # value_layers:
+  #   - layer_type: linear
+  #     layer_size: [256]
+  #     activation: relu
+  #   - layer_type: linear
+  #     layer_size: [256]
+  #     activation: relu
+
+
+  buffer_type: REPLAY_QUE
+  # actor_lr: 0.0003
+  # critic_lr: 0.001
+  # entropy_coef: 0.01
+  # eps_clip: 0.2
   gamma: 0.99
-  k_epochs: 4
-  batch_size: 256
-  sgd_batch_size: 128
+  batch_size: 64
+  epsilon_decay: 500
+  epsilon_end: 0.01
+  epsilon_start: 0.95
+  gamma: 0.95
+  lr: 0.0001  
+  target_update: 1
+
 env_cfg:
-  id: CartPole-v1
+  id: CartPole-v1 #     CartPole-v1 # CartPole-v1 # Pendulum-v1 #    
   render_mode: null
   
