@@ -290,13 +290,13 @@ class Learner:
 class DataServer:
     def __init__(self):
         self.curr_episode = 0
-        self.max_epsiode = 100
+        self.max_episode = 100
     def increase_episode(self):
         self.curr_episode += 1
     def get_episode(self):
         return self.curr_episode
     def check_episode_limit(self):
-        return self.curr_episode > self.max_epsiode
+        return self.curr_episode > self.max_episode
 if __name__ == "__main__":
     # 启动并行任务
     ray.shutdown()
