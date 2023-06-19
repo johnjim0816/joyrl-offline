@@ -122,8 +122,8 @@ class ActorNetwork(BaseActorNetwork):
             probs = self.action_layer(x, legal_actions)
             return probs
         elif self.action_type == ActionLayerType.CONTINUOUS:
-            mu, sigma = self.action_layer(x)
-            return mu, sigma
+            output = self.action_layer(x)
+            return output
         elif self.action_type == ActionLayerType.DPG:
             mu = self.action_layer(x)
             return mu
