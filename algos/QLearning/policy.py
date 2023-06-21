@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-05-19 00:16:03
-LastEditor: JiangJi
-LastEditTime: 2023-05-19 00:57:23
-Discription: 
-'''
 import torch
 import torch.nn as nn
 import math,random
@@ -41,7 +31,7 @@ class Policy(ToyPolicy):
     def predict_action(self, state, **kwargs):
         action = np.argmax(self.Q_table[str(state)])
         return action
-    def train(self, **kwargs):
+    def learn(self, **kwargs):
         state, action, reward, next_state, done = kwargs.get('state'), kwargs.get('action'), kwargs.get('reward'), kwargs.get('next_state'), kwargs.get('done')
         Q_predict = self.Q_table[str(state)][action] 
         if done: 

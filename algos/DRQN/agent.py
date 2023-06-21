@@ -81,7 +81,7 @@ class GRUMemory:
         定义收集 episode 版的经验回放池
         Args:
             max_epi_num (int): 存放 episode 的容量大小
-            max_epi_len (int): 单个epsiode中采样的最大step数量
+            max_epi_len (int): 单个episode中采样的最大step数量
             lookup_size (int, optional): 所要采样每个 episode 中 step 的数量
         '''
         self.lookup_size = lookup_size  # lookup size for sequential sampling
