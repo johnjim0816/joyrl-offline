@@ -1,13 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-05-19 00:22:50
-LastEditor: JiangJi
-LastEditTime: 2023-05-19 00:55:08
-Discription: 
-'''
 import numpy as np
 from algos.base.data_handlers import BaseDataHandler
 from algos.base.exps import Exp
@@ -21,7 +11,7 @@ class DataHandler(BaseDataHandler):
         '''
         exp = self._create_exp(transition)
         self.buffer.append(exp)
-    def add_data_after_train(self, data):
+    def add_data_after_learn(self, data):
         ''' add update data
         '''
         self.data_after_train = data

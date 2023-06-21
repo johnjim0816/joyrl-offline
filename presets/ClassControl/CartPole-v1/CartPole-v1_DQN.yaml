@@ -1,11 +1,11 @@
 general_cfg:
   algo_name: DQN # algo name
   env_name: gym # env name, differ from env_id in env_cfgs
-  device: cuda # device, cpu or cuda
+  device: cpu # device, cpu or cuda
   mode: train # run mode: train, test
   collect_traj: false # if collect trajectories or not
-  mp_backend: single # multi-processing mode: single(default), ray
-  n_workers: 2 # number of workers if using multi-processing, default 1
+  mp_backend:  # multi-processing mode: single(default), ray
+  n_workers: 1 # number of workers if using multi-processing, default 1
   load_checkpoint: false # if load checkpoint or not
   load_path: Train_single_CartPole-v1_DQN_20230515-211721 # if load checkpoint, then config path in 'tasks' dir
   load_model_step: best # load model step
@@ -17,6 +17,7 @@ general_cfg:
   model_save_fre: 500 # update step frequency of saving model
 
 algo_cfg:
+  n_steps_per_learn: 1
   value_layers:
     - layer_type: linear
       layer_size: [256]
@@ -24,7 +25,7 @@ algo_cfg:
     - layer_type: linear
       layer_size: [256]
       activation: relu
-  batch_size: 64
+  batch_size: 128
   buffer_type: REPLAY_QUE
   buffer_size: 100000
   epsilon_decay: 500

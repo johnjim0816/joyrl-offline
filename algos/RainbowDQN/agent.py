@@ -6,12 +6,6 @@ import numpy as np
 import ray
 from common.memories import ReplayBufferQue, ReplayBuffer, ReplayTree
 from common.optms import SharedAdam
-
-'''
-This NoisyLinear is modified from the original code from 
-https://github.com/higgsfield/RL-Adventure/blob/master/5.noisy%20dqn.ipynb
-''' 
-
 class NoisyLinear(nn.Module):
     def __init__(self, input_dim, output_dim, std_init=0.4):
         super(NoisyLinear, self).__init__()
