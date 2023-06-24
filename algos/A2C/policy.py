@@ -163,10 +163,10 @@ class Policy(BasePolicy):
         rewards = torch.tensor(np.array(rewards), device=self.device, dtype=torch.float32) # shape:[batch_size,1]
         dones = torch.tensor(np.array(dones), device=self.device, dtype=torch.float32) # shape:[batch_size,1]
         returns = self._compute_returns(rewards, dones) # shape:[batch_size,1]  
-        torch_dataset = Data.TensorDataset(states, actions, old_probs, old_log_probs,returns, rewards, next_states, dones)
+        torch_dataset = Data.TensorDataset(states, actions, old_probs, old_log_probs,returns)
         train_loader = Data.DataLoader(dataset=torch_dataset, batch_size=self.sgd_batch_size, shuffle=True,drop_last=False)
         for _ in range(self.k_epochs):
-            for batch_idx, (states_sgd, actions_sgd, old_probs_sgd, old_log_probs_sgd, returns_sgd, rewards, next_states, dones) in enumerate(train_loader):
+            for batch_idx, (states_sgd, actions_sgd, old_probs_sgd, old_log_probs_sgd, returns_sgd) in enumerate(train_loader):
                 values_sgd, new_log_probs_sgd, entropies = self.evaluate(states_sgd,actions_sgd)
                 advantages = returns_sgd - values_sgd.detach()
                 self.actor_loss = torch.mean(-new_log_probs_sgd*advantages.detach())
