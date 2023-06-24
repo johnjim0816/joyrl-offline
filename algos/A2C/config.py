@@ -1,21 +1,20 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2022-10-30 00:53:03
-LastEditor: JiangJi
-LastEditTime: 2022-12-04 14:47:54
-Discription: default parameters of A2C
-'''
-        
 class AlgoConfig:
     def __init__(self) -> None:
-        self.continuous = False # continuous or discrete action space
+        self.independ_actor = True # whether to use independent actor
+        # whether actor and critic share the same optimizer
+        self.share_optimizer = False # if True, lr for actor and critic will be the same
+        self.action_type = "continuous" # continuous action space
         self.gamma = 0.99 # discount factor
-        self.actor_lr = 3e-4 # learning rate of actor
-        self.critic_lr = 1e-3 # learning rate of critic
-        self.actor_hidden_dim = 256 # hidden_dim for actor MLP
-        self.critic_hidden_dim = 256 # hidden_dim for critic MLP
-        self.entropy_coef = 0.001 # entropy coefficient
-        self.update_freq = 20 # update policy every n steps
+        self.k_epochs = 4 # update policy for K epochs
+        self.lr = 0.0001 # for shared optimizer
+        self.actor_lr = 0.0003 # learning rate for actor, must be specified if share_optimizer is False
+        self.critic_lr = 0.001 # learning rate for critic, must be specified if share_optimizer is False
+        self.critic_loss_coef = 0.5 # critic loss coefficient
+        self.entropy_coef = 0.01 # entropy coefficient
+        self.buffer_type = "ONPOLICY_QUE" # buffer type
+        self.batch_size = 256 # ppo train batch size
+        # self.batch_episode = -1 # ppo train batch episode, -1 means not using batch episode
+        self.sgd_batch_size = 32 # sgd batch size
+        self.actor_hidden_dim = 256 # hidden dimension for actor
+        self.critic_hidden_dim = 256 # hidden dimension for critic
+        self.min_policy = 0 # min value for policy (for discrete action space)
