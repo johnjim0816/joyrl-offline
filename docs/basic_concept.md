@@ -96,13 +96,14 @@ while True:
             |-- config.py # 存放每个算法的默认参数设置
                 |-- class AlgoConfig # 算法参数设置的类
             |-- policy.py # 存放策略
-                |-- class Agent # 每个算法的类命名为Agent
-            |-- config.py
+            |-- data_handler.py # 存放数据处理器
     |-- config 
         |-- config.py # 存放通用参数设置
     |-- framework # 框架文件夹，存放一些模块等
     |-- presets # 预设的参数，对应的结果存放在benchmarks下面
     |-- envs
+        |-- gym # 存放gym环境
+            |-- config.py # 存放gym环境的默认参数设置
     |-- benchmarks # 存放训练好的结果
     |-- docs # 说明文档目录
     |-- tasks # 训练的时候会自动生成
@@ -111,3 +112,13 @@ while True:
     |-- README_cn.md # 项目中文README
     |-- requirements.txt # Pyhton依赖列表
 ```
+
+## 参数说明
+
+`JoyRL`旨在让用户只需要通过调参就能进行相关的强化学习实践，主要的参数包括：
+
+* 通用参数(`GeneralConfig`)：跟运行模式相关的参数，如算法名称`algo_name`、环境名称`env_name`、随机种子`seed`等等；
+* 算法参数(`AlgoConfig`)：算法本身相关参数，也是用户需要调参的主要参数；
+* 环境参数(`EnvConfig`)：环境相关参数，比如`gym`环境中的`render_mode`等；
+
+`JoyRL`目前提供两种方式来设置参数。其一是通过设置对应的`config.py`文件(具体位置参考目录树)，这些文件中也有对应的参数说明，然后运行`python main.py`即可，笔者不推荐使用这种方式。其二是通过设置`yaml`文件，然后运行`python main.py --config [path to yaml file]`即可，笔者推荐使用这种方式，因为这种方式更加灵活，而且可以通过`yaml`文件来设置多个参数组合，从而进行多组实验。`JoyRL`中提供了一些预设的`yaml`文件，用户可以参考这些文件来设置自己的`yaml`文件，这些预设的`yaml`文件存放在`presets`文件夹下面。
