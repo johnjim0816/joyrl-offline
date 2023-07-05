@@ -36,7 +36,7 @@ class SimpleInteractor(BaseInteractor):
         super().__init__(cfg, env, id, *args, **kwargs)
 
     def run(self, policy = None, *args, **kwargs):
-        dataserver, logger = kwargs['dataserver'], kwargs['logger']
+        mode, dataserver, logger = kwargs['mode'], kwargs['dataserver'], kwargs['logger']
         self.reset_summary()
         exps = []
         run_step , run_episode = 0, 0 # local run step, local run episode
@@ -45,7 +45,7 @@ class SimpleInteractor(BaseInteractor):
             global_sample_count = dataserver.get_sample_count() # get global sample count
             if self.cfg.render_mode == 'rgb_array' and self.episode == 0: # render env for the first episode
                 dataserver.add_ep_frame(self.env.render())
-            action = policy.get_action(self.curr_state, sample_count = global_sample_count)
+            action = policy.get_action(self.curr_state, mode, sample_count = global_sample_count)
             next_state, reward, terminated, truncated, info = self.env.step(action)
             # add transition to exps
             interact_transition = {'state':self.curr_state,'action':action,'reward':reward,'next_state':next_state,'done':terminated,'info':info}
