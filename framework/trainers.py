@@ -40,7 +40,18 @@ class BaseTrainer:
 class SimpleTrainer(BaseTrainer):
     def __init__(self, cfg, *args,**kwargs) -> None:
         super().__init__(cfg, *args, **kwargs)
-        
+    def learn(self):
+        n_steps_per_learn = self.collector.get_buffer_length() if self.cfg.onpolicy_flag else self.cfg.n_steps_per_learn
+        for _ in range(n_steps_per_learn):
+            training_data = self.collector.get_training_data() # get training data
+            learner_output = self.learner.run(training_data, dataserver = self.dataserver) # run learner
+            if learner_output is not None:
+                policy = self.learner.get_policy() # get policy from main learner
+                self.collector.handle_data_after_learn(learner_output['policy_data_after_learn']) # handle exps after update
+                self.stats_recorder.add_summary([learner_output['policy_summary']], writter_type = 'policy')
+                online_tester_output = self.online_tester.run(policy, dataserver = self.dataserver, logger = self.logger) # online evaluation
+                if online_tester_output is not None:
+                    self.stats_recorder.add_summary([online_tester_output['summary']], writter_type = 'policy')
     def run(self):
         self.logger.info(f"Start {self.cfg.mode}ing!") # print info
         s_t = time.time() # start time
@@ -49,17 +60,7 @@ class SimpleTrainer(BaseTrainer):
             interact_outputs = [interactor.run(policy, mode = self.cfg.mode, dataserver = self.dataserver, logger = self.logger ) for interactor in self.interactors] # run interactors
             self.collector.add_exps_list([interact_output['exps'] for interact_output in interact_outputs]) # handle exps after interact
             self.stats_recorder.add_summary([interact_output['interact_summary'] for interact_output in interact_outputs], writter_type = 'interact')
-            n_steps_per_learn = self.collector.get_buffer_length() if self.cfg.onpolicy_flag else self.cfg.n_steps_per_learn
-            for _ in range(n_steps_per_learn):
-                training_data = self.collector.get_training_data() # get training data
-                learner_output = self.learner.run(training_data, dataserver = self.dataserver) # run learner
-                if learner_output is not None:
-                    policy = self.learner.get_policy() # get policy from main learner
-                    self.collector.handle_data_after_learn(learner_output['policy_data_after_learn']) # handle exps after update
-                    self.stats_recorder.add_summary([learner_output['policy_summary']], writter_type = 'policy')
-                    online_tester_output = self.online_tester.run(policy, dataserver = self.dataserver, logger = self.logger) # online evaluation
-                    if online_tester_output is not None:
-                        self.stats_recorder.add_summary([online_tester_output['summary']], writter_type = 'policy')
+            if self.cfg.mode == "train": self.learn()
             if self.dataserver.check_task_end():
                 break    
         e_t = time.time() # end time
