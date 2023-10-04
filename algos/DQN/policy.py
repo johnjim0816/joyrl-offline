@@ -11,7 +11,7 @@ class Policy(BasePolicy):
         self.cfg = cfg
         self.gamma = cfg.gamma  
         # e-greedy parameters
-        self.sample_count = None
+        self.sample_count = 0
         self.epsilon_start = cfg.epsilon_start
         self.epsilon_end = cfg.epsilon_end
         self.epsilon_decay = cfg.epsilon_decay
@@ -32,7 +32,7 @@ class Policy(BasePolicy):
         ''' sample action
         '''
         # epsilon must decay(linear,exponential and etc.) for balancing exploration and exploitation
-        self.sample_count = kwargs.get('sample_count')
+        self.sample_count += 1
         self.epsilon = self.epsilon_end + (self.epsilon_start - self.epsilon_end) * \
             math.exp(-1. * self.sample_count / self.epsilon_decay) 
         if random.random() > self.epsilon:

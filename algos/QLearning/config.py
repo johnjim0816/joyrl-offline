@@ -1,4 +1,4 @@
-from config.config import DefaultConfig
+from config.general_config import DefaultConfig
 
 class AlgoConfig(DefaultConfig):
     ''' algorithm parameters

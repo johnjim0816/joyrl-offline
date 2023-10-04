@@ -4,8 +4,8 @@ general_cfg:
   device: cpu # device, cpu or cuda
   mode: train # run mode: train, test
   collect_traj: false # if collect trajectories or not
-  mp_backend:  # multi-processing mode: single(default), ray
-  n_workers: 1 # number of workers if using multi-processing, default 1
+  mp_backend:  # multi-processing mode: dummy(default), ray
+  n_workers: 2 # number of workers if using multi-processing, default 1
   load_checkpoint: false # if load checkpoint or not
   load_path: Train_single_CartPole-v1_DQN_20230515-211721 # if load checkpoint, then config path in 'tasks' dir
   load_model_step: best # load model step
@@ -17,7 +17,7 @@ general_cfg:
   model_save_fre: 500 # update step frequency of saving model
 
 algo_cfg:
-  n_steps_per_learn: 1
+  n_steps_per_learn: 2
   value_layers:
     - layer_type: linear
       layer_size: [256]
@@ -35,5 +35,5 @@ algo_cfg:
   lr: 0.0001
   target_update: 4
 env_cfg:
-  id: CartPole-v1
+  id: CartPole-v0
   render_mode: null

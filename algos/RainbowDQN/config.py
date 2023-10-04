@@ -8,7 +8,7 @@ LastEditor: JiangJi
 LastEditTime: 2023-03-12 18:32:17
 Discription: 
 '''
-from config.config import DefaultConfig
+from config.general_config import DefaultConfig
 
 import torch
 class AlgoConfig(DefaultConfig):
