@@ -9,13 +9,14 @@ import gymnasium as gym
 import torch.multiprocessing as mp
 from pathlib import Path
 from config.general_config import GeneralConfig, MergedConfig, DefaultConfig
-from framework.collectors import SimpleCollector, RayCollector
+from framework.collector import SimpleCollector, RayCollector
 from framework.dataserver import SimpleDataServer, RayDataServer
-from framework.interactors import DummyVecInteractor
-from framework.learners import SimpleLearner
-from framework.stats import SimpleStatsRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
-from framework.testers import SimpleTester, RayTester
-from framework.trainers import SimpleTrainer
+from framework.interactor import DummyVecInteractor
+from framework.learner import SimpleLearner
+from framework.recorder import SimpleStatsRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
+from framework.tester import SimpleTester, RayTester
+from framework.trainer import SimpleTrainer
+from framework.policy_mgr import PolicyMgr
 
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
 
@@ -187,10 +188,12 @@ class Main(object):
         online_tester = SimpleTester(self.cfg, test_env) # create online tester
         collector = SimpleCollector(self.cfg, data_handler = data_handler)
         dataserver = SimpleDataServer(self.cfg)
+        policy_mgr = PolicyMgr(self.cfg, policy, dataserver = dataserver)
         stats_recorder = SimpleStatsRecorder(self.cfg) # create stats recorder
         self.logger = SimpleLogger(self.cfg.log_dir)
         self.print_cfgs()  # print config
         trainer = SimpleTrainer(self.cfg, 
+                                policy_mgr = policy_mgr,
                                 vec_interactor = vec_interactor, 
                                 learner = learner, 
                                 collector = collector, 

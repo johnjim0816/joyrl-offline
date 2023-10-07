@@ -192,6 +192,7 @@ def timing(func):
         print(f"func: {func.__name__}, took: {te-ts:2.4f} seconds")
         return result
     return wrap
+
 def all_seed(seed = 1):
     ''' 设置随机种子，保证实验可复现，同时保证GPU和CPU的随机种子一致
     '''

@@ -6,6 +6,8 @@ class BaseLearner:
         self.cfg = cfg
         self.id = id
         self.policy = policy
+        self.collector = kwargs['collector']
+        self.dataserver = kwargs['dataserver']
 
     def get_policy(self):
         return self.policy
@@ -34,6 +36,11 @@ class SimpleLearner(BaseLearner):
         super().__init__(cfg, id, policy, *args, **kwargs)
 
     def run(self, training_data, *args, **kwargs):
+        n_steps_per_learn = self.collector.get_buffer_length() if self.cfg.onpolicy_flag else self.cfg.n_steps_per_learn
+        for _ in range(n_steps_per_learn):
+            training_data = self.collector.get_training_data() # get training data
+            if training_data is None: continue
+
         if training_data is None: return None
         dataserver = kwargs['dataserver']
         dataserver.increase_update_step()

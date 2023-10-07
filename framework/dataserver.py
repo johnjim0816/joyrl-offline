@@ -10,22 +10,48 @@ Discription:
 '''
 import ray
 from ray.util.queue import Queue, Empty, Full
-
+from typing import int
+from framework.message import Msg, MsgType
 class BaseDataServer:
     def __init__(self,cfg) -> None:
         self.global_episode = 0 # current global episode
         self.global_sample_count = 0 # global sample count
         self.global_update_step = 0 # global update step
         self.max_episode = cfg.max_episode # max episode
-    def increase_episode(self, i=1):
+
+    def pub_msg(self, msg: Msg):
+        msg_type, msg_data = msg.type, msg.data
+        if msg_type == MsgType.DATASERVER_GET_EPISODE:
+            self._DATASERVER_GET_EPISODE()
+        elif msg_type == MsgType.DATASERVER_INCREASE_EPISODE:
+            episode_delta = 1 if msg_data is None else msg_data
+            self._DATASERVER_INCREASE_EPISODE(msg_data,i = episode_delta)
+        elif msg_type == MsgType.GET_SAMPLE_COUNT:
+            self._get_sample_count(msg_data)
+        elif msg_type == MsgType.GET_UPDATE_STEP:
+            self._get_update_step(msg_data)
+        elif msg_type == MsgType.CHECK_TASK_END:
+            self._check_task_end(msg_data)
+        elif msg_type == MsgType.DATASERVER_INCREASE_EPISODE:
+            self._DATASERVER_INCREASE_EPISODE(msg_data)
+        elif msg_type == MsgType.INCREASE_SAMPLE_COUNT:
+            self._increase_sample_count(msg_data)
+        elif msg_type == MsgType.INCREASE_UPDATE_STEP:
+            self._increase_update_step(msg_data)
+        elif msg_type == MsgType.DATASERVER_CHECK_TASK_END:
+            self._check_task_end(msg_data)
+        else:
+            raise NotImplementedError
+
+    def _DATASERVER_INCREASE_EPISODE(self, i: int =1):
         ''' increase episode
         '''
         self.global_episode += i
-    def get_episode(self):
+    def _DATASERVER_GET_EPISODE(self):
         ''' get current episode
         '''
         return self.global_episode
-    def check_task_end(self):
+    def _check_task_end(self):
         ''' check if episode reaches the max episode
         '''
         if self.max_episode < 0:
