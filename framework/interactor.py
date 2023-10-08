@@ -8,9 +8,10 @@ from framework.message import Msg, MsgType
 class BaseInteractor:
     ''' Interactor for gym env to support sample n-steps or n-episodes traning data
     '''
-    def __init__(self, cfg: BaseEnvConfig, id = 0, *args, **kwargs) -> None:
+    def __init__(self, cfg: BaseEnvConfig, id = 0, policy = None, *args, **kwargs) -> None:
         self.cfg = cfg 
         self.id = id
+        self.policy = policy
         self.dataserver = kwargs['dataserver']
         self.logger = kwargs['logger']
         self.env = gym.make(self.cfg.env_cfg.id)
@@ -23,11 +24,17 @@ class BaseInteractor:
     def pub_msg(self, msg: Msg):
         msg_type, msg_data = msg.type, msg.data
         if msg_type == MsgType.INTERACTOR_SAMPLE:
-            policy = msg_data
-            self._sample_data(policy)
+            model_params = msg_data
+            self._put_model_params(model_params)
+            self._sample_data()
         elif msg_type == MsgType.INTERACTOR_GET_SAMPLE_DATA:
             return self._get_sample_data()
         
+    def _put_model_params(self, model_params):
+        ''' set model parameters
+        '''
+        self.policy.put_model_params(model_params)
+
     def reset_summary(self):
         ''' Create interact summary
         '''
@@ -49,14 +56,15 @@ class BaseInteractor:
     def init(self):
         self.curr_obs, self.curr_info = self.env.reset(seed = self.seed)
         return self.curr_obs, self.curr_info
-    def _sample_data(self, policy):
+    
+    def _sample_data(self):
         exps = []
         run_step, run_episode = 0, 0 # local run step, local run episode
         while True:
-            action = policy.get_action(self.curr_obs)
+            action = self.policy.get_action(self.curr_obs)
             obs, reward, terminated, truncated, info = self.env.step(action)
             interact_transition = {'interactor_id': self.id, 'state': self.curr_obs, 'action': action,'reward': reward, 'next_state': obs, 'done': terminated or truncated, 'info': info}
-            policy_transition = policy.POLICY_MGR_GET_POLICY_transition()
+            policy_transition = policy.get_policy_transition()
             exps.append(Exp(**interact_transition, **policy_transition))
             run_step += 1
             self.curr_obs, self.curr_info = obs, info
@@ -64,8 +72,8 @@ class BaseInteractor:
             self.ep_step += 1
             if terminated or truncated:
                 run_episode += 1
-                self.dataserver.DATASERVER_INCREASE_EPISODE() # increase episode
-                global_episode = self.dataserver.DATASERVER_GET_EPISODE() # get global episode
+                self.dataserver.pub_msg(Msg(MsgType.DATASERVER_INCREASE_EPISODE))
+                global_episode = self.dataserver.pub_msg(Msg(MsgType.DATASERVER_GET_EPISODE))
                 if global_episode % self.cfg.interact_summary_fre == 0 and global_episode <= self.cfg.max_episode: 
                     self.logger.info(f"Interactor {self.id} finished episode {global_episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
                     interact_summary = {'reward':self.ep_reward,'step':self.ep_step}

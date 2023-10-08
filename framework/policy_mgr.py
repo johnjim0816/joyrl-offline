@@ -7,7 +7,7 @@ class PolicyMgr:
     def __init__(self, cfg, policy, **kwargs) -> None:
         self.cfg = cfg
         self.dataserver = kwargs['dataserver']
-        self._latest_policy_dict = {0: policy}
+        self._latest_model_params_dict = {0: policy}
         self._save_policy_queue = Queue(maxsize = 128)
         self._thread_save_policy = threading.Thread(target=self._save_policy)
         self._thread_save_policy.setDaemon(True)
@@ -16,10 +16,10 @@ class PolicyMgr:
         ''' publish message
         '''
         msg_type, msg_data = msg.type, msg.data
-        if msg_type == MsgType.POLICY_MGR_PUT_POLICY:
-            self._POLICY_MGR_PUT_POLICY(msg_data)
-        elif msg_type == MsgType.POLICY_MGR_GET_POLICY:
-            self._POLICY_MGR_GET_POLICY(msg_data)
+        if msg_type == MsgType.POLICY_MGR_PUT_MODEL_PARAMS:
+            self._put_model_params(msg_data)
+        elif msg_type == MsgType.POLICY_MGR_GET_MODEL_PARAMS:
+            return self._get_model_params()
         else:
             raise NotImplementedError
         
@@ -28,21 +28,21 @@ class PolicyMgr:
         '''
         self._thread_save_policy.start()
 
-    def _POLICY_MGR_PUT_POLICY(self, msg_data):
-        ''' put policy
+    def _put_model_params(self, msg_data):
+        ''' put model params
         '''
-        policy_step, policy = msg_data
-        if policy_step >= self._latest_policy_dict.keys()[-1]:
-            self._latest_policy_dict[policy_step] = policy
+        update_step, model_params = msg_data
+        if update_step >= self._latest_model_params_dict.keys()[-1]:
+            self._latest_model_params_dict[update_step] = model_params
         while not self._save_policy_queue.full(): # if queue is full, wait for 0.01s
-            self._save_policy_queue.put((policy_step, policy))
+            self._save_policy_queue.put((update_step, model_params))
             time.sleep(0.01)
             break
 
-    def _POLICY_MGR_GET_POLICY(self, msg_data):
+    def _get_model_params(self):
         ''' get policy
         '''
-        self._latest_policy_dict.values()[-1]
+        self._latest_model_params_dict.values()[-1]
 
     def _save_policy(self):
         ''' async run
