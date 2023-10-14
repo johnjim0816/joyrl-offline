@@ -154,7 +154,7 @@ class CriticNetwork(BaseCriticNetwork):
 if __name__ == "__main__":
     # test：export PYTHONPATH=./:$PYTHONPATH
     import torch
-    from config.config import MergedConfig
+    from config.general_config import MergedConfig
     import gymnasium as gym
     cfg = MergedConfig()
     state_size = [None,4]

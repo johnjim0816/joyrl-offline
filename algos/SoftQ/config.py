@@ -1,15 +1,4 @@
-#!/usr/bin/env python
-# coding=utf-8
-'''
-Author: JiangJi
-Email: johnjim0816@gmail.com
-Date: 2023-02-21 20:32:11
-LastEditor: JiangJi
-LastEditTime: 2023-05-18 13:38:56
-Discription: 
-'''
-from config.general_config import DefaultConfig
-class AlgoConfig(DefaultConfig):
+class AlgoConfig():
     ''' algorithm parameters
     '''
     def __init__(self) -> None:
@@ -19,11 +8,13 @@ class AlgoConfig(DefaultConfig):
         self.epsilon_decay = 500  # epsilon decay
         self.gamma = 0.95  # reward discount factor
         self.lr = 0.0001  # learning rate
+        self.buffer_type = 'REPLAY_QUE' # replay buffer type
         self.buffer_size = 100000  # replay buffer size
         self.batch_size = 64  # batch size
+        self.alpha = 4 # default 4 for cartpole
         self.target_update = 4  # target network update frequency
         # value network layers config
         self.value_layers = [
-            {'layer_type': 'noisy_linear', 'layer_size': [64], 'activation': 'ReLU','std_init': 0.4},
-            {'layer_type': 'noisy_linear', 'layer_size': [64], 'activation': 'ReLU','std_init': 0.4},
+            {'layer_type': 'Linear', 'layer_size': [64], 'activation': 'ReLU'},
+            {'layer_type': 'Linear', 'layer_size': [64], 'activation': 'ReLU'},
         ]

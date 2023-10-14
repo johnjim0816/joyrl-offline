@@ -14,17 +14,28 @@ from pathlib import Path
 import pickle
 import logging
 from torch.utils.tensorboard import SummaryWriter  
+from framework.message import Msg, MsgType
 
 class BaseStatsRecorder:
     def __init__(self, cfg) -> None:
         self.cfg = cfg
-        self.init_writter()
-    def init_writter(self):
+        self._init_writter()
+    def pub_msg(self, msg: Msg):
+        ''' publish message
+        '''
+        msg_type, msg_data = msg.type, msg.data
+        if msg_type == MsgType.STATS_RECORDER_PUT_INTERACT_SUMMARY:
+            interact_summary_list = msg_data
+            self._add_summary(interact_summary_list, writter_type = 'interact')
+        else:
+            raise NotImplementedError
+    def _init_writter(self):
         self.writters = {}
         self.writter_types = ['interact','policy']
         for writter_type in self.writter_types:
             self.writters[writter_type] = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/{writter_type}")
-    def add_summary(self, summary_all_entities, writter_type = None):
+    
+    def _add_summary(self, summary_all_entities, writter_type = None):
         for summary_each_entity in summary_all_entities:
             for summary_data in summary_each_entity:
                 step, summary = summary_data

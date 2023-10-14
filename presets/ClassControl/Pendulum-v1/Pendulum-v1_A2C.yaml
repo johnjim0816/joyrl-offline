@@ -1,0 +1,48 @@
+general_cfg:
+  algo_name: A2C
+  env_name: gym # env name, differ from env_id in env_cfgs
+  device: cpu # device, cpu or cuda
+  mode: test # run mode: train, test
+  collect_traj: false # if collect trajectories or not
+  mp_backend: single # multi-processing mode: single(default), ray
+  n_workers: 2 # number of workers if using multi-processing, default 1
+  load_checkpoint: true # if load checkpoint or not
+  load_path: Train_Pendulum-v1_A2C_20230623-232832 # if load checkpoint, then config path in 'tasks' dir
+  load_model_step: best # load model step
+  max_episode: 50 # max episodes, set -1 to keep running
+  max_step: 200 # max steps per episode
+  seed: 1 # random seed, set 0 not to use seed
+  online_eval: true # if online eval or not
+  online_eval_episode: 10 # online eval episodes
+  model_save_fre: 10 # update step frequency of saving model
+algo_cfg:
+  n_steps_per_learn: 1
+  action_type: continuous
+  independ_actor: true
+  share_optimizer: false
+  actor_layers:
+    - layer_type: linear
+      layer_size: [256]
+      activation: relu
+    # - layer_type: linear
+    #   layer_size: [128]
+    #   activation: relu
+  critic_layers:
+    - layer_type: linear
+      layer_size: [256]
+      activation: relu
+    # - layer_type: linear
+    #   layer_size: [128]
+    #   activation: relu
+  buffer_type: ONPOLICY_QUE
+  actor_lr: 0.0001
+  critic_lr: 0.005
+  entropy_coef: 0.01
+  gamma: 0.9
+  k_epochs: 4
+  batch_size: 256
+  sgd_batch_size: 32
+env_cfg:
+  id: Pendulum-v1
+  render_mode: null
+  
