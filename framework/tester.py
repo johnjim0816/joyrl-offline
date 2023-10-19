@@ -18,7 +18,6 @@ class SimpleTester(BaseTester):
     def __init__(self, cfg, env = None) -> None:
         super().__init__(cfg, env)
     def eval(self, policy, global_update_step = 0, logger = None):
-       
         sum_eval_reward = 0
         for _ in range(self.cfg.online_eval_episode):
             state, info = self.env.reset(seed = self.cfg.seed)

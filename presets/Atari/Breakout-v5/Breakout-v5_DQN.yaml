@@ -16,6 +16,7 @@ general_cfg:
   online_eval_episode: 10 # online eval episodes
   model_save_fre: 500 # update step frequency of saving model
 algo_cfg:
+  n_steps_per_learn: 1
   value_layers:
     - layer_type: conv2d
       in_channel: 4

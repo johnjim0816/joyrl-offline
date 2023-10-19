@@ -91,7 +91,7 @@ def plot_rewards(rewards,title="learning curve",fpath=None,save_fig=True,show_fi
     sns.set()
     plt.figure()  # 创建一个图形实例，方便同时多画几个图
     plt.title(f"{title}")
-    plt.xlabel('epsiodes')
+    plt.xlabel('episodes')
     plt.plot(rewards, label='rewards')
     plt.plot(smooth(rewards), label='smoothed')
     plt.legend()
@@ -104,7 +104,7 @@ def plot_losses(losses, algo="DQN", save=True, path='./'):
     sns.set()
     plt.figure()
     plt.title("loss curve of {}".format(algo))
-    plt.xlabel('epsiodes')
+    plt.xlabel('episodes')
     plt.plot(losses, label='rewards')
     plt.legend()
     if save:
@@ -192,6 +192,7 @@ def timing(func):
         print(f"func: {func.__name__}, took: {te-ts:2.4f} seconds")
         return result
     return wrap
+
 def all_seed(seed = 1):
     ''' 设置随机种子，保证实验可复现，同时保证GPU和CPU的随机种子一致
     '''

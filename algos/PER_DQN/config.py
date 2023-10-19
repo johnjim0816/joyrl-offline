@@ -8,7 +8,7 @@ LastEditor: JiangJi
 LastEditTime: 2023-05-18 23:14:20
 Discription: 
 '''
-from config.config import DefaultConfig
+from config.general_config import DefaultConfig
 
 class AlgoConfig(DefaultConfig):
     def __init__(self) -> None:

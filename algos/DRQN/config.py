@@ -1,4 +1,4 @@
-from config.config import DefaultConfig
+from config.general_config import DefaultConfig
 
 
 class AlgoConfig(DefaultConfig):
@@ -16,6 +16,6 @@ class AlgoConfig(DefaultConfig):
 
         self.lookup_step = 10  # 采样的 step 数量
         self.min_epi_num = 16  # 用于触发训练的最小 episode 数量的阈值
-        self.max_epi_len = 128  # 单个epsiode中采样的最大step数量
+        self.max_epi_len = 128  # 单个episode中采样的最大step数量
         self.max_epi_num = 100  # 存放 episode 的容量大小，也就是经验回放池大小
 

@@ -122,19 +122,19 @@ class ActorNetwork(BaseActorNetwork):
             probs = self.action_layer(x, legal_actions)
             return probs
         elif self.action_type == ActionLayerType.CONTINUOUS:
-            mu, sigma = self.action_layer(x)
-            return mu, sigma
+            output = self.action_layer(x)
+            return output
         elif self.action_type == ActionLayerType.DPG:
             mu = self.action_layer(x)
             return mu
 
 class CriticNetwork(BaseCriticNetwork):
-    def __init__(self, cfg, state_size):
+    def __init__(self, cfg, input_size, output_dim = 1):
         super(CriticNetwork, self).__init__()
         self.cfg = cfg
         self.layers_cfg_dic = cfg.critic_layers # load layers config
         self.layers = nn.ModuleList()
-        output_size = state_size
+        output_size = input_size
         for layer_cfg_dic in self.layers_cfg_dic:
             if "layer_type" not in layer_cfg_dic:
                 raise ValueError("layer_type must be specified in layer_cfg")
@@ -142,7 +142,7 @@ class CriticNetwork(BaseCriticNetwork):
             layer, layer_out_size = create_layer(output_size, layer_cfg)
             output_size = layer_out_size
             self.layers.append(layer) 
-        head_layer_cfg = LayerConfig(layer_type='linear', layer_size=[1], activation='none')
+        head_layer_cfg = LayerConfig(layer_type='linear', layer_size=[output_dim], activation='none')
         self.head_layer, layer_out_size = create_layer(output_size, head_layer_cfg)
     def forward(self, x):
         for layer in self.layers:
@@ -154,7 +154,7 @@ class CriticNetwork(BaseCriticNetwork):
 if __name__ == "__main__":
     # test：export PYTHONPATH=./:$PYTHONPATH
     import torch
-    from config.config import MergedConfig
+    from config.general_config import MergedConfig
     import gymnasium as gym
     cfg = MergedConfig()
     state_size = [None,4]

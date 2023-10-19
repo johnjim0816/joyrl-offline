@@ -41,7 +41,7 @@ class BasePolicy(nn.Module):
     def get_model_params(self):
         model_params = self.state_dict()
         return model_params
-    def set_model_params(self, model_params):
+    def put_model_params(self, model_params):
         self.load_state_dict(model_params)
     def get_optimizer_params(self):
         return self.optimizer.state_dict()
@@ -68,8 +68,10 @@ class BasePolicy(nn.Module):
         ''' update policy transition
         '''
         self.policy_transition = {}
+        
     def get_policy_transition(self):
         return self.policy_transition
+    
     def create_summary(self):
         ''' create policy summary
         '''

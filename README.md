@@ -38,6 +38,8 @@ pip install torch==1.10.0+cu113 torchvision==0.11.0+cu113 torchaudio==0.10.0 --e
 
 ```bash
 pip install -r requirements.txt
+# image-url
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 ## 使用说明
@@ -53,7 +55,7 @@ python main.py
 或者也可以新建一个 `yaml`文件自定义参数，例如 `config/custom_config_Train.yaml`然后执行:
 
 ```bash
-python main.py --yaml config/custom_config_Train.yaml
+python main.py -c config/custom_config_Train.yaml
 ```
 
 在[presets](./presets/)文件夹中已经有一些预设的 `yaml`文件，并且相应地在[benchmarks](./benchmarks/)文件夹中保存了一些已经训练好的结果。
