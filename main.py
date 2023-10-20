@@ -9,7 +9,7 @@ import gymnasium as gym
 import torch.multiprocessing as mp
 from pathlib import Path
 from config.general_config import GeneralConfig, MergedConfig, DefaultConfig
-from framework.collector import SimpleCollector, RayCollector
+from framework.collector import SimpleCollector
 from framework.dataserver import SimpleDataServer, RayDataServer
 from framework.interactor import DummyVecInteractor
 from framework.learner import SimpleLearner
@@ -183,14 +183,22 @@ class Main(object):
     def run(self) -> None:
         test_env = self.create_single_env() # create single env
         policy, data_handler = self.policy_config(self.cfg) # configure policy and data_handler
-        vec_interactor = DummyVecInteractor(self.cfg)
-        learner = SimpleLearner(self.cfg, policy = policy)
-        online_tester = SimpleTester(self.cfg, test_env) # create online tester
-        collector = SimpleCollector(self.cfg, data_handler = data_handler)
         dataserver = SimpleDataServer(self.cfg)
+        self.logger = SimpleLogger(self.cfg.log_dir)
+        collector = SimpleCollector(self.cfg, data_handler = data_handler)
+        vec_interactor = DummyVecInteractor(self.cfg,
+                                            dataserver = dataserver,
+                                            logger = self.logger
+                                            )
+        learner = SimpleLearner(self.cfg, 
+                                dataserver = dataserver,
+                                policy = policy,
+                                collector = collector
+                                )
+        online_tester = SimpleTester(self.cfg, test_env) # create online tester
         policy_mgr = PolicyMgr(self.cfg, policy, dataserver = dataserver)
         stats_recorder = SimpleStatsRecorder(self.cfg) # create stats recorder
-        self.logger = SimpleLogger(self.cfg.log_dir)
+        
         self.print_cfgs()  # print config
         trainer = SimpleTrainer(self.cfg, 
                                 policy_mgr = policy_mgr,

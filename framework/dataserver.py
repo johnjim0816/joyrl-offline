@@ -10,7 +10,6 @@ Discription:
 '''
 import ray
 from ray.util.queue import Queue, Empty, Full
-from typing import int
 from framework.message import Msg, MsgType
 class BaseDataServer:
     def __init__(self,cfg) -> None:

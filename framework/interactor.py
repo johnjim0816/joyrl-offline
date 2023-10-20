@@ -97,7 +97,7 @@ class BaseInteractor:
         self.env.close()
 
 class BaseVecInteractor:
-    def __init__(self, cfg) -> None:
+    def __init__(self, cfg: BaseEnvConfig, policy = None, *args, **kwargs) -> None:
         self.cfg = cfg
         self.n_envs = cfg.n_workers
         self.reset_interact_outputs()
@@ -105,9 +105,9 @@ class BaseVecInteractor:
         self.interact_outputs = []
 
 class DummyVecInteractor(BaseVecInteractor):
-    def __init__(self, cfg) -> None:
-        super().__init__(cfg)
-        self.interactors = [BaseInteractor(cfg, id = i) for i in range(self.n_envs)]
+    def __init__(self, cfg: BaseEnvConfig, policy = None, *args, **kwargs) -> None:
+        super().__init__(cfg, policy = policy, *args, **kwargs)
+        self.interactors = [BaseInteractor(cfg, id = i, policy = policy, *args, **kwargs) for i in range(self.n_envs)]
 
     def run(self, policy, *args, **kwargs):
         for i in range(self.n_envs):
