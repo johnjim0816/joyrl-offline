@@ -27,4 +27,4 @@ class AlgoConfig:
         self.alpha = 5 # the para to calculate the scalar lambda
         self.lmbda = 1 # the hyperparameter for normalization on the Q value
         self.train_iterations = 1500 # 训练的迭代次数
-        self.normalize = True
+        self.normalize = True # 是否对 state 归一化
