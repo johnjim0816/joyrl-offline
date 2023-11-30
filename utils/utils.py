@@ -26,8 +26,6 @@ import pandas as pd
 from functools import wraps
 from time import time
 import logging
-import torch.multiprocessing as mp
-
 from matplotlib.font_manager import FontProperties  # 导入字体模块
 
 def chinese_font():
@@ -154,44 +152,24 @@ def load_cfgs(cfgs, fpath):
         for cfg_type in cfgs:
             for k, v in load_cfg[cfg_type].items():
                 setattr(cfgs[cfg_type], k, v)
-# def del_empty_dir(*paths):
-#     ''' 删除目录下所有空文件夹
-#     '''
-#     for path in paths:
-#         dirs = os.listdir(path)
-#         for dir in dirs:
-#             if not os.listdir(os.path.join(path, dir)):
-#                 os.removedirs(os.path.join(path, dir))
 
-# class NpEncoder(json.JSONEncoder):
-#     def default(self, obj):
-#         if isinstance(obj, np.integer):
-#             return int(obj)
-#         if isinstance(obj, np.floating):
-#             return float(obj)
-#         if isinstance(obj, np.ndarray):
-#             return obj.tolist()
-#         return json.JSONEncoder.default(self, obj)
-        
-# def save_args(args,path=None):
-#     # save parameters  
-#     Path(path).mkdir(parents=True, exist_ok=True) 
-#     with open(f"{path}/params.json", 'w') as fp:
-#         json.dump(args, fp,cls=NpEncoder)   
-#     print("Parameters saved!")
+def timing(func_name=True):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            end_time = time.time()
+            
+            execution_time = end_time - start_time
+            if func_name:
+                print(f"func {func.__name__} executed: {execution_time} seconds")
+            else:
+                print(f"executed: {execution_time} seconds秒")
+            return result
+        return wrapper
+    return decorator
 
-
-def timing(func):
-    ''' a decorator to print the running time of a function
-    ''' 
-    @wraps(func)
-    def wrap(*args, **kw):
-        ts = time()
-        result = func(*args, **kw)
-        te = time()
-        print(f"func: {func.__name__}, took: {te-ts:2.4f} seconds")
-        return result
-    return wrap
 
 def all_seed(seed = 1):
     ''' 设置随机种子，保证实验可复现，同时保证GPU和CPU的随机种子一致

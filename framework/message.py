@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Optional, Any
+from dataclasses import dataclass
 
 class MsgType(Enum):
     # dataserver
@@ -24,10 +25,11 @@ class MsgType(Enum):
 
     # recorder
     STATS_RECORDER_PUT_INTERACT_SUMMARY = 40
-    # policy_mgr
-    POLICY_MGR_PUT_MODEL_PARAMS = 70
-    POLICY_MGR_GET_MODEL_PARAMS = 71
-
+    
+    # model_mgr
+    MODEL_MGR_PUT_MODEL_PARAMS = 70
+    MODEL_MGR_GET_MODEL_PARAMS = 71
+@dataclass
 class Msg(object):
     type: MsgType
     data: Optional[Any] = None

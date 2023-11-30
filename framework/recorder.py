@@ -35,12 +35,11 @@ class BaseStatsRecorder:
         for writter_type in self.writter_types:
             self.writters[writter_type] = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/{writter_type}")
     
-    def _add_summary(self, summary_all_entities, writter_type = None):
-        for summary_each_entity in summary_all_entities:
-            for summary_data in summary_each_entity:
-                step, summary = summary_data
-                for key, value in summary.items():
-                    self.writters[writter_type].add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = step)
+    def _add_summary(self, summary_data_list, writter_type = None):
+        for summary_data in summary_data_list:
+            step, summary = summary_data
+            for key, value in summary.items():
+                self.writters[writter_type].add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = step)
 
 class SimpleStatsRecorder(BaseStatsRecorder):
     def __init__(self, cfg) -> None:

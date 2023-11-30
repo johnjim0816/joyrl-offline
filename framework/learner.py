@@ -1,5 +1,5 @@
 import ray
-from ray.util.queue import Queue, Empty, Full
+from queue import Queue
 from typing import Tuple
 from framework.message import Msg, MsgType
 
@@ -53,15 +53,29 @@ class SimpleLearner(BaseLearner):
     def __init__(self, cfg, id = 0, policy = None, *args, **kwargs) -> None:
         super().__init__(cfg, id, policy, *args, **kwargs)
 
-    def _update_policy(self):
-        n_steps_per_learn = self.collector.get_buffer_length() if self.cfg.onpolicy_flag else self.cfg.n_steps_per_learn
-        for _ in range(n_steps_per_learn):
-            training_data = self.collector.get_training_data() # get training data
-            if training_data is None: continue
-            self.dataserver.increase_update_step()
-            self.global_update_step = self.dataserver.get_update_step()
-            self.policy.learn(**training_data,update_step = self.global_update_step)
-            self._put_updated_model_params_queue()
+    def run(self, *args, **kwargs):
+        model_mgr = kwargs['model_mgr']
+        model_params = model_mgr.pub_msg(Msg(type = MsgType.MODEL_MGR_GET_MODEL_PARAMS)) # get model params
+        self.policy.put_model_params(model_params)
+        collector = kwargs['collector']
+        training_data = collector.pub_msg(Msg(type = MsgType.COLLECTOR_GET_TRAINING_DATA)) # get training data
+        if training_data is None: return
+        dataserver = kwargs['dataserver']
+        curr_update_step = dataserver.pub_msg(Msg(type = MsgType.DATASERVER_GET_UPDATE_STEP))
+        self.policy.learn(**training_data,update_step = curr_update_step)
+        dataserver.pub_msg(Msg(type = MsgType.DATASERVER_INCREASE_UPDATE_STEP))
+        model_params = self.policy.get_model_params()
+        model_mgr.pub_msg(Msg(type = MsgType.MODEL_MGR_PUT_MODEL_PARAMS, data = (curr_update_step, model_params)))
+
+    # def _update_policy(self):
+    #     n_steps_per_learn = self.collector.get_buffer_length() if self.cfg.onpolicy_flag else self.cfg.n_steps_per_learn
+    #     for _ in range(n_steps_per_learn):
+    #         training_data = self.collector.get_training_data() # get training data
+    #         if training_data is None: continue
+    #         self.dataserver.increase_update_step()
+    #         self.global_update_step = self.dataserver.get_update_step()
+    #         self.policy.learn(**training_data,update_step = self.global_update_step)
+    #         self._put_updated_model_params_queue()
 
         # if training_data is None: return None
         # self.dataserver.increase_update_step()

@@ -4,6 +4,7 @@
 # parent_path = os.path.dirname(curr_path)  # parent path 
 # sys.path.append(parent_path)  # add path to system path
 import sys,os
+import copy
 import argparse,datetime,importlib,yaml,time 
 import gymnasium as gym
 import torch.multiprocessing as mp
@@ -16,7 +17,7 @@ from framework.learner import SimpleLearner
 from framework.recorder import SimpleStatsRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.tester import SimpleTester, RayTester
 from framework.trainer import SimpleTrainer
-from framework.policy_mgr import PolicyMgr
+from framework.model_mgr import ModelMgr
 
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
 
@@ -29,16 +30,15 @@ class Main(object):
         all_seed(seed=self.general_cfg.seed)  # set seed == 0 means no seed
         self.check_sample_length(self.cfg) # check onpolicy sample length
         
-
-    def print_cfgs(self):
+    def print_cfgs(self, logger = None):
         ''' print parameters
         '''
         def print_cfg(cfg, name = ''):
             cfg_dict = vars(cfg)
-            self.logger.info(f"{name}:")
-            self.logger.info(''.join(['='] * 80))
+            logger.info(f"{name}:")
+            logger.info(''.join(['='] * 80))
             tplt = "{:^20}\t{:^20}\t{:^20}"
-            self.logger.info(tplt.format("Name", "Value", "Type"))
+            logger.info(tplt.format("Name", "Value", "Type"))
             for k, v in cfg_dict.items():
                 if v.__class__.__name__ == 'list': # convert list to str
                     v = str(v)
@@ -46,8 +46,8 @@ class Main(object):
                     v = 'None'
                 if "support" in k: # avoid ndarray
                     v = str(v[0])
-                self.logger.info(tplt.format(k, v, str(type(v))))
-            self.logger.info(''.join(['='] * 80))
+                logger.info(tplt.format(k, v, str(type(v))))
+            logger.info(''.join(['='] * 80))
         print_cfg(self.cfg.general_cfg, name = 'General Configs')
         print_cfg(self.cfg.algo_cfg, name = 'Algo Configs')
         print_cfg(self.cfg.env_cfg, name = 'Env Configs')
@@ -67,13 +67,12 @@ class Main(object):
         ''' load yaml config
         '''
         parser = argparse.ArgumentParser(description="hyperparameters")
-        parser.add_argument('-c', default=None, type=str,
-
+        parser.add_argument('--yaml', default=None, type=str,
                             help='the path of config file')
         args = parser.parse_args()
         # load config from yaml file
-        if args.c is not None:
-            with open(args.c) as f:
+        if args.yaml is not None:
+            with open(args.yaml) as f:
                 load_cfg = yaml.load(f, Loader=yaml.FullLoader)
                 # load general config
                 self.load_yaml_cfg(self.general_cfg,load_cfg,'general_cfg')
@@ -184,31 +183,32 @@ class Main(object):
         test_env = self.create_single_env() # create single env
         policy, data_handler = self.policy_config(self.cfg) # configure policy and data_handler
         dataserver = SimpleDataServer(self.cfg)
-        self.logger = SimpleLogger(self.cfg.log_dir)
+        logger = SimpleLogger(self.cfg.log_dir)
         collector = SimpleCollector(self.cfg, data_handler = data_handler)
-        vec_interactor = DummyVecInteractor(self.cfg,
-                                            dataserver = dataserver,
-                                            logger = self.logger
+        vec_interactor = DummyVecInteractor(self.cfg, 
+                                            policy = copy.deepcopy(policy),
                                             )
         learner = SimpleLearner(self.cfg, 
+                                policy = copy.deepcopy(policy),
                                 dataserver = dataserver,
-                                policy = policy,
                                 collector = collector
                                 )
         online_tester = SimpleTester(self.cfg, test_env) # create online tester
-        policy_mgr = PolicyMgr(self.cfg, policy, dataserver = dataserver)
+        model_mgr = ModelMgr(self.cfg, policy.get_model_params(),
+                               dataserver = dataserver,
+                               logger = logger
+                               )
         stats_recorder = SimpleStatsRecorder(self.cfg) # create stats recorder
-        
-        self.print_cfgs()  # print config
+        self.print_cfgs(logger = logger)  # print config
         trainer = SimpleTrainer(self.cfg, 
-                                policy_mgr = policy_mgr,
+                                dataserver = dataserver,
+                                model_mgr = model_mgr,
                                 vec_interactor = vec_interactor, 
                                 learner = learner, 
                                 collector = collector, 
                                 online_tester = online_tester,
-                                dataserver = dataserver,
                                 stats_recorder = stats_recorder, 
-                                logger = self.logger) # create trainer
+                                logger = logger) # create trainer
         trainer.run() # run trainer
         save_cfgs(self.save_cfgs, self.cfg.task_dir)  # save config
 

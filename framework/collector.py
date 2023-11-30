@@ -9,19 +9,18 @@ class BaseCollector:
         '''
         msg_type, msg_data = msg.type, msg.data
         if msg_type == MsgType.COLLECTOR_PUT_EXPS:
-            exps_list = msg_data
-            self._put_exps(exps_list)
+            exps = msg_data
+            self._put_exps(exps)
         elif msg_type == MsgType.COLLECTOR_GET_TRAINING_DATA:
             return self._get_training_data()
         elif msg_type == MsgType.COLLECTOR_GET_BUFFER_LENGTH:
             return self.get_buffer_length()
         else:
             raise NotImplementedError
-    def _put_exps(self, exps_list):
+    def _put_exps(self, exps):
         ''' add exps to data handler
         '''
-        for exps in exps_list:
-            self.data_handler.add_exps(exps) # add exps to data handler
+        self.data_handler.add_exps(exps) # add exps to data handler
     def _get_training_data(self):
         training_data = self.data_handler.sample_training_data() # sample training data
         return training_data

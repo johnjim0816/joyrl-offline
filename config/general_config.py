@@ -30,7 +30,7 @@ class GeneralConfig():
         self.max_step = 200 # number of episodes for testing, set -1 means unlimited steps
         self.collect_traj = False # if collect trajectory or not
         # multiprocessing settings
-        self.mp_backend = "single" # multiprocessing backend: "ray", default "single"
+        self.mp_backend = "dummy" # multiprocessing backend: "ray", default "single"
         self.n_workers = 1 # number of workers
         self.n_learners = 1 # number of learners if using multi-processing, default 1
         self.share_buffer = True # if all learners share the same buffer

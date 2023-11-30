@@ -1,26 +1,24 @@
 import gymnasium as gym
 from typing import Tuple
-
 from algos.base.exps import Exp
-from envs.base.config import BaseEnvConfig
 from framework.message import Msg, MsgType
+from config.general_config import MergedConfig
 
 class BaseInteractor:
     ''' Interactor for gym env to support sample n-steps or n-episodes traning data
     '''
-    def __init__(self, cfg: BaseEnvConfig, id = 0, policy = None, *args, **kwargs) -> None:
+    def __init__(self, cfg: MergedConfig, id = 0, policy = None, *args, **kwargs) -> None:
         self.cfg = cfg 
         self.id = id
         self.policy = policy
-        self.dataserver = kwargs['dataserver']
-        self.logger = kwargs['logger']
         self.env = gym.make(self.cfg.env_cfg.id)
         self.seed = self.cfg.seed + self.id
         self.data = None
-        self.reset_summary()
-        self.reset_ep_params()
-        self.init()
-
+        self.exps = [] # reset experiences
+        self.summary = [] # reset summary
+        self.ep_reward, self.ep_step = 0, 0 # reset params per episode
+        self.curr_obs, self.curr_info = self.env.reset(seed = self.seed) # reset env
+    
     def pub_msg(self, msg: Msg):
         msg_type, msg_data = msg.type, msg.data
         if msg_type == MsgType.INTERACTOR_SAMPLE:
@@ -29,75 +27,54 @@ class BaseInteractor:
             self._sample_data()
         elif msg_type == MsgType.INTERACTOR_GET_SAMPLE_DATA:
             return self._get_sample_data()
-        
-    def _put_model_params(self, model_params):
-        ''' set model parameters
-        '''
+
+    def run(self, model_params, *args, **kwargs):
+        collector = kwargs['collector']
+        stats_recorder = kwargs['stats_recorder']
         self.policy.put_model_params(model_params)
+        self._sample_data(*args, **kwargs)
+        collector.pub_msg(Msg(type = MsgType.COLLECTOR_PUT_EXPS, data = self.exps)) # put exps to collector
+        self.exps = [] # reset exps
+        if len(self.summary) > 0:
+            stats_recorder.pub_msg(Msg(type = MsgType.STATS_RECORDER_PUT_INTERACT_SUMMARY, data = self.summary)) # put summary to stats recorder
+            self.summary = [] # reset summary
 
-    def reset_summary(self):
-        ''' Create interact summary
-        '''
-        self.summary = list()  
-
-    def update_summary(self, summary: Tuple):
-        ''' Add interact summary
-        '''
-        self.summary.append(summary)
-
-    def get_summary(self):
-        return self.summary
-    
-    def reset_ep_params(self):
-        ''' Reset episode params
-        '''
-        self.ep_reward, self.ep_step = 0, 0
-
-    def init(self):
-        self.curr_obs, self.curr_info = self.env.reset(seed = self.seed)
-        return self.curr_obs, self.curr_info
-    
-    def _sample_data(self):
-        exps = []
+    def _sample_data(self,*args, **kwargs):
+        dataserver = kwargs['dataserver']
+        logger = kwargs['logger']
         run_step, run_episode = 0, 0 # local run step, local run episode
         while True:
             action = self.policy.get_action(self.curr_obs)
             obs, reward, terminated, truncated, info = self.env.step(action)
             interact_transition = {'interactor_id': self.id, 'state': self.curr_obs, 'action': action,'reward': reward, 'next_state': obs, 'done': terminated or truncated, 'info': info}
-            policy_transition = policy.get_policy_transition()
-            exps.append(Exp(**interact_transition, **policy_transition))
+            policy_transition = self.policy.get_policy_transition()
+            self.exps.append(Exp(**interact_transition, **policy_transition))
             run_step += 1
             self.curr_obs, self.curr_info = obs, info
             self.ep_reward += reward
             self.ep_step += 1
-            if terminated or truncated:
+            if terminated or truncated or self.ep_step >= self.cfg.max_step:
                 run_episode += 1
-                self.dataserver.pub_msg(Msg(MsgType.DATASERVER_INCREASE_EPISODE))
-                global_episode = self.dataserver.pub_msg(Msg(MsgType.DATASERVER_GET_EPISODE))
+                dataserver.pub_msg(Msg(MsgType.DATASERVER_INCREASE_EPISODE))
+                global_episode = dataserver.pub_msg(Msg(MsgType.DATASERVER_GET_EPISODE))
                 if global_episode % self.cfg.interact_summary_fre == 0 and global_episode <= self.cfg.max_episode: 
-                    self.logger.info(f"Interactor {self.id} finished episode {global_episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
+                    logger.info(f"Interactor {self.id} finished episode {global_episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
                     interact_summary = {'reward':self.ep_reward,'step':self.ep_step}
-                    self.update_summary((global_episode, interact_summary))
-                self.reset_ep_params()
-                self.curr_obs, self.curr_info = self.env.reset(seed = self.seed)
+                    self.summary.append((global_episode, interact_summary))
+                self.ep_reward, self.ep_step = 0, 0 # reset params per episode
+                self.curr_obs, self.curr_info = self.env.reset(seed = self.seed) # reset env
                 if run_episode >= self.cfg.n_sample_episodes:
                     run_episode = 0
                     break
             if run_step >= self.cfg.n_sample_steps:
                 run_step = 0
                 break
-        self.data = {"exps": exps, "interact_summary": self.get_summary()}
-    
-    def _get_sample_data(self):
-        output = self.data
-        self.data = None # reset data
-        return output
     
     def close_env(self):
         self.env.close()
 
 class BaseVecInteractor:
-    def __init__(self, cfg: BaseEnvConfig, policy = None, *args, **kwargs) -> None:
+    def __init__(self, cfg: MergedConfig, policy = None, *args, **kwargs) -> None:
         self.cfg = cfg
         self.n_envs = cfg.n_workers
         self.reset_interact_outputs()
@@ -105,18 +82,15 @@ class BaseVecInteractor:
         self.interact_outputs = []
 
 class DummyVecInteractor(BaseVecInteractor):
-    def __init__(self, cfg: BaseEnvConfig, policy = None, *args, **kwargs) -> None:
+    def __init__(self, cfg: MergedConfig, policy = None, *args, **kwargs) -> None:
         super().__init__(cfg, policy = policy, *args, **kwargs)
         self.interactors = [BaseInteractor(cfg, id = i, policy = policy, *args, **kwargs) for i in range(self.n_envs)]
 
-    def run(self, policy, *args, **kwargs):
+    def run(self, *args, **kwargs):
+        model_mgr = kwargs['model_mgr']
+        model_params = model_mgr.pub_msg(Msg(type = MsgType.MODEL_MGR_GET_MODEL_PARAMS)) # get model params
         for i in range(self.n_envs):
-            self.interactors[i].run(policy, *args, **kwargs)
-        for i in range(self.n_envs):
-            self.interact_outputs.append(self.interactors[i].get_data())
-        outputs = self.interact_outputs
-        self.reset_interact_outputs()
-        return outputs
+            self.interactors[i].run(model_params, *args, **kwargs)
 
     def close_envs(self):
         for i in range(self.n_envs):

@@ -21,23 +21,23 @@ class BaseDataServer:
     def pub_msg(self, msg: Msg):
         msg_type, msg_data = msg.type, msg.data
         if msg_type == MsgType.DATASERVER_GET_EPISODE:
-            self._get_episode()
+            return self._get_episode()
         elif msg_type == MsgType.DATASERVER_INCREASE_EPISODE:
             episode_delta = 1 if msg_data is None else msg_data
             self._increase_episode(i = episode_delta)
-        elif msg_type == MsgType.GET_SAMPLE_COUNT:
-            self._get_sample_count(msg_data)
-        elif msg_type == MsgType.GET_UPDATE_STEP:
-            self._get_update_step(msg_data)
-        elif msg_type == MsgType.CHECK_TASK_END:
-            self._check_task_end(msg_data)
-        elif msg_type == MsgType.INCREASE_SAMPLE_COUNT:
-            self._increase_sample_count(msg_data)
+        # elif msg_type == MsgType.GET_SAMPLE_COUNT:
+        #     self._get_sample_count(msg_data)
+        elif msg_type == MsgType.DATASERVER_GET_UPDATE_STEP:
+            return self._get_update_step()
+        # elif msg_type == MsgType.CHECK_TASK_END:
+        #     self._check_task_end(msg_data)
+        # elif msg_type == MsgType.INCREASE_SAMPLE_COUNT:
+        #     self._increase_sample_count(msg_data)
         elif msg_type == MsgType.DATASERVER_INCREASE_UPDATE_STEP:
             update_step_delta = 1 if msg_data is None else msg_data
             self._increase_update_step(i = update_step_delta)
         elif msg_type == MsgType.DATASERVER_CHECK_TASK_END:
-            self._check_task_end(msg_data)
+            self._check_task_end()
         else:
             raise NotImplementedError
 
@@ -71,7 +71,8 @@ class BaseDataServer:
         ''' increase update step
         '''
         self.global_update_step += i
-    def get_update_step(self):
+        
+    def _get_update_step(self):
         ''' get update step
         '''
         return self.global_update_step
