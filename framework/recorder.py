@@ -24,11 +24,12 @@ class BaseStatsRecorder:
         ''' publish message
         '''
         msg_type, msg_data = msg.type, msg.data
-        if msg_type == MsgType.STATS_RECORDER_PUT_INTERACT_SUMMARY:
+        if msg_type == MsgType.RECORDER_PUT_INTERACT_SUMMARY:
             interact_summary_list = msg_data
             self._add_summary(interact_summary_list, writter_type = 'interact')
         else:
             raise NotImplementedError
+        
     def _init_writter(self):
         self.writters = {}
         self.writter_types = ['interact','policy']

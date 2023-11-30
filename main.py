@@ -4,7 +4,6 @@
 # parent_path = os.path.dirname(curr_path)  # parent path 
 # sys.path.append(parent_path)  # add path to system path
 import sys,os
-import copy
 import argparse,datetime,importlib,yaml,time 
 import gymnasium as gym
 import torch.multiprocessing as mp
@@ -123,7 +122,7 @@ class Main(object):
         for k,v in dirs_dic.items():
             config_dir(v,name=k)
 
-    def create_single_env(self):
+    def env_config(self):
         ''' create single env
         '''
         env_cfg_dic = self.env_cfg.__dict__
@@ -180,24 +179,30 @@ class Main(object):
         setattr(self.cfg, 'n_sample_episodes', n_sample_episodes)
 
     def run(self) -> None:
-        test_env = self.create_single_env() # create single env
+        env = self.env_config() # create single env
         policy, data_handler = self.policy_config(self.cfg) # configure policy and data_handler
         dataserver = SimpleDataServer(self.cfg)
         logger = SimpleLogger(self.cfg.log_dir)
         collector = SimpleCollector(self.cfg, data_handler = data_handler)
         vec_interactor = DummyVecInteractor(self.cfg, 
-                                            policy = copy.deepcopy(policy),
+                                            env = env,
+                                            policy = policy,
                                             )
         learner = SimpleLearner(self.cfg, 
-                                policy = copy.deepcopy(policy),
+                                policy = policy,
                                 dataserver = dataserver,
                                 collector = collector
                                 )
-        online_tester = SimpleTester(self.cfg, test_env) # create online tester
-        model_mgr = ModelMgr(self.cfg, policy.get_model_params(),
-                               dataserver = dataserver,
-                               logger = logger
-                               )
+        online_tester = SimpleTester(self.cfg, 
+                                    env = env,
+                                    policy = policy,    
+                                    logger = logger
+                                    ) # create online tester
+        model_mgr = ModelMgr(self.cfg, 
+                            model_params = policy.get_model_params(),
+                            dataserver = dataserver,
+                            logger = logger
+                            )
         stats_recorder = SimpleStatsRecorder(self.cfg) # create stats recorder
         self.print_cfgs(logger = logger)  # print config
         trainer = SimpleTrainer(self.cfg, 

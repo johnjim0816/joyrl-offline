@@ -36,8 +36,9 @@ class BaseDataServer:
         elif msg_type == MsgType.DATASERVER_INCREASE_UPDATE_STEP:
             update_step_delta = 1 if msg_data is None else msg_data
             self._increase_update_step(i = update_step_delta)
+            
         elif msg_type == MsgType.DATASERVER_CHECK_TASK_END:
-            self._check_task_end()
+            return self._check_task_end()
         else:
             raise NotImplementedError
 

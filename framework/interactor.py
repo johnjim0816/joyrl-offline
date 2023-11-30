@@ -1,4 +1,5 @@
 import gymnasium as gym
+import copy
 from typing import Tuple
 from algos.base.exps import Exp
 from framework.message import Msg, MsgType
@@ -7,36 +8,28 @@ from config.general_config import MergedConfig
 class BaseInteractor:
     ''' Interactor for gym env to support sample n-steps or n-episodes traning data
     '''
-    def __init__(self, cfg: MergedConfig, id = 0, policy = None, *args, **kwargs) -> None:
+    def __init__(self, cfg: MergedConfig, id = 0, env = None, policy = None, *args, **kwargs) -> None:
         self.cfg = cfg 
         self.id = id
         self.policy = policy
-        self.env = gym.make(self.cfg.env_cfg.id)
+        self.env = env
         self.seed = self.cfg.seed + self.id
-        self.data = None
         self.exps = [] # reset experiences
         self.summary = [] # reset summary
         self.ep_reward, self.ep_step = 0, 0 # reset params per episode
         self.curr_obs, self.curr_info = self.env.reset(seed = self.seed) # reset env
     
-    def pub_msg(self, msg: Msg):
-        msg_type, msg_data = msg.type, msg.data
-        if msg_type == MsgType.INTERACTOR_SAMPLE:
-            model_params = msg_data
-            self._put_model_params(model_params)
-            self._sample_data()
-        elif msg_type == MsgType.INTERACTOR_GET_SAMPLE_DATA:
-            return self._get_sample_data()
-
-    def run(self, model_params, *args, **kwargs):
+    def run(self, *args, **kwargs):
         collector = kwargs['collector']
         stats_recorder = kwargs['stats_recorder']
+        model_mgr = kwargs['model_mgr']
+        model_params = model_mgr.pub_msg(Msg(type = MsgType.MODEL_MGR_GET_MODEL_PARAMS)) # get model params
         self.policy.put_model_params(model_params)
         self._sample_data(*args, **kwargs)
         collector.pub_msg(Msg(type = MsgType.COLLECTOR_PUT_EXPS, data = self.exps)) # put exps to collector
         self.exps = [] # reset exps
         if len(self.summary) > 0:
-            stats_recorder.pub_msg(Msg(type = MsgType.STATS_RECORDER_PUT_INTERACT_SUMMARY, data = self.summary)) # put summary to stats recorder
+            stats_recorder.pub_msg(Msg(type = MsgType.RECORDER_PUT_INTERACT_SUMMARY, data = self.summary)) # put summary to stats recorder
             self.summary = [] # reset summary
 
     def _sample_data(self,*args, **kwargs):
@@ -77,24 +70,15 @@ class BaseVecInteractor:
     def __init__(self, cfg: MergedConfig, policy = None, *args, **kwargs) -> None:
         self.cfg = cfg
         self.n_envs = cfg.n_workers
-        self.reset_interact_outputs()
-    def reset_interact_outputs(self):
-        self.interact_outputs = []
 
 class DummyVecInteractor(BaseVecInteractor):
-    def __init__(self, cfg: MergedConfig, policy = None, *args, **kwargs) -> None:
-        super().__init__(cfg, policy = policy, *args, **kwargs)
-        self.interactors = [BaseInteractor(cfg, id = i, policy = policy, *args, **kwargs) for i in range(self.n_envs)]
+    def __init__(self, cfg: MergedConfig, env = None, policy = None, *args, **kwargs) -> None:
+        super().__init__(cfg, env = env, policy = policy, *args, **kwargs)
+        self.interactors = [BaseInteractor(cfg, id = i, env = copy.deepcopy(env), policy = copy.deepcopy(policy), *args, **kwargs) for i in range(self.n_envs)]
 
     def run(self, *args, **kwargs):
-        model_mgr = kwargs['model_mgr']
-        model_params = model_mgr.pub_msg(Msg(type = MsgType.MODEL_MGR_GET_MODEL_PARAMS)) # get model params
         for i in range(self.n_envs):
-            self.interactors[i].run(model_params, *args, **kwargs)
-
-    def close_envs(self):
-        for i in range(self.n_envs):
-            self.interactors[i].close_env()
+            self.interactors[i].run(*args, **kwargs)
 
 class RayVecInteractor(BaseVecInteractor):
     def __init__(self, cfg) -> None:

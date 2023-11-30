@@ -15,7 +15,7 @@ class ModelMgr:
         self._saved_policy_bundles: Dict[int, int] = {}
         self._saved_policy_queue = Queue(maxsize = 128)
         self._thread_save_policy = threading.Thread(target=self._save_policy)
-        # self._thread_save_policy.setDaemon(True)
+        self._thread_save_policy.setDaemon(True)
         self.start()
 
     def pub_msg(self, msg: Msg):

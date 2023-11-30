@@ -1,4 +1,5 @@
 import ray
+import copy
 from queue import Queue
 from typing import Tuple
 from framework.message import Msg, MsgType
@@ -7,7 +8,7 @@ class BaseLearner:
     def __init__(self, cfg, id = 0, policy = None, *args, **kwargs) -> None:
         self.cfg = cfg
         self.id = id
-        self.policy = policy
+        self.policy = copy.deepcopy(policy)
         self.collector = kwargs['collector']
         self.dataserver = kwargs['dataserver']
         self.updated_model_params_queue = Queue(maxsize = 128)

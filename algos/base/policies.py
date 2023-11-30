@@ -38,11 +38,17 @@ class BasePolicy(nn.Module):
         return self.state_size, self.action_size
     def create_optimizer(self):
         self.optimizer = optim.Adam(self.parameters(), lr=self.cfg.lr) 
+
     def get_model_params(self):
-        model_params = self.state_dict()
-        return model_params
+        ''' get model params
+        '''
+        return self.state_dict()
+    
     def put_model_params(self, model_params):
+        ''' put model params
+        '''
         self.load_state_dict(model_params)
+
     def get_optimizer_params(self):
         return self.optimizer.state_dict()
     def set_optimizer_params(self, optim_params_dict):
