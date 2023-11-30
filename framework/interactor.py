@@ -63,15 +63,13 @@ class BaseInteractor:
                 run_step = 0
                 break
     
-    def close_env(self):
-        self.env.close()
 
-class BaseVecInteractor:
+class BaseWorker:
     def __init__(self, cfg: MergedConfig, policy = None, *args, **kwargs) -> None:
         self.cfg = cfg
         self.n_envs = cfg.n_workers
 
-class DummyVecInteractor(BaseVecInteractor):
+class DummyWorker(BaseWorker):
     def __init__(self, cfg: MergedConfig, env = None, policy = None, *args, **kwargs) -> None:
         super().__init__(cfg, env = env, policy = policy, *args, **kwargs)
         self.interactors = [BaseInteractor(cfg, id = i, env = copy.deepcopy(env), policy = copy.deepcopy(policy), *args, **kwargs) for i in range(self.n_envs)]
@@ -80,7 +78,7 @@ class DummyVecInteractor(BaseVecInteractor):
         for i in range(self.n_envs):
             self.interactors[i].run(*args, **kwargs)
 
-class RayVecInteractor(BaseVecInteractor):
+class RayWorker(BaseWorker):
     def __init__(self, cfg) -> None:
         super().__init__(cfg)
         if not ray.is_initialized(): ray.init()
@@ -120,7 +118,7 @@ if __name__ == "__main__":
             return random.randint(0,1)
     cfg = Config()
     policy = Policy()
-    env = DummyVecInteractor(cfg)
+    env = DummyWorker(cfg)
     # env = RayVecEnv(cfg)
     s_t = time.time()
     env.step(policy)

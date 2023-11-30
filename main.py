@@ -11,7 +11,7 @@ from pathlib import Path
 from config.general_config import GeneralConfig, MergedConfig, DefaultConfig
 from framework.collector import SimpleCollector
 from framework.dataserver import SimpleDataServer, RayDataServer
-from framework.interactor import DummyVecInteractor
+from framework.interactor import DummyWorker
 from framework.learner import SimpleLearner
 from framework.recorder import SimpleRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.tester import SimpleTester, RayTester
@@ -185,7 +185,7 @@ class Main(object):
         dataserver = SimpleDataServer(self.cfg)
         logger = SimpleLogger(self.cfg.log_dir)
         collector = SimpleCollector(self.cfg, data_handler = data_handler)
-        vec_interactor = DummyVecInteractor(self.cfg, 
+        worker = DummyWorker(self.cfg, 
                                             env = env,
                                             policy = policy,
                                             )
@@ -209,7 +209,7 @@ class Main(object):
         trainer = SimpleTrainer(self.cfg, 
                                 dataserver = dataserver,
                                 model_mgr = model_mgr,
-                                vec_interactor = vec_interactor, 
+                                worker = worker, 
                                 learner = learner, 
                                 collector = collector, 
                                 online_tester = online_tester,

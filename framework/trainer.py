@@ -4,7 +4,7 @@ class BaseTrainer:
     def __init__(self, cfg, *args,**kwargs) -> None:
         self.cfg = cfg
         self.model_mgr = kwargs['model_mgr']
-        self.vec_interactor = kwargs['vec_interactor']
+        self.worker = kwargs['worker']
         self.learner = kwargs['learner']
         self.collector = kwargs['collector']
         self.online_tester = kwargs['online_tester']
@@ -36,7 +36,7 @@ class SimpleTrainer(BaseTrainer):
         s_t = time.time() # start time
         while True:
             # interact with env and sample data
-            self.vec_interactor.run(
+            self.worker.run(
                 model_mgr = self.model_mgr,
                 dataserver = self.dataserver,
                 collector = self.collector,
