@@ -13,7 +13,7 @@ from framework.collector import SimpleCollector
 from framework.dataserver import SimpleDataServer, RayDataServer
 from framework.interactor import DummyVecInteractor
 from framework.learner import SimpleLearner
-from framework.recorder import SimpleStatsRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
+from framework.recorder import SimpleRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
 from framework.tester import SimpleTester, RayTester
 from framework.trainer import SimpleTrainer
 from framework.model_mgr import ModelMgr
@@ -114,6 +114,7 @@ class Main(object):
             'task_dir':task_dir,
             'model_dir':f"{task_dir}/models",
             'res_dir':f"{task_dir}/results",
+            'fig_dir':f"{task_dir}/figs",
             'log_dir':f"{task_dir}/logs",
             'traj_dir':f"{task_dir}/traj",
             'video_dir':f"{task_dir}/videos",
@@ -203,7 +204,7 @@ class Main(object):
                             dataserver = dataserver,
                             logger = logger
                             )
-        stats_recorder = SimpleStatsRecorder(self.cfg) # create stats recorder
+        recorder = SimpleRecorder(self.cfg) # create stats recorder
         self.print_cfgs(logger = logger)  # print config
         trainer = SimpleTrainer(self.cfg, 
                                 dataserver = dataserver,
@@ -212,7 +213,7 @@ class Main(object):
                                 learner = learner, 
                                 collector = collector, 
                                 online_tester = online_tester,
-                                stats_recorder = stats_recorder, 
+                                recorder = recorder, 
                                 logger = logger) # create trainer
         trainer.run() # run trainer
         save_cfgs(self.save_cfgs, self.cfg.task_dir)  # save config

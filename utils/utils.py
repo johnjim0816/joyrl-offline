@@ -67,6 +67,7 @@ def save_frames_as_gif(frames, fpath=None):
 
     anim = animation.FuncAnimation(plt.gcf(), animate, frames = len(frames), interval=50)
     anim.save(f"{fpath}/video.gif", writer='pillow', fps=60)
+    
 def smooth(data, weight=0.9):  
     '''用于平滑曲线，类似于Tensorboard中的smooth
 

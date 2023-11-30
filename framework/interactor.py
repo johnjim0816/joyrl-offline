@@ -21,7 +21,7 @@ class BaseInteractor:
     
     def run(self, *args, **kwargs):
         collector = kwargs['collector']
-        stats_recorder = kwargs['stats_recorder']
+        recorder = kwargs['recorder']
         model_mgr = kwargs['model_mgr']
         model_params = model_mgr.pub_msg(Msg(type = MsgType.MODEL_MGR_GET_MODEL_PARAMS)) # get model params
         self.policy.put_model_params(model_params)
@@ -29,7 +29,7 @@ class BaseInteractor:
         collector.pub_msg(Msg(type = MsgType.COLLECTOR_PUT_EXPS, data = self.exps)) # put exps to collector
         self.exps = [] # reset exps
         if len(self.summary) > 0:
-            stats_recorder.pub_msg(Msg(type = MsgType.RECORDER_PUT_INTERACT_SUMMARY, data = self.summary)) # put summary to stats recorder
+            recorder.pub_msg(Msg(type = MsgType.RECORDER_PUT_INTERACT_SUMMARY, data = self.summary)) # put summary to stats recorder
             self.summary = [] # reset summary
 
     def _sample_data(self,*args, **kwargs):

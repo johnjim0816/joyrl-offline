@@ -12,14 +12,29 @@ import ray
 from ray.util.queue import Queue, Empty, Full
 from pathlib import Path
 import pickle
+import time
+import threading
 import logging
+import pandas
+from queue import Queue
 from torch.utils.tensorboard import SummaryWriter  
 from framework.message import Msg, MsgType
 
-class BaseStatsRecorder:
+class BaseRecorder:
     def __init__(self, cfg) -> None:
         self.cfg = cfg
         self._init_writter()
+        self._summary_que_dict = { 'interact': Queue(maxsize = 256), 'policy': Queue(maxsize = 256)}
+        self._thread_save_interact_summary = threading.Thread(target=self._save_interact_summary)
+        self._thread_save_interact_summary.setDaemon(True)
+        self._thread_save_policy_summary = threading.Thread(target=self._save_policy_summary)
+        self._thread_save_policy_summary.setDaemon(True)
+        self.start()
+
+    def start(self):
+        self._thread_save_interact_summary.start()
+        self._thread_save_policy_summary.start()
+
     def pub_msg(self, msg: Msg):
         ''' publish message
         '''
@@ -27,6 +42,9 @@ class BaseStatsRecorder:
         if msg_type == MsgType.RECORDER_PUT_INTERACT_SUMMARY:
             interact_summary_list = msg_data
             self._add_summary(interact_summary_list, writter_type = 'interact')
+        elif msg_type == MsgType.RECORDER_PUT_POLICY_SUMMARY:
+            policy_summary_list = msg_data
+            self._add_summary(policy_summary_list, writter_type = 'policy')
         else:
             raise NotImplementedError
         
@@ -37,18 +55,55 @@ class BaseStatsRecorder:
             self.writters[writter_type] = SummaryWriter(log_dir=f"{self.cfg.tb_dir}/{writter_type}")
     
     def _add_summary(self, summary_data_list, writter_type = None):
-        for summary_data in summary_data_list:
-            step, summary = summary_data
-            for key, value in summary.items():
-                self.writters[writter_type].add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = step)
+        while not self._summary_que_dict[writter_type].full():
+            self._summary_que_dict[writter_type].put(summary_data_list)
+            time.sleep(0.001)
+            break
 
-class SimpleStatsRecorder(BaseStatsRecorder):
+    def _write_tb_scalar(self, step, summary, writter_type):
+        for key, value in summary.items():
+            self.writters[writter_type].add_scalar(tag = f"{self.cfg.mode.lower()}_{key}", scalar_value=value, global_step = step)
+
+    def _write_dataframe(self, step, summary, writter_type):
+        df_file = f"{self.cfg.res_dir}/{writter_type}.csv"
+        if Path(df_file).exists():
+            df = pandas.read_csv(df_file)
+        else:
+            df = pandas.DataFrame()
+        saved_dict = {f"{writter_type}_step": step}
+        saved_dict.update(summary)
+        df = df.append(saved_dict, ignore_index=True)
+        df.to_csv(df_file, index = False)
+
+    def _save_interact_summary(self):
+        while True:
+            while not self._summary_que_dict['interact'].empty():
+                summary_data_list = self._summary_que_dict['interact'].get()
+                for summary_data in summary_data_list:
+                    step, summary = summary_data
+                    self._write_tb_scalar(step, summary, writter_type = 'interact')
+                    self._write_dataframe(step, summary, writter_type = 'interact')
+                break
+            time.sleep(0.002)
+
+    def _save_policy_summary(self):
+        while True:
+            while not self._summary_que_dict['policy'].empty():
+                summary_data_list = self._summary_que_dict['policy'].get()
+                for summary_data in summary_data_list:
+                    step, summary = summary_data
+                    self._write_tb_scalar(step, summary, writter_type = 'policy')
+                    self._write_dataframe(step, summary, writter_type = 'policy')
+                break
+            time.sleep(0.001)
+
+class SimpleRecorder(BaseRecorder):
     def __init__(self, cfg) -> None:
         super().__init__(cfg)
 
 
 @ray.remote
-class RayStatsRecorder(BaseStatsRecorder):
+class RayStatsRecorder(BaseRecorder):
     ''' statistics recorder
     '''
     def __init__(self, cfg) -> None:

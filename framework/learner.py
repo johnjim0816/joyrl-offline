@@ -65,24 +65,11 @@ class SimpleLearner(BaseLearner):
         curr_update_step = dataserver.pub_msg(Msg(type = MsgType.DATASERVER_GET_UPDATE_STEP))
         self.policy.learn(**training_data,update_step = curr_update_step)
         dataserver.pub_msg(Msg(type = MsgType.DATASERVER_INCREASE_UPDATE_STEP))
+        # put updated model params to model_mgr
         model_params = self.policy.get_model_params()
         model_mgr.pub_msg(Msg(type = MsgType.MODEL_MGR_PUT_MODEL_PARAMS, data = (curr_update_step, model_params)))
-
-    # def _update_policy(self):
-    #     n_steps_per_learn = self.collector.get_buffer_length() if self.cfg.onpolicy_flag else self.cfg.n_steps_per_learn
-    #     for _ in range(n_steps_per_learn):
-    #         training_data = self.collector.get_training_data() # get training data
-    #         if training_data is None: continue
-    #         self.dataserver.increase_update_step()
-    #         self.global_update_step = self.dataserver.get_update_step()
-    #         self.policy.learn(**training_data,update_step = self.global_update_step)
-    #         self._put_updated_model_params_queue()
-
-        # if training_data is None: return None
-        # self.dataserver.increase_update_step()
-        # self.global_update_step = self.dataserver.get_update_step()
-        # self.policy.learn(**training_data,update_step = self.global_update_step)
-        # policy_data_after_learn = self.policy.get_data_after_learn()
-        # policy_summary = [(self.global_update_step,self.policy.get_summary())]
-        # return {'policy_data_after_learn': policy_data_after_learn, 'policy_summary': policy_summary}
-    
+        # put policy summary to recorder
+        if curr_update_step % self.cfg.policy_summary_fre == 0:
+            policy_summary = [(curr_update_step,self.policy.get_summary())]
+            recorder = kwargs['recorder']
+            recorder.pub_msg(Msg(type = MsgType.RECORDER_PUT_POLICY_SUMMARY, data = policy_summary))

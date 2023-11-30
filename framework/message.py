@@ -26,11 +26,12 @@ class MsgType(Enum):
 
     # recorder
     RECORDER_PUT_INTERACT_SUMMARY = 40
+    RECORDER_PUT_POLICY_SUMMARY = 41
     
     # model_mgr
     MODEL_MGR_PUT_MODEL_PARAMS = 70
     MODEL_MGR_GET_MODEL_PARAMS = 71
-    
+
 @dataclass
 class Msg(object):
     type: MsgType

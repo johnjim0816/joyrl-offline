@@ -9,7 +9,7 @@ class BaseTrainer:
         self.collector = kwargs['collector']
         self.online_tester = kwargs['online_tester']
         self.dataserver = kwargs['dataserver']
-        self.stats_recorder = kwargs['stats_recorder']
+        self.recorder = kwargs['recorder']
         self.logger = kwargs['logger']
 
     def run(self):
@@ -27,10 +27,10 @@ class SimpleTrainer(BaseTrainer):
             if learner_output is not None:
                 policy = self.learner.MODEL_MGR_GET_MODEL_PARAMS() # get policy from main learner
                 self.collector.handle_data_after_learn(learner_output['policy_data_after_learn']) # handle exps after update
-                self.stats_recorder.add_summary([learner_output['policy_summary']], writter_type = 'policy')
+                self.recorder.add_summary([learner_output['policy_summary']], writter_type = 'policy')
                 online_tester_output = self.online_tester.run(policy, dataserver = self.dataserver, logger = self.logger) # online evaluation
                 if online_tester_output is not None:
-                    self.stats_recorder.add_summary([online_tester_output['summary']], writter_type = 'policy')
+                    self.recorder.add_summary([online_tester_output['summary']], writter_type = 'policy')
     def run(self):
         self.logger.info(f"Start {self.cfg.mode}ing!") # print info
         s_t = time.time() # start time
@@ -41,13 +41,14 @@ class SimpleTrainer(BaseTrainer):
                 dataserver = self.dataserver,
                 collector = self.collector,
                 logger = self.logger,
-                stats_recorder = self.stats_recorder
+                recorder = self.recorder
             ) 
             if self.cfg.mode == "train": 
                 self.learner.run(
                     model_mgr = self.model_mgr,
                     dataserver = self.dataserver,
                     collector = self.collector,
+                    recorder = self.recorder
                 )
             if self.dataserver.pub_msg(Msg(type = MsgType.DATASERVER_CHECK_TASK_END)):
                 break    

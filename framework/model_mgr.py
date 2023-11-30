@@ -61,6 +61,6 @@ class ModelMgr:
             global_episode = self.dataserver.pub_msg(Msg(type = MsgType.DATASERVER_GET_EPISODE))
             if global_episode >= self.cfg.max_episode:
                 break
-            time.sleep(1)
+            time.sleep(0.1)
     
 
