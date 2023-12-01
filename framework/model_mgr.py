@@ -58,7 +58,7 @@ class ModelMgr:
             while not self._saved_policy_queue.empty():
                 update_step, model_params = self._saved_policy_queue.get()
                 torch.save(model_params, f"{self.cfg.model_dir}/{update_step}")
-            global_episode = self.tracker.pub_msg(Msg(type = MsgType.DATASERVER_GET_EPISODE))
+            global_episode = self.tracker.pub_msg(Msg(type = MsgType.TRACKER_GET_EPISODE))
             if global_episode >= self.cfg.max_episode:
                 break
             time.sleep(0.1)

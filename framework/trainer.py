@@ -50,7 +50,7 @@ class SimpleTrainer(BaseTrainer):
                     collector = self.collector,
                     recorder = self.recorder
                 )
-            if self.tracker.pub_msg(Msg(type = MsgType.DATASERVER_CHECK_TASK_END)):
+            if self.tracker.pub_msg(Msg(type = MsgType.TRACKER_CHECK_TASK_END)):
                 break    
         e_t = time.time() # end time
         self.logger.info(f"Finish {self.cfg.mode}ing! Time cost: {e_t - s_t:.3f} s") # print info      

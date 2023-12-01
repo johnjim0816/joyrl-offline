@@ -48,8 +48,8 @@ class BaseInteractor:
             self.ep_step += 1
             if terminated or truncated or self.ep_step >= self.cfg.max_step:
                 run_episode += 1
-                tracker.pub_msg(Msg(MsgType.DATASERVER_INCREASE_EPISODE))
-                global_episode = tracker.pub_msg(Msg(MsgType.DATASERVER_GET_EPISODE))
+                tracker.pub_msg(Msg(MsgType.TRACKER_INCREASE_EPISODE))
+                global_episode = tracker.pub_msg(Msg(MsgType.TRACKER_GET_EPISODE))
                 if global_episode % self.cfg.interact_summary_fre == 0 and global_episode <= self.cfg.max_episode: 
                     logger.info(f"Interactor {self.id} finished episode {global_episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
                     interact_summary = {'reward':self.ep_reward,'step':self.ep_step}

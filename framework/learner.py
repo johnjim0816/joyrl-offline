@@ -62,9 +62,9 @@ class SimpleLearner(BaseLearner):
         training_data = collector.pub_msg(Msg(type = MsgType.COLLECTOR_GET_TRAINING_DATA)) # get training data
         if training_data is None: return
         tracker = kwargs['tracker']
-        curr_update_step = tracker.pub_msg(Msg(type = MsgType.DATASERVER_GET_UPDATE_STEP))
+        curr_update_step = tracker.pub_msg(Msg(type = MsgType.TRACKER_GET_UPDATE_STEP))
         self.policy.learn(**training_data,update_step = curr_update_step)
-        tracker.pub_msg(Msg(type = MsgType.DATASERVER_INCREASE_UPDATE_STEP))
+        tracker.pub_msg(Msg(type = MsgType.TRACKER_INCREASE_UPDATE_STEP))
         # put updated model params to model_mgr
         model_params = self.policy.get_model_params()
         model_mgr.pub_msg(Msg(type = MsgType.MODEL_MGR_PUT_MODEL_PARAMS, data = (curr_update_step, model_params)))
