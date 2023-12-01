@@ -10,7 +10,7 @@ import torch.multiprocessing as mp
 from pathlib import Path
 from config.general_config import GeneralConfig, MergedConfig, DefaultConfig
 from framework.collector import SimpleCollector
-from framework.dataserver import SimpleDataServer, RayDataServer
+from framework.tracker import SimpleTracker, RayTracker
 from framework.interactor import DummyWorker
 from framework.learner import SimpleLearner
 from framework.recorder import SimpleRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
@@ -182,7 +182,7 @@ class Main(object):
     def run(self) -> None:
         env = self.env_config() # create single env
         policy, data_handler = self.policy_config(self.cfg) # configure policy and data_handler
-        dataserver = SimpleDataServer(self.cfg)
+        tracker = SimpleTracker(self.cfg)
         logger = SimpleLogger(self.cfg.log_dir)
         collector = SimpleCollector(self.cfg, data_handler = data_handler)
         worker = DummyWorker(self.cfg, 
@@ -191,7 +191,7 @@ class Main(object):
                                             )
         learner = SimpleLearner(self.cfg, 
                                 policy = policy,
-                                dataserver = dataserver,
+                                tracker = tracker,
                                 collector = collector
                                 )
         online_tester = SimpleTester(self.cfg, 
@@ -201,13 +201,13 @@ class Main(object):
                                     ) # create online tester
         model_mgr = ModelMgr(self.cfg, 
                             model_params = policy.get_model_params(),
-                            dataserver = dataserver,
+                            tracker = tracker,
                             logger = logger
                             )
         recorder = SimpleRecorder(self.cfg) # create stats recorder
         self.print_cfgs(logger = logger)  # print config
         trainer = SimpleTrainer(self.cfg, 
-                                dataserver = dataserver,
+                                tracker = tracker,
                                 model_mgr = model_mgr,
                                 worker = worker, 
                                 learner = learner, 

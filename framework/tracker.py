@@ -11,7 +11,7 @@ Discription:
 import ray
 from ray.util.queue import Queue, Empty, Full
 from framework.message import Msg, MsgType
-class BaseDataServer:
+class BaseTracker:
     def __init__(self,cfg) -> None:
         self.global_episode = 0 # current global episode
         self.global_sample_count = 0 # global sample count
@@ -78,7 +78,7 @@ class BaseDataServer:
         '''
         return self.global_update_step
     
-class SimpleDataServer(BaseDataServer):
+class SimpleTracker(BaseTracker):
     def __init__(self,cfg) -> None:
         super().__init__(cfg)
         self.ep_frames = [] # episode frames for visualization
@@ -91,7 +91,7 @@ class SimpleDataServer(BaseDataServer):
         '''
         return self.ep_frames
 @ray.remote
-class RayDataServer(BaseDataServer):
+class RayTracker(BaseTracker):
     def __init__(self,cfg) -> None:
         super().__init__(cfg)
 

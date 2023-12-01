@@ -9,7 +9,7 @@ from algos.base.policies import BasePolicy
 class ModelMgr:
     def __init__(self, cfg, model_params, **kwargs) -> None:
         self.cfg = cfg
-        self.dataserver = kwargs['dataserver']
+        self.tracker = kwargs['tracker']
         self.logger = kwargs['logger']
         self._latest_model_params_dict = {0: model_params}
         self._saved_policy_bundles: Dict[int, int] = {}
@@ -58,7 +58,7 @@ class ModelMgr:
             while not self._saved_policy_queue.empty():
                 update_step, model_params = self._saved_policy_queue.get()
                 torch.save(model_params, f"{self.cfg.model_dir}/{update_step}")
-            global_episode = self.dataserver.pub_msg(Msg(type = MsgType.DATASERVER_GET_EPISODE))
+            global_episode = self.tracker.pub_msg(Msg(type = MsgType.DATASERVER_GET_EPISODE))
             if global_episode >= self.cfg.max_episode:
                 break
             time.sleep(0.1)

@@ -10,7 +10,7 @@ class BaseLearner:
         self.id = id
         self.policy = copy.deepcopy(policy)
         self.collector = kwargs['collector']
-        self.dataserver = kwargs['dataserver']
+        self.tracker = kwargs['tracker']
         self.updated_model_params_queue = Queue(maxsize = 128)
         self.global_update_step = 0
 
@@ -61,10 +61,10 @@ class SimpleLearner(BaseLearner):
         collector = kwargs['collector']
         training_data = collector.pub_msg(Msg(type = MsgType.COLLECTOR_GET_TRAINING_DATA)) # get training data
         if training_data is None: return
-        dataserver = kwargs['dataserver']
-        curr_update_step = dataserver.pub_msg(Msg(type = MsgType.DATASERVER_GET_UPDATE_STEP))
+        tracker = kwargs['tracker']
+        curr_update_step = tracker.pub_msg(Msg(type = MsgType.DATASERVER_GET_UPDATE_STEP))
         self.policy.learn(**training_data,update_step = curr_update_step)
-        dataserver.pub_msg(Msg(type = MsgType.DATASERVER_INCREASE_UPDATE_STEP))
+        tracker.pub_msg(Msg(type = MsgType.DATASERVER_INCREASE_UPDATE_STEP))
         # put updated model params to model_mgr
         model_params = self.policy.get_model_params()
         model_mgr.pub_msg(Msg(type = MsgType.MODEL_MGR_PUT_MODEL_PARAMS, data = (curr_update_step, model_params)))

@@ -33,7 +33,7 @@ class BaseInteractor:
             self.summary = [] # reset summary
 
     def _sample_data(self,*args, **kwargs):
-        dataserver = kwargs['dataserver']
+        tracker = kwargs['tracker']
         logger = kwargs['logger']
         run_step, run_episode = 0, 0 # local run step, local run episode
         while True:
@@ -48,8 +48,8 @@ class BaseInteractor:
             self.ep_step += 1
             if terminated or truncated or self.ep_step >= self.cfg.max_step:
                 run_episode += 1
-                dataserver.pub_msg(Msg(MsgType.DATASERVER_INCREASE_EPISODE))
-                global_episode = dataserver.pub_msg(Msg(MsgType.DATASERVER_GET_EPISODE))
+                tracker.pub_msg(Msg(MsgType.DATASERVER_INCREASE_EPISODE))
+                global_episode = tracker.pub_msg(Msg(MsgType.DATASERVER_GET_EPISODE))
                 if global_episode % self.cfg.interact_summary_fre == 0 and global_episode <= self.cfg.max_episode: 
                     logger.info(f"Interactor {self.id} finished episode {global_episode} with reward {self.ep_reward:.3f} in {self.ep_step} steps")
                     interact_summary = {'reward':self.ep_reward,'step':self.ep_step}

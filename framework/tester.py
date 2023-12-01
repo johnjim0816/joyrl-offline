@@ -109,7 +109,7 @@ class RayTester(BaseTester):
     def run(self, policy, *args, **kwargs):
         ''' Run online tester
         '''
-        dataserver, logger = kwargs['dataserver'], kwargs['logger']
-        global_update_step = ray.get(dataserver.get_update_step.remote()) # get global update step
+        tracker, logger = kwargs['tracker'], kwargs['logger']
+        global_update_step = ray.get(tracker.get_update_step.remote()) # get global update step
         if global_update_step % self.cfg.model_save_fre == 0 and self.cfg.online_eval == True:
             return self.eval(policy, global_update_step = global_update_step, logger = logger)

@@ -269,9 +269,9 @@ import time
 class Worker:
     def __init__(self,id) -> None:
         self.id = id
-    def run(self,data_server,learners):
-        while not ray.get(data_server.check_episode_limit.remote()):
-            # print(f"curr_episode {ray.get(data_server.get_episode.remote())}")
+    def run(self,tracker,learners):
+        while not ray.get(tracker.check_episode_limit.remote()):
+            # print(f"curr_episode {ray.get(tracker.get_episode.remote())}")
             # 模拟单-learner
             ray.get(learners[0].learn.remote())
             # 模拟multi-learner
@@ -279,7 +279,7 @@ class Worker:
             #     ray.get(learners[0].learn.remote())
             # else:
             #     ray.get(learners[1].learn.remote())
-            ray.get(data_server.increase_episode.remote())
+            ray.get(tracker.increase_episode.remote())
             time.sleep(0.1) # 模拟交互时间
 @ray.remote
 class Learner:
@@ -310,12 +310,12 @@ if __name__ == "__main__":
         workers = []
         for i in range(n_workers):
             workers.append(Worker.remote(i))
-        data_server = DataServer.remote()
+        tracker = DataServer.remote()
         learners = []
         for i in range(2):
             learner = Learner.remote()
             learners.append(learner)
-        worker_tasks = [worker.run.remote(data_server,learners) for worker in workers]
+        worker_tasks = [worker.run.remote(tracker,learners) for worker in workers]
         # 等待任务完成
         ray.get(worker_tasks)
         e_t = time.time()

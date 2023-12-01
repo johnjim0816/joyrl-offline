@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 @unique
 class MsgType(Enum):
-    # dataserver
+    # tracker
     DATASERVER_GET_EPISODE = 0
     DATASERVER_INCREASE_EPISODE = 1
     DATASERVER_INCREASE_UPDATE_STEP = 2
