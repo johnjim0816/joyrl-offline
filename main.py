@@ -4,18 +4,19 @@
 # parent_path = os.path.dirname(curr_path)  # parent path 
 # sys.path.append(parent_path)  # add path to system path
 import sys,os
+import ray
 import argparse,datetime,importlib,yaml,time 
 import gymnasium as gym
 import torch.multiprocessing as mp
 from pathlib import Path
 from config.general_config import GeneralConfig, MergedConfig, DefaultConfig
-from framework.collector import SimpleCollector
-from framework.tracker import SimpleTracker, RayTracker
-from framework.interactor import DummyWorker
-from framework.learner import SimpleLearner
-from framework.recorder import SimpleRecorder, RayStatsRecorder, SimpleLogger, RayLogger, SimpleTrajCollector
-from framework.tester import SimpleTester, RayTester
-from framework.trainer import SimpleTrainer
+from framework.collector import Collector
+from framework.tracker import Tracker
+from framework.interactor import InteractorMgr
+from framework.learner import LearnerMgr
+from framework.recorder import Logger, Recorder
+from framework.tester import OnlineTester
+from framework.trainer import Trainer
 from framework.model_mgr import ModelMgr
 
 from utils.utils import save_cfgs, merge_class_attrs, all_seed,save_frames_as_gif
@@ -182,41 +183,64 @@ class Main(object):
     def run(self) -> None:
         env = self.env_config() # create single env
         policy, data_handler = self.policy_config(self.cfg) # configure policy and data_handler
-        tracker = SimpleTracker(self.cfg)
-        logger = SimpleLogger(self.cfg.log_dir)
-        collector = SimpleCollector(self.cfg, data_handler = data_handler)
-        worker = DummyWorker(self.cfg, 
-                                            env = env,
-                                            policy = policy,
-                                            )
-        learner = SimpleLearner(self.cfg, 
-                                policy = policy,
-                                tracker = tracker,
-                                collector = collector
-                                )
-        online_tester = SimpleTester(self.cfg, 
-                                    env = env,
-                                    policy = policy,    
-                                    logger = logger
-                                    ) # create online tester
-        model_mgr = ModelMgr(self.cfg, 
-                            model_params = policy.get_model_params(),
-                            tracker = tracker,
-                            logger = logger
-                            )
-        recorder = SimpleRecorder(self.cfg) # create stats recorder
-        self.print_cfgs(logger = logger)  # print config
-        trainer = SimpleTrainer(self.cfg, 
+        ray.init()
+        tracker = Tracker.remote(self.cfg)
+        logger = Logger.remote(self.cfg)
+        recorder = Recorder.remote(self.cfg, logger = logger)
+        online_tester = OnlineTester.remote(self.cfg, env = env, policy = policy, logger = logger)
+        collector = Collector.remote(self.cfg, data_handler = data_handler)
+        interactor_mgr = InteractorMgr.remote(self.cfg, env = env, policy = policy)
+        learner_mgr = LearnerMgr.remote(self.cfg, policy = policy)
+        model_mgr = ModelMgr.remote(self.cfg, model_params = policy.get_model_params(),logger = logger)
+        trainer = Trainer.remote(self.cfg,
                                 tracker = tracker,
                                 model_mgr = model_mgr,
-                                worker = worker, 
-                                learner = learner, 
-                                collector = collector, 
+                                collector = collector,
+                                interactor_mgr = interactor_mgr,
+                                learner_mgr = learner_mgr,
                                 online_tester = online_tester,
-                                recorder = recorder, 
-                                logger = logger) # create trainer
-        trainer.run() # run trainer
-        save_cfgs(self.save_cfgs, self.cfg.task_dir)  # save config
+                                recorder = recorder,
+                                logger = logger)
+        ray.get(trainer.run.remote())
+
+
+
+
+        # tracker = SimpleTracker(self.cfg)
+        # logger = SimpleLogger(self.cfg.log_dir)
+        # collector = SimpleCollector(self.cfg, data_handler = data_handler)
+        # worker = DummyWorker(self.cfg, 
+        #                                     env = env,
+        #                                     policy = policy,
+        #                                     )
+        # learner = SimpleLearner(self.cfg, 
+        #                         policy = policy,
+        #                         tracker = tracker,
+        #                         collector = collector
+        #                         )
+        # online_tester = SimpleTester(self.cfg, 
+        #                             env = env,
+        #                             policy = policy,    
+        #                             logger = logger
+        #                             ) # create online tester
+        # model_mgr = ModelMgr(self.cfg, 
+        #                     model_params = policy.get_model_params(),
+        #                     tracker = tracker,
+        #                     logger = logger
+        #                     )
+        # recorder = SimpleRecorder(self.cfg) # create stats recorder
+        # self.print_cfgs(logger = logger)  # print config
+        # trainer = SimpleTrainer(self.cfg, 
+        #                         tracker = tracker,
+        #                         model_mgr = model_mgr,
+        #                         worker = worker, 
+        #                         learner = learner, 
+        #                         collector = collector, 
+        #                         online_tester = online_tester,
+        #                         recorder = recorder, 
+        #                         logger = logger) # create trainer
+        # trainer.run() # run trainer
+        # save_cfgs(self.save_cfgs, self.cfg.task_dir)  # save config
 
 if __name__ == "__main__":
     main = Main()

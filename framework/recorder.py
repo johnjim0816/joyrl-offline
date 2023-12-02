@@ -19,19 +19,22 @@ import pandas
 from queue import Queue
 from torch.utils.tensorboard import SummaryWriter  
 from framework.message import Msg, MsgType
+from config.general_config import MergedConfig
 
-class BaseRecorder:
-    def __init__(self, cfg) -> None:
+@ray.remote(num_cpus=0)
+class Recorder:
+    def __init__(self, cfg: MergedConfig, *args, **kwargs) -> None:
         self.cfg = cfg
+        self.logger = kwargs['logger']
         self._init_writter()
         self._summary_que_dict = { 'interact': Queue(maxsize = 256), 'policy': Queue(maxsize = 256)}
         self._thread_save_interact_summary = threading.Thread(target=self._save_interact_summary)
         self._thread_save_interact_summary.setDaemon(True)
         self._thread_save_policy_summary = threading.Thread(target=self._save_policy_summary)
         self._thread_save_policy_summary.setDaemon(True)
-        self.start()
 
-    def start(self):
+    def run(self):
+        self.logger.info.remote("[Recorder] Start recorder!")
         self._thread_save_interact_summary.start()
         self._thread_save_policy_summary.start()
 
@@ -97,17 +100,17 @@ class BaseRecorder:
                 break
             time.sleep(0.001)
 
-class SimpleRecorder(BaseRecorder):
-    def __init__(self, cfg) -> None:
-        super().__init__(cfg)
+# class SimpleRecorder(BaseRecorder):
+#     def __init__(self, cfg) -> None:
+#         super().__init__(cfg)
 
 
-@ray.remote
-class RayStatsRecorder(BaseRecorder):
-    ''' statistics recorder
-    '''
-    def __init__(self, cfg) -> None:
-        super().__init__(cfg)
+# @ray.remote
+# class RayStatsRecorder(BaseRecorder):
+#     ''' statistics recorder
+#     '''
+#     def __init__(self, cfg) -> None:
+#         super().__init__(cfg)
   
 class BaseLogger(object):
     def __init__(self, fpath = None) -> None:
@@ -146,6 +149,28 @@ class RayLogger(BaseLogger):
     def info(self, msg):
         super().info(msg)
         print(msg) # print log to console
+
+@ray.remote(num_cpus=0)
+class Logger:
+    ''' Logger for print log to console
+    '''
+    def __init__(self, cfg: MergedConfig) -> None:
+        self.logger = logging.getLogger(name="BaseLog")  
+        self.logger.setLevel(logging.INFO) # default level is INFO
+        self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S')
+        # output to file by using FileHandler
+        fh = logging.FileHandler(f"{cfg.log_dir}/log.txt")
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(self.formatter)
+        self.logger.addHandler(fh)
+        self.logger.name = "RayLog"
+
+    def info(self, content):
+        self.logger.info(content)
+        print(content) # print log to console
+        
+
 
 class BaseTrajCollector:
     ''' Base class for trajectory collector

@@ -9,7 +9,7 @@ LastEditTime: 2023-05-19 00:55:08
 Discription: 
 '''
 import numpy as np
-from algos.base.data_handlers import BaseDataHandler
+from algos.base.data_handler import BaseDataHandler
 from algos.base.exps import Exp
 class DataHandler(BaseDataHandler):
     def __init__(self,cfg) -> None:

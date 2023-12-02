@@ -1,22 +1,23 @@
 from framework.message import Msg, MsgType
 import time
+import ray
 import threading
 import torch
 from typing import Dict, List
 from queue import Queue
 from algos.base.policies import BasePolicy
 
+@ray.remote(num_cpus=0)
 class ModelMgr:
-    def __init__(self, cfg, model_params, **kwargs) -> None:
+    def __init__(self, cfg, model_params = None, **kwargs) -> None:
+        if model_params is None: raise NotImplementedError("[ModelMgr] model_params must be specified!")
         self.cfg = cfg
-        self.tracker = kwargs['tracker']
         self.logger = kwargs['logger']
         self._latest_model_params_dict = {0: model_params}
         self._saved_policy_bundles: Dict[int, int] = {}
         self._saved_policy_queue = Queue(maxsize = 128)
         self._thread_save_policy = threading.Thread(target=self._save_policy)
         self._thread_save_policy.setDaemon(True)
-        self.start()
 
     def pub_msg(self, msg: Msg):
         ''' publish message
@@ -29,9 +30,10 @@ class ModelMgr:
         else:
             raise NotImplementedError
         
-    def start(self):
+    def run(self):
         ''' start
         '''
+        self.logger.info.remote(f"[ModelMgr] Start model manager!")
         self._thread_save_policy.start()
 
     def _put_model_params(self, msg_data):
@@ -58,9 +60,6 @@ class ModelMgr:
             while not self._saved_policy_queue.empty():
                 update_step, model_params = self._saved_policy_queue.get()
                 torch.save(model_params, f"{self.cfg.model_dir}/{update_step}")
-            global_episode = self.tracker.pub_msg(Msg(type = MsgType.TRACKER_GET_EPISODE))
-            if global_episode >= self.cfg.max_episode:
-                break
             time.sleep(0.1)
     
 

@@ -16,6 +16,7 @@ class Policy(BasePolicy):
         self.epsilon_end = cfg.epsilon_end
         self.epsilon_decay = cfg.epsilon_decay
         self.target_update = cfg.target_update
+        self.update_step = 0
         self.create_graph() # create graph and optimizer
         self.create_summary() # create summary
         self.to(self.device)
@@ -52,7 +53,6 @@ class Policy(BasePolicy):
         ''' learn policy
         '''
         states, actions, next_states, rewards, dones = kwargs.get('states'), kwargs.get('actions'), kwargs.get('next_states'), kwargs.get('rewards'), kwargs.get('dones')
-        update_step = kwargs.get('update_step')
         # convert numpy to tensor
         states = torch.tensor(states, device=self.device, dtype=torch.float32)
         actions = torch.tensor(actions, device=self.device, dtype=torch.int64).unsqueeze(dim=1)
@@ -74,7 +74,8 @@ class Policy(BasePolicy):
             param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
         # update target net every C steps
-        if update_step % self.target_update == 0: 
+        if self.update_step % self.target_update == 0: 
             self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.update_step += 1
         self.update_summary() # update summary
  

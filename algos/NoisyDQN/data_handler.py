@@ -8,7 +8,7 @@ LastEditor: JiangJi
 LastEditTime: 2023-05-18 13:31:14
 Discription: 
 '''
-from algos.base.data_handlers import BaseDataHandler
+from algos.base.data_handler import BaseDataHandler
 class DataHandler(BaseDataHandler):
     def __init__(self, cfg):
         super().__init__(cfg)
