@@ -1,7 +1,7 @@
 
 ## 算法参数说明 
 
-PPO算法参数如下：
+Qlearning算法参数如下：
 
 ```python
 class AlgoConfig:
